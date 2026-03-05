@@ -17067,6 +17067,11 @@
                         if (data.choices && data.choices[0] && data.choices[0].message) {
                             let reply = data.choices[0].message.content;
                             
+                            reply = reply.replace(/<think>[\s\S]*?<\/think>/gi, '');
+                            reply = reply.replace(/<thinking>[\s\S]*?<\/thinking>/gi, '');
+                            reply = reply.replace(/<reasoning>[\s\S]*?<\/reasoning>/gi, '');
+                            reply = reply.replace(/<cot>[\s\S]*?<\/cot>/gi, '');
+                            
                             let extractedLocation = null;
                             const locationMatch = reply.match(/\[LOCATION:([^\]]+)\]/);
                             if (locationMatch) {
@@ -20782,6 +20787,26 @@ ${conversationHistory.slice(-10).map(msg => `${msg.type === 'sent' ? '用户' : 
             } catch (e) {
                 console.error('worldbookFolders 加载失败:', e);
                 worldbookFolders = [];
+            }
+            
+            if (typeof loadAllIcons === 'function') {
+                loadAllIcons();
+                console.log('桌面图标重新加载完成');
+            }
+            
+            if (typeof applyWallpaper === 'function') {
+                applyWallpaper();
+                console.log('桌面壁纸重新加载完成');
+            }
+            
+            if (typeof loadWidgets === 'function') {
+                loadWidgets();
+                console.log('桌面小组件重新加载完成');
+            }
+            
+            if (typeof applyFontColors === 'function') {
+                applyFontColors();
+                console.log('字体颜色重新加载完成');
             }
             
             isDataInitialized = true;
@@ -26271,6 +26296,12 @@ ${commenterInfo}
 
                 if (data.choices && data.choices[0] && data.choices[0].message) {
                     let reply = data.choices[0].message.content;
+                    
+                    reply = reply.replace(/<think>[\s\S]*?<\/think>/gi, '');
+                    reply = reply.replace(/<thinking>[\s\S]*?<\/thinking>/gi, '');
+                    reply = reply.replace(/<reasoning>[\s\S]*?<\/reasoning>/gi, '');
+                    reply = reply.replace(/<cot>[\s\S]*?<\/cot>/gi, '');
+                    
                     reply = reply.trim();
                     
                     const replyIndex = musicAddMessage(reply);
@@ -28597,6 +28628,11 @@ ${recentHistory.map(msg => {
                     if (data.choices && data.choices[0] && data.choices[0].message) {
                         let reply = data.choices[0].message.content;
                         console.log('[InsProfile] API 原始回复:', reply);
+                        
+                        reply = reply.replace(/<think>[\s\S]*?<\/think>/gi, '');
+                        reply = reply.replace(/<thinking>[\s\S]*?<\/thinking>/gi, '');
+                        reply = reply.replace(/<reasoning>[\s\S]*?<\/reasoning>/gi, '');
+                        reply = reply.replace(/<cot>[\s\S]*?<\/cot>/gi, '');
                         
                         let extractedStatus = null;
                         const statusMatch = reply.match(/\[STATUS:([^\]]+)\]/);
@@ -32073,6 +32109,11 @@ ${recentHistory.map(msg => {
             if (!text) return '';
             
             let processed = text;
+            
+            processed = processed.replace(/<think>[\s\S]*?<\/think>/gi, '');
+            processed = processed.replace(/<thinking>[\s\S]*?<\/thinking>/gi, '');
+            processed = processed.replace(/<reasoning>[\s\S]*?<\/reasoning>/gi, '');
+            processed = processed.replace(/<cot>[\s\S]*?<\/cot>/gi, '');
             
             const aiPatterns = [
                 /作为(一个)?(AI|人工智能|语言模型|大语言模型|虚拟助手|智能助手)[^。！？]*[，,。：: ]*/gi,
