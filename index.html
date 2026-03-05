@@ -19924,7 +19924,17 @@ ${conversationHistory.slice(-10).map(msg => `${msg.type === 'sent' ? '用户' : 
             const savedImage = localStorage.getItem('circleWidgetImage');
             if (savedImage) {
                 const widget = document.getElementById('circle-widget');
-                widget.innerHTML = `<img src="${savedImage}" alt="小组件图片" style="border-radius: 50%; box-shadow: 0 0 4px 1px rgba(255,255,255,0.4), 0 4px 12px rgba(0,0,0,0.3); border: 2px solid white;">`;
+                const img = document.createElement('img');
+                img.src = savedImage;
+                img.alt = '小组件图片';
+                img.style.cssText = 'border-radius: 50%; box-shadow: 0 0 4px 1px rgba(255,255,255,0.4), 0 4px 12px rgba(0,0,0,0.3); border: 2px solid white; width: 100%; height: 100%; object-fit: cover;';
+                img.onerror = function() {
+                    console.error('小组件图片加载失败');
+                    const cacheBuster = savedImage.includes('?') ? '&' : '?';
+                    img.src = savedImage + cacheBuster + '_t=' + Date.now();
+                };
+                widget.innerHTML = '';
+                widget.appendChild(img);
             }
             
             const savedText = localStorage.getItem('textWidgetText');
@@ -19932,7 +19942,6 @@ ${conversationHistory.slice(-10).map(msg => `${msg.type === 'sent' ? '用户' : 
                 document.getElementById('text-widget').textContent = savedText;
             }
             
-            // 加载便签内容
             loadNoteWidget();
         }
 
@@ -19998,6 +20007,11 @@ ${conversationHistory.slice(-10).map(msg => `${msg.type === 'sent' ? '用户' : 
                     img.src = savedIcon;
                     img.alt = app.name;
                     img.style.cssText = 'width: 100%; height: 100%; object-fit: cover; border-radius: inherit;';
+                    img.onerror = function() {
+                        console.error('图标加载失败:', appId);
+                        const cacheBuster = savedIcon.includes('?') ? '&' : '?';
+                        img.src = savedIcon + cacheBuster + '_t=' + Date.now();
+                    };
                     iconContainer.appendChild(img);
                 }
                 
@@ -22106,12 +22120,23 @@ ${conversationHistory.slice(-10).map(msg => `${msg.type === 'sent' ? '用户' : 
             const customWallpaper = localStorage.getItem('customWallpaper');
             
             if (customWallpaper) {
-                preview.style.backgroundImage = `url(${customWallpaper})`;
-                preview.style.backgroundSize = 'cover';
-                preview.style.backgroundPosition = 'center';
-                preview.innerHTML = '';
+                const testImg = new Image();
+                testImg.onload = function() {
+                    preview.style.backgroundImage = `url(${customWallpaper})`;
+                    preview.style.backgroundSize = 'cover';
+                    preview.style.backgroundPosition = 'center';
+                    preview.innerHTML = '';
+                };
+                testImg.onerror = function() {
+                    const cacheBuster = customWallpaper.includes('?') ? '&' : '?';
+                    const wallpaperUrl = customWallpaper + cacheBuster + '_t=' + Date.now();
+                    preview.style.backgroundImage = `url(${wallpaperUrl})`;
+                    preview.style.backgroundSize = 'cover';
+                    preview.style.backgroundPosition = 'center';
+                    preview.innerHTML = '';
+                };
+                testImg.src = customWallpaper;
             } else {
-                // 使用指定的默认壁纸链接
                 const defaultWallpaper = '';
                 preview.style.backgroundImage = `url(${defaultWallpaper})`;
                 preview.style.backgroundSize = 'cover';
@@ -22127,13 +22152,28 @@ ${conversationHistory.slice(-10).map(msg => `${msg.type === 'sent' ? '用户' : 
             const customWallpaper = localStorage.getItem('customWallpaper');
             
             if (customWallpaper) {
-                body.style.background = `url(${customWallpaper}) center/cover no-repeat fixed`;
-                body.style.backgroundAttachment = 'fixed';
-                body.style.backgroundPosition = 'center';
-                body.style.backgroundSize = 'cover';
-                body.style.backgroundRepeat = 'no-repeat';
+                const cacheBuster = customWallpaper.includes('?') ? '&' : '?';
+                const wallpaperUrl = customWallpaper + cacheBuster + '_t=' + Date.now();
+                
+                const testImg = new Image();
+                testImg.onload = function() {
+                    body.style.background = `url(${customWallpaper}) center/cover no-repeat fixed`;
+                    body.style.backgroundAttachment = 'fixed';
+                    body.style.backgroundPosition = 'center';
+                    body.style.backgroundSize = 'cover';
+                    body.style.backgroundRepeat = 'no-repeat';
+                    console.log('壁纸加载成功');
+                };
+                testImg.onerror = function() {
+                    console.error('壁纸加载失败，尝试重新加载');
+                    body.style.background = `url(${wallpaperUrl}) center/cover no-repeat fixed`;
+                    body.style.backgroundAttachment = 'fixed';
+                    body.style.backgroundPosition = 'center';
+                    body.style.backgroundSize = 'cover';
+                    body.style.backgroundRepeat = 'no-repeat';
+                };
+                testImg.src = customWallpaper;
             } else {
-                // 使用指定的默认壁纸链接
                 const defaultWallpaper = '';
                 body.style.background = `url(${defaultWallpaper}) center/cover no-repeat fixed`;
                 body.style.backgroundAttachment = 'fixed';
