@@ -17235,10 +17235,13 @@
                     ];
                     
                     finalHistory.forEach(msg => {
+                        const msgContent = (msg.content && typeof msg.content === 'object' && msg.content.type === 'voice') 
+                            ? `[语音消息] ${msg.content.text}` 
+                            : (msg.content || '');
                         if (msg.type === 'sent') {
-                            apiMessages.push({ role: 'user', content: msg.content });
+                            apiMessages.push({ role: 'user', content: msgContent });
                         } else if (msg.type === 'received') {
-                            apiMessages.push({ role: 'assistant', content: msg.content });
+                            apiMessages.push({ role: 'assistant', content: msgContent });
                         }
                     });
                     
@@ -26880,10 +26883,13 @@ ${commenterInfo}
                 ];
                 
                 recentHistory.forEach(msg => {
+                    const msgContent = (msg.content && typeof msg.content === 'object' && msg.content.type === 'voice') 
+                        ? `[语音消息] ${msg.content.text}` 
+                        : (msg.content || '');
                     if (msg.type === 'sent') {
-                        apiMessages.push({ role: 'user', content: msg.content });
+                        apiMessages.push({ role: 'user', content: msgContent });
                     } else if (msg.type === 'received') {
-                        apiMessages.push({ role: 'assistant', content: msg.content });
+                        apiMessages.push({ role: 'assistant', content: msgContent });
                     }
                 });
                 
@@ -29450,15 +29456,24 @@ ${recentHistory.map(msg => {
                     });
                 }
                 
+                function getMessageText(msg) {
+                    if (!msg.content) return '';
+                    if (typeof msg.content === 'object' && msg.content.type === 'voice') {
+                        return `[语音消息] ${msg.content.text}`;
+                    }
+                    return msg.content;
+                }
+                
                 const apiMessages = [
                     { role: 'system', content: systemPrompt }
                 ];
                 
                 finalHistory.forEach(msg => {
+                    const msgContent = getMessageText(msg);
                     if (msg.type === 'sent') {
-                        apiMessages.push({ role: 'user', content: msg.content });
+                        apiMessages.push({ role: 'user', content: msgContent });
                     } else if (msg.type === 'received') {
-                        apiMessages.push({ role: 'assistant', content: msg.content });
+                        apiMessages.push({ role: 'assistant', content: msgContent });
                     }
                 });
                 
@@ -30337,17 +30352,23 @@ ${recentHistory.map(msg => {
                 ];
                 
                 contextMessages.forEach(msg => {
+                    const msgContent = (msg.content && typeof msg.content === 'object' && msg.content.type === 'voice') 
+                        ? `[语音消息] ${msg.content.text}` 
+                        : (msg.content || '');
                     if (msg.type === 'sent') {
-                        apiMessages.push({ role: 'user', content: msg.content });
+                        apiMessages.push({ role: 'user', content: msgContent });
                     } else if (msg.type === 'received') {
-                        apiMessages.push({ role: 'assistant', content: msg.content });
+                        apiMessages.push({ role: 'assistant', content: msgContent });
                     }
                 });
 
                 // 添加最后一条用户消息作为触发
                 const lastUserMessage = contextMessages.filter(msg => msg.type === 'sent').pop();
                 if (lastUserMessage) {
-                    apiMessages.push({ role: 'user', content: lastUserMessage.content });
+                    const lastMsgContent = (lastUserMessage.content && typeof lastUserMessage.content === 'object' && lastUserMessage.content.type === 'voice') 
+                        ? `[语音消息] ${lastUserMessage.content.text}` 
+                        : (lastUserMessage.content || '');
+                    apiMessages.push({ role: 'user', content: lastMsgContent });
                 }
 
                 const controller = new AbortController();
