@@ -14701,7 +14701,7 @@
             <h3 style="margin: 20px 0 12px; font-size: 20px; color: #333; font-weight: 600;">导入成功</h3>
             <p id="import-success-message" style="color: #666; font-size: 14px; line-height: 1.6; margin-bottom: 24px;"></p>
             <button class="btn-primary import-confirm-btn" onclick="confirmImportSuccess()" style="width: 100%; padding: 14px 24px; font-size: 16px; font-weight: 500;">
-                确认并刷新页面
+                确定
             </button>
         </div>
     </div>
@@ -20941,6 +20941,8 @@ ${conversationHistory.slice(-10).map(msg => `${msg.type === 'sent' ? '用户' : 
                 showStorageProgress('正在导入数据...', 50);
                 console.log('步骤 6/6: 正在导入数据...');
                 
+                await ImageStorage.init();
+                
                 if (conflictStrategy === 'overwrite') {
                     console.log('覆盖模式：清除所有旧数据...');
                     console.log('清除前localStorage键数:', Object.keys(localStorage).length);
@@ -20952,6 +20954,19 @@ ${conversationHistory.slice(-10).map(msg => `${msg.type === 'sent' ? '用户' : 
                 var importedCount = 0;
                 var skippedCount = 0;
                 var overwrittenCount = 0;
+                var migratedToIndexedDB = 0;
+                
+                var imagePatterns = [
+                    'icon_', 'Avatar', 'Wallpaper', 'Background', 'Image',
+                    'circleWidgetImage', 'customWallpaper', 'chatWallpaper_',
+                    'characterDetailImage_', 'detailImages_'
+                ];
+                
+                function isImageKey(key) {
+                    return imagePatterns.some(function(pattern) {
+                        return key.indexOf(pattern) !== -1;
+                    });
+                }
                 
                 var totalItems = newKeys.length;
                 var batchSize = 50;
@@ -20961,6 +20976,22 @@ ${conversationHistory.slice(-10).map(msg => `${msg.type === 'sent' ? '用户' : 
                     var value = importData.data[key];
                     
                     var exists = existingKeys.has(key);
+                    var isImage = isImageKey(key);
+                    var isLargeImage = isImage && value && value.length > 100000;
+                    
+                    if (isLargeImage) {
+                        console.log('检测到大图片数据，迁移到 IndexedDB:', key, '大小:', (value.length / 1024).toFixed(1), 'KB');
+                        try {
+                            await ImageStorage.save(key, value);
+                            migratedToIndexedDB++;
+                            importedCount++;
+                            console.log('大图片已迁移到 IndexedDB:', key);
+                        } catch (e) {
+                            console.error('IndexedDB 存储失败:', key, e);
+                            skippedCount++;
+                        }
+                        continue;
+                    }
                     
                     if (conflictStrategy === 'overwrite') {
                         try {
@@ -20970,11 +21001,37 @@ ${conversationHistory.slice(-10).map(msg => `${msg.type === 'sent' ? '用户' : 
                                 importedCount++;
                             } else {
                                 console.error('验证失败:', key, '期望长度:', value.length, '实际长度:', verifyValue ? verifyValue.length : 0);
-                                skippedCount++;
+                                if (isImage && value.length > 50000) {
+                                    console.log('尝试将图片迁移到 IndexedDB:', key);
+                                    try {
+                                        await ImageStorage.save(key, value);
+                                        migratedToIndexedDB++;
+                                        importedCount++;
+                                        console.log('图片已迁移到 IndexedDB:', key);
+                                    } catch (e2) {
+                                        console.error('IndexedDB 迁移也失败:', key, e2);
+                                        skippedCount++;
+                                    }
+                                } else {
+                                    skippedCount++;
+                                }
                             }
                         } catch (e) {
                             console.error('存储失败:', key, e);
-                            skippedCount++;
+                            if (isImage && value.length > 50000) {
+                                console.log('localStorage 存储失败，尝试迁移到 IndexedDB:', key);
+                                try {
+                                    await ImageStorage.save(key, value);
+                                    migratedToIndexedDB++;
+                                    importedCount++;
+                                    console.log('图片已迁移到 IndexedDB:', key);
+                                } catch (e2) {
+                                    console.error('IndexedDB 迁移也失败:', key, e2);
+                                    skippedCount++;
+                                }
+                            } else {
+                                skippedCount++;
+                            }
                         }
                     } else if (exists) {
                         switch (conflictStrategy) {
@@ -20989,7 +21046,17 @@ ${conversationHistory.slice(-10).map(msg => `${msg.type === 'sent' ? '用户' : 
                                     importedCount++;
                                 } catch (e) {
                                     console.error('存储失败:', key, e);
-                                    skippedCount++;
+                                    if (isImage && value.length > 50000) {
+                                        try {
+                                            await ImageStorage.save(key, value);
+                                            migratedToIndexedDB++;
+                                            importedCount++;
+                                        } catch (e2) {
+                                            skippedCount++;
+                                        }
+                                    } else {
+                                        skippedCount++;
+                                    }
                                 }
                                 break;
                         }
@@ -20999,7 +21066,17 @@ ${conversationHistory.slice(-10).map(msg => `${msg.type === 'sent' ? '用户' : 
                             importedCount++;
                         } catch (e) {
                             console.error('存储失败:', key, e);
-                            skippedCount++;
+                            if (isImage && value.length > 50000) {
+                                try {
+                                    await ImageStorage.save(key, value);
+                                    migratedToIndexedDB++;
+                                    importedCount++;
+                                } catch (e2) {
+                                    skippedCount++;
+                                }
+                            } else {
+                                skippedCount++;
+                            }
                         }
                     }
                     
@@ -21011,7 +21088,7 @@ ${conversationHistory.slice(-10).map(msg => `${msg.type === 'sent' ? '用户' : 
                 }
 
                 showStorageProgress('完成！', 100);
-                console.log('导入完成！统计:', { imported: importedCount, overwritten: overwrittenCount, skipped: skippedCount });
+                console.log('导入完成！统计:', { imported: importedCount, overwritten: overwrittenCount, skipped: skippedCount, migratedToIndexedDB: migratedToIndexedDB });
                 
                 if (importData.indexedDBData && Object.keys(importData.indexedDBData).length > 0) {
                     showStorageProgress('正在导入图片数据到 IndexedDB...', 95);
@@ -21084,6 +21161,9 @@ ${conversationHistory.slice(-10).map(msg => `${msg.type === 'sent' ? '用户' : 
                 }
                 if (skippedCount > 0) {
                     resultMsg += '，跳过 ' + skippedCount + ' 项';
+                }
+                if (migratedToIndexedDB > 0) {
+                    resultMsg += '，' + migratedToIndexedDB + ' 项大图片已迁移到 IndexedDB';
                 }
                 
                 if (importData.metadata && importData.metadata.imageCount) {
@@ -21269,7 +21349,7 @@ ${conversationHistory.slice(-10).map(msg => `${msg.type === 'sent' ? '用户' : 
             if (modal) {
                 modal.style.display = 'none';
             }
-            console.log('用户确认刷新页面');
+            console.log('用户确认，正在刷新页面');
             console.log('刷新前localStorage状态:');
             console.log('- 总键数:', Object.keys(localStorage).length);
             console.log('- wechatRoles:', localStorage.getItem('wechatRoles') ? '存在' : '不存在');
