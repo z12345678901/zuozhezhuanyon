@@ -9198,6 +9198,18 @@
             opacity: 1;
         }
 
+        .chat-menu-category-content.scrollable.expanded {
+            max-height: 600px;
+            overflow-y: auto;
+            overflow-x: hidden;
+            touch-action: manipulation;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        #beautify-category.scrollable.expanded {
+            max-height: 80vh;
+        }
+
         .chat-menu-category-content .chat-menu-wallpaper-preview {
             margin: 12px 16px 8px;
         }
@@ -15948,7 +15960,7 @@
                             <polyline points="6 9 12 15 18 9"></polyline>
                         </svg>
                     </div>
-                    <div class="chat-menu-category-content" id="beautify-category">
+                    <div class="chat-menu-category-content scrollable" id="beautify-category">
                         <div style="padding: 12px 16px;">
                             <div class="chat-menu-category" style="margin-bottom: 8px; border: 1px solid rgba(0,0,0,0.08); border-radius: 8px;">
                                 <div class="chat-menu-category-header" onclick="toggleCategory('role-css')" style="padding: 10px 12px; background: rgba(0,0,0,0.02);">
@@ -15963,7 +15975,7 @@
                                         <polyline points="6 9 12 15 18 9"></polyline>
                                     </svg>
                                 </div>
-                                <div class="chat-menu-category-content" id="role-css-category" style="padding: 12px;">
+                                <div class="chat-menu-category-content scrollable" id="role-css-category" style="padding: 12px;">
                                     <div class="form-group" style="margin-bottom: 12px;">
                                         <label for="role-custom-css" style="font-size: 13px; color: #333; margin-bottom: 8px; display: block;">角色CSS样式</label>
                                         <div class="css-editor-container" id="css-editor-container">
@@ -16047,7 +16059,7 @@
                                         <polyline points="6 9 12 15 18 9"></polyline>
                                     </svg>
                                 </div>
-                                <div class="chat-menu-category-content" id="global-css-category" style="padding: 12px;">
+                                <div class="chat-menu-category-content scrollable" id="global-css-category" style="padding: 12px;">
                                     <div class="form-group" style="margin-bottom: 12px;">
                                         <label for="global-custom-css" style="font-size: 13px; color: #333; margin-bottom: 8px; display: block;">全局CSS样式</label>
                                         <textarea id="global-custom-css" placeholder="在此输入全局CSS代码，对所有页面生效" style="width: 100%; min-height: 120px; padding: 12px; border: 1px solid rgba(0, 0, 0, 0.15); border-radius: 8px; background: rgba(255, 255, 255, 0.9); color: #333; font-size: 13px; font-family: 'Consolas', 'Monaco', monospace; resize: vertical; line-height: 1.5;"></textarea>
