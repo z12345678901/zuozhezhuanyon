@@ -14209,6 +14209,7 @@
                         <li>✏️ 修改了编辑消息a跳b的情况</li>
                         <li>🖼️ 修了一下大图片数据导入失效的问题</li>
                         <li>🔄 朋友圈去除默认消息，增加了刷新中和成功的提示</li>
+                        <li>🔧 修复了导入机制，安卓不太会卡百分之50了</li>
                     </ul>
                 </div>
             </div>
@@ -18681,17 +18682,42 @@ ${role.tags && role.tags.length > 0 ? `- 性格特点：${role.tags.join('、')}
             db: null,
             
             async init() {
+                if (this.db) {
+                    return this.db;
+                }
+                
                 return new Promise((resolve, reject) => {
                     const request = indexedDB.open(this.dbName, 1);
                     
+                    let timeoutId = setTimeout(() => {
+                        console.error('IndexedDB 初始化超时');
+                        reject(new Error('IndexedDB 初始化超时'));
+                    }, 10000);
+                    
                     request.onerror = () => {
+                        clearTimeout(timeoutId);
                         console.error('IndexedDB 打开失败:', request.error);
                         reject(request.error);
                     };
                     
+                    request.onblocked = () => {
+                        console.warn('IndexedDB 被其他标签页阻塞，请关闭其他使用此应用的标签页');
+                    };
+                    
                     request.onsuccess = () => {
+                        clearTimeout(timeoutId);
                         this.db = request.result;
                         console.log('IndexedDB 初始化成功');
+                        
+                        this.db.onclose = () => {
+                            console.log('IndexedDB 连接已关闭');
+                            this.db = null;
+                        };
+                        
+                        this.db.onerror = (event) => {
+                            console.error('IndexedDB 数据库错误:', event.target.error);
+                        };
+                        
                         resolve(this.db);
                     };
                     
@@ -18713,13 +18739,32 @@ ${role.tags && role.tags.length > 0 ? `- 性格特点：${role.tags.join('、')}
                     const store = transaction.objectStore(this.storeName);
                     const request = store.put({ key: key, data: data });
                     
-                    request.onsuccess = () => {
+                    let timeoutId = setTimeout(() => {
+                        console.error('IndexedDB 保存超时:', key);
+                        reject(new Error('IndexedDB 保存超时'));
+                    }, 30000);
+                    
+                    transaction.oncomplete = () => {
+                        clearTimeout(timeoutId);
                         console.log('图片保存到 IndexedDB 成功:', key);
                         resolve(true);
                     };
                     
+                    transaction.onerror = () => {
+                        clearTimeout(timeoutId);
+                        console.error('图片保存到 IndexedDB 失败:', transaction.error);
+                        reject(transaction.error);
+                    };
+                    
+                    transaction.onabort = () => {
+                        clearTimeout(timeoutId);
+                        console.error('IndexedDB 事务被中止:', key);
+                        reject(new Error('IndexedDB 事务被中止'));
+                    };
+                    
                     request.onerror = () => {
-                        console.error('图片保存到 IndexedDB 失败:', request.error);
+                        clearTimeout(timeoutId);
+                        console.error('图片保存请求失败:', request.error);
                         reject(request.error);
                     };
                 });
@@ -18733,6 +18778,21 @@ ${role.tags && role.tags.length > 0 ? `- 性格特点：${role.tags.join('、')}
                     const store = transaction.objectStore(this.storeName);
                     const request = store.get(key);
                     
+                    let timeoutId = setTimeout(() => {
+                        console.error('IndexedDB 加载超时:', key);
+                        reject(new Error('IndexedDB 加载超时'));
+                    }, 10000);
+                    
+                    transaction.oncomplete = () => {
+                        clearTimeout(timeoutId);
+                    };
+                    
+                    transaction.onerror = () => {
+                        clearTimeout(timeoutId);
+                        console.error('从 IndexedDB 加载图片失败:', transaction.error);
+                        reject(transaction.error);
+                    };
+                    
                     request.onsuccess = () => {
                         if (request.result) {
                             resolve(request.result.data);
@@ -18742,7 +18802,8 @@ ${role.tags && role.tags.length > 0 ? `- 性格特点：${role.tags.join('、')}
                     };
                     
                     request.onerror = () => {
-                        console.error('从 IndexedDB 加载图片失败:', request.error);
+                        clearTimeout(timeoutId);
+                        console.error('从 IndexedDB 加载图片请求失败:', request.error);
                         reject(request.error);
                     };
                 });
@@ -18756,13 +18817,26 @@ ${role.tags && role.tags.length > 0 ? `- 性格特点：${role.tags.join('、')}
                     const store = transaction.objectStore(this.storeName);
                     const request = store.delete(key);
                     
-                    request.onsuccess = () => {
+                    let timeoutId = setTimeout(() => {
+                        console.error('IndexedDB 删除超时:', key);
+                        reject(new Error('IndexedDB 删除超时'));
+                    }, 10000);
+                    
+                    transaction.oncomplete = () => {
+                        clearTimeout(timeoutId);
                         console.log('从 IndexedDB 删除图片成功:', key);
                         resolve(true);
                     };
                     
+                    transaction.onerror = () => {
+                        clearTimeout(timeoutId);
+                        console.error('从 IndexedDB 删除图片失败:', transaction.error);
+                        reject(transaction.error);
+                    };
+                    
                     request.onerror = () => {
-                        console.error('从 IndexedDB 删除图片失败:', request.error);
+                        clearTimeout(timeoutId);
+                        console.error('从 IndexedDB 删除图片请求失败:', request.error);
                         reject(request.error);
                     };
                 });
@@ -18776,11 +18850,26 @@ ${role.tags && role.tags.length > 0 ? `- 性格特点：${role.tags.join('、')}
                     const store = transaction.objectStore(this.storeName);
                     const request = store.getAllKeys();
                     
+                    let timeoutId = setTimeout(() => {
+                        console.error('IndexedDB getAllKeys 超时');
+                        reject(new Error('IndexedDB getAllKeys 超时'));
+                    }, 10000);
+                    
+                    transaction.oncomplete = () => {
+                        clearTimeout(timeoutId);
+                    };
+                    
+                    transaction.onerror = () => {
+                        clearTimeout(timeoutId);
+                        reject(transaction.error);
+                    };
+                    
                     request.onsuccess = () => {
                         resolve(request.result);
                     };
                     
                     request.onerror = () => {
+                        clearTimeout(timeoutId);
                         reject(request.error);
                     };
                 });
@@ -18809,13 +18898,26 @@ ${role.tags && role.tags.length > 0 ? `- 性格特点：${role.tags.join('、')}
                     const store = transaction.objectStore(this.storeName);
                     const request = store.clear();
                     
-                    request.onsuccess = () => {
+                    let timeoutId = setTimeout(() => {
+                        console.error('IndexedDB 清除超时');
+                        reject(new Error('IndexedDB 清除超时'));
+                    }, 30000);
+                    
+                    transaction.oncomplete = () => {
+                        clearTimeout(timeoutId);
                         console.log('IndexedDB 所有数据已清除');
                         resolve(true);
                     };
                     
+                    transaction.onerror = () => {
+                        clearTimeout(timeoutId);
+                        console.error('IndexedDB 清除失败:', transaction.error);
+                        reject(transaction.error);
+                    };
+                    
                     request.onerror = () => {
-                        console.error('IndexedDB 清除失败:', request.error);
+                        clearTimeout(timeoutId);
+                        console.error('IndexedDB 清除请求失败:', request.error);
                         reject(request.error);
                     };
                 });
