@@ -16544,7 +16544,7 @@
                         <div class="avatar-loading-text">上传中...</div>
                     </div>
                 </div>
-                <input type="file" id="profile-avatar-input" accept="image/jpeg,image/png,image/webp,image/heic,image/heif,image/gif,image/bmp,.jpg,.jpeg,.png,.webp,.heic,.heif,.gif,.bmp" capture="environment" style="display: none;" onchange="handleAvatarUpload(event)">
+                <input type="file" id="profile-avatar-input" accept="image/jpeg,image/png,image/webp,image/heic,image/heif,image/gif,image/bmp,.jpg,.jpeg,.png,.webp,.heic,.heif,.gif,.bmp" style="display: none;" onchange="handleAvatarUpload(event)">
                 <div class="avatar-toast" id="avatar-toast"></div>
                 <div class="profile-name" id="profile-name-display" onclick="openProfileNameModal()">用户</div>
                 <div class="profile-id" id="wechat-id-display" onclick="openWechatIdModal()">Wechat ID: 用户</div>
@@ -29914,7 +29914,8 @@ ${recentHistory.map(msg => {
                 multiSelectItem.addEventListener('click', (e) => {
                     e.stopPropagation();
                     hideContextMenu();
-                    enterMultiSelectMode(parseInt(messageIndex));
+                    const idx = parseInt(e.currentTarget.dataset.messageIndex);
+                    enterMultiSelectMode(idx);
                 });
             }
             
@@ -29922,28 +29923,32 @@ ${recentHistory.map(msg => {
             contextMenu.querySelector('.context-menu-item.edit').addEventListener('click', (e) => {
                 e.stopPropagation();
                 hideContextMenu();
-                showEditMessageModal(parseInt(messageIndex));
+                const idx = parseInt(e.currentTarget.dataset.messageIndex);
+                showEditMessageModal(idx);
             });
             
             // 引用按钮事件
             contextMenu.querySelector('.context-menu-item.quote').addEventListener('click', (e) => {
                 e.stopPropagation();
                 hideContextMenu();
-                setQuoteMessage(parseInt(messageIndex));
+                const idx = parseInt(e.currentTarget.dataset.messageIndex);
+                setQuoteMessage(idx);
             });
             
             // 重新生成按钮事件
             contextMenu.querySelector('.context-menu-item.regenerate').addEventListener('click', (e) => {
                 e.stopPropagation();
                 hideContextMenu();
-                regenerateMessage(parseInt(messageIndex));
+                const idx = parseInt(e.currentTarget.dataset.messageIndex);
+                regenerateMessage(idx);
             });
             
             // 删除按钮事件
             contextMenu.querySelector('.context-menu-item.delete').addEventListener('click', (e) => {
                 e.stopPropagation();
                 hideContextMenu();
-                showDeleteConfirmModal(parseInt(messageIndex));
+                const idx = parseInt(e.currentTarget.dataset.messageIndex);
+                showDeleteConfirmModal(idx);
             });
             
             setTimeout(() => {
