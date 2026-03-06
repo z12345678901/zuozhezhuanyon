@@ -14192,20 +14192,23 @@
         <div class="announcement-card">
             <div class="announcement-header">
                 <h2 class="announcement-title">本次更新内容</h2>
-                <div class="announcement-date" id="announcement-date">2026年3月5日</div>
+                <div class="announcement-date" id="announcement-date">2026年3月6日</div>
             </div>
             <div class="announcement-body">
                 <div class="announcement-content">
                     <p>欢迎使用小鼠机！本次更新内容如下：</p>
                     <ul>
                         <li>🔧 修复了跳思维链</li>
+                        <li>🎨 增加两个未实装app</li>
+                        <li>💬 又优化了角色回复逻辑，现在活人感强多了</li>
                         <li>🌙 夜间模式美化了一些，内置了小悦的美化，大家谢谢这个小悦！</li>
                         <li>🔧 更新了一下无法删除预设api</li>
                         <li>🔧 更新了数据清空不生效</li>
                         <li>🔧 更新了一些角色回复错误的问题</li>
                         <li>🎨 增加了全局css美化</li>
-                        <li>📱 iOS可以上传大一些的图片了</li>
                         <li>✏️ 修改了编辑消息a跳b的情况</li>
+                        <li>🖼️ 修了一下大图片数据导入失效的问题</li>
+                        <li>🔄 朋友圈去除默认消息，增加了刷新中和成功的提示</li>
                     </ul>
                 </div>
             </div>
@@ -20460,13 +20463,13 @@ ${conversationHistory.slice(-10).map(msg => `${msg.type === 'sent' ? '用户' : 
                 const appNameElement = element.querySelector('.app-name, .dock-name');
                 const app = apps.find(a => a.id === appId);
                 
-                if (savedIcon && iconContainer && app) {
+                if (savedIcon && iconContainer) {
                     while (iconContainer.firstChild) {
                         iconContainer.removeChild(iconContainer.firstChild);
                     }
                     const img = document.createElement('img');
                     img.src = savedIcon;
-                    img.alt = app.name;
+                    img.alt = app ? app.name : appId;
                     img.style.cssText = 'width: 100%; height: 100%; object-fit: cover; border-radius: inherit;';
                     img.onerror = function() {
                         console.error('图标加载失败:', appId);
@@ -20476,8 +20479,8 @@ ${conversationHistory.slice(-10).map(msg => `${msg.type === 'sent' ? '用户' : 
                     iconContainer.appendChild(img);
                 }
                 
-                if (appNameElement && app) {
-                    const savedName = localStorage.getItem('appName_' + appId) || app.name;
+                if (appNameElement) {
+                    const savedName = localStorage.getItem('appName_' + appId) || (app ? app.name : appId);
                     appNameElement.textContent = savedName;
                 }
             });
@@ -21262,7 +21265,7 @@ ${conversationHistory.slice(-10).map(msg => `${msg.type === 'sent' ? '用户' : 
                 console.log('wallpaper(旧):', oldWallpaperCheck !== null ? '存在(长度:' + oldWallpaperCheck.length + ')' : '不存在');
                 console.log('circleWidgetImage:', circleWidgetImageCheck !== null ? '存在(长度:' + circleWidgetImageCheck.length + ')' : '不存在');
                 
-                var iconApps = ['wechat', 'worldbook', 'netease', 'forum', 'home', 'anniversary', 'settings'];
+                var iconApps = ['wechat', 'worldbook', 'netease', 'forum', 'waimai', 'diary', 'home', 'anniversary', 'settings'];
                 iconApps.forEach(function(appId) {
                     var iconCheck = localStorage.getItem('icon_' + appId);
                     console.log('icon_' + appId + ':', iconCheck !== null ? '存在(长度:' + iconCheck.length + ')' : '不存在');
