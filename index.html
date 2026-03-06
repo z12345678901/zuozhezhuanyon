@@ -14195,6 +14195,7 @@
                         <li>🔧 更新了数据清空不生效</li>
                         <li>🔧 更新了一些角色回复错误的问题</li>
                         <li>🎨 增加了全局css美化</li>
+                        <li>📱 iOS可以上传大一些的图片了</li>
                     </ul>
                 </div>
             </div>
@@ -16543,7 +16544,7 @@
                         <div class="avatar-loading-text">上传中...</div>
                     </div>
                 </div>
-                <input type="file" id="profile-avatar-input" accept="image/*" style="display: none;" onchange="handleAvatarUpload(event)">
+                <input type="file" id="profile-avatar-input" accept="image/jpeg,image/png,image/webp,image/heic,image/heif,image/gif,image/bmp,.jpg,.jpeg,.png,.webp,.heic,.heif,.gif,.bmp" capture="environment" style="display: none;" onchange="handleAvatarUpload(event)">
                 <div class="avatar-toast" id="avatar-toast"></div>
                 <div class="profile-name" id="profile-name-display" onclick="openProfileNameModal()">用户</div>
                 <div class="profile-id" id="wechat-id-display" onclick="openWechatIdModal()">Wechat ID: 用户</div>
@@ -32120,13 +32121,14 @@ ${recentHistory.map(msg => {
         function isValidImageFile(file) {
             if (!file) return false;
             
-            const imageExtensions = ['.jpg', '.jpeg', '.png', '.webp', '.gif', '.heic', '.heif', '.bmp', '.tiff'];
+            const imageExtensions = ['.jpg', '.jpeg', '.png', '.webp', '.gif', '.heic', '.heif', '.bmp', '.tiff', '.tif'];
             const fileExtension = '.' + file.name.split('.').pop().toLowerCase();
             
-            const isValidType = file.type && (file.type.startsWith('image/') || file.type === '');
+            const isImageMimeType = file.type && (file.type.startsWith('image/') || file.type === 'public.image');
+            const isEmptyType = !file.type || file.type === '';
             const isValidExtension = imageExtensions.includes(fileExtension);
             
-            return isValidType || isValidExtension;
+            return isImageMimeType || isValidExtension || isEmptyType;
         }
 
         // ========== 头像上传功能 ==========
@@ -32181,13 +32183,17 @@ ${recentHistory.map(msg => {
 
         function validateAvatarFile(file) {
             const fileExtension = '.' + file.name.split('.').pop().toLowerCase();
-            const isValidExtension = AVATAR_ALLOWED_EXTENSIONS.includes(fileExtension);
-            const isValidType = AVATAR_ALLOWED_TYPES.includes(file.type) || file.type.startsWith('image/');
+            const allImageExtensions = ['.jpg', '.jpeg', '.png', '.webp', '.heic', '.heif', '.gif', '.bmp', '.tiff', '.tif'];
+            const isValidExtension = allImageExtensions.includes(fileExtension);
             
-            if (!isValidType && !isValidExtension) {
+            const isImageMimeType = file.type && (file.type.startsWith('image/') || file.type === 'public.image');
+            const isEmptyType = !file.type || file.type === '';
+            const isValidType = isImageMimeType || isValidExtension || isEmptyType;
+            
+            if (!isValidType) {
                 return {
                     valid: false,
-                    message: '请选择有效的图片文件（JPG、PNG、WEBP、HEIC）'
+                    message: '请选择有效的图片文件（JPG、PNG、WEBP、HEIC、GIF等）'
                 };
             }
 
