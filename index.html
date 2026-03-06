@@ -18802,6 +18802,54 @@ ${role.tags && role.tags.length > 0 ? `- 性格特点：${role.tags.join('、')}
             }
         };
         
+        async function getImageData(key) {
+            let data = localStorage.getItem(key);
+            if (data) {
+                return data;
+            }
+            
+            try {
+                await ImageStorage.init();
+                data = await ImageStorage.load(key);
+                if (data) {
+                    return data;
+                }
+            } catch (e) {
+                console.warn('从 IndexedDB 读取图片失败:', key, e);
+            }
+            
+            return null;
+        }
+        
+        async function setImageData(key, data) {
+            if (data && data.length > 50000) {
+                try {
+                    await ImageStorage.init();
+                    await ImageStorage.save(key, data);
+                    localStorage.removeItem(key);
+                    console.log('大图片已存储到 IndexedDB:', key);
+                    return true;
+                } catch (e) {
+                    console.warn('IndexedDB 存储失败，回退到 localStorage:', e);
+                }
+            }
+            
+            try {
+                localStorage.setItem(key, data);
+                return true;
+            } catch (e) {
+                console.error('localStorage 存储失败:', e);
+                try {
+                    await ImageStorage.init();
+                    await ImageStorage.save(key, data);
+                    return true;
+                } catch (e2) {
+                    console.error('IndexedDB 存储也失败:', e2);
+                    return false;
+                }
+            }
+        }
+        
         const apps = [
             { id: 'wechat', name: '微信', svg: '<img src="" alt="微信">' },
             { id: 'worldbook', name: '世界书', svg: '<img src="" alt="世界书">' },
@@ -20974,13 +21022,24 @@ ${conversationHistory.slice(-10).map(msg => `${msg.type === 'sent' ? '用户' : 
                 var imagePatterns = [
                     'icon_', 'Avatar', 'Wallpaper', 'Background', 'Image',
                     'circleWidgetImage', 'customWallpaper', 'chatWallpaper_',
-                    'characterDetailImage_', 'detailImages_'
+                    'characterDetailImage_', 'detailImages_', 'userAvatar',
+                    'musicRoomBackground', 'musicRoomImage', 'neteaseVinyl',
+                    'cover_', 'photo_', 'picture_', 'img_', 'image_'
                 ];
                 
-                function isImageKey(key) {
-                    return imagePatterns.some(function(pattern) {
-                        return key.indexOf(pattern) !== -1;
+                function isImageKey(key, value) {
+                    var hasPattern = imagePatterns.some(function(pattern) {
+                        return key.toLowerCase().indexOf(pattern.toLowerCase()) !== -1;
                     });
+                    var isBase64Image = value && typeof value === 'string' && value.indexOf('data:image') === 0;
+                    return hasPattern || isBase64Image;
+                }
+                
+                function shouldUseIndexedDB(key, value) {
+                    if (!value || typeof value !== 'string') return false;
+                    var isImage = isImageKey(key, value);
+                    var isLarge = value.length > 50000;
+                    return isImage && isLarge;
                 }
                 
                 var totalItems = newKeys.length;
@@ -20991,16 +21050,16 @@ ${conversationHistory.slice(-10).map(msg => `${msg.type === 'sent' ? '用户' : 
                     var value = importData.data[key];
                     
                     var exists = existingKeys.has(key);
-                    var isImage = isImageKey(key);
-                    var isLargeImage = isImage && value && value.length > 100000;
+                    var isImage = isImageKey(key, value);
+                    var useIndexedDB = shouldUseIndexedDB(key, value);
                     
-                    if (isLargeImage) {
-                        console.log('检测到大图片数据，迁移到 IndexedDB:', key, '大小:', (value.length / 1024).toFixed(1), 'KB');
+                    if (useIndexedDB) {
+                        console.log('检测到图片数据，存储到 IndexedDB:', key, '大小:', (value.length / 1024).toFixed(1), 'KB');
                         try {
                             await ImageStorage.save(key, value);
                             migratedToIndexedDB++;
                             importedCount++;
-                            console.log('大图片已迁移到 IndexedDB:', key);
+                            console.log('图片已存储到 IndexedDB:', key);
                         } catch (e) {
                             console.error('IndexedDB 存储失败:', key, e);
                             skippedCount++;
@@ -26556,7 +26615,7 @@ ${commenterInfo}
             }, 800);
         }
 
-        function forceReloadChatMessages(roleId) {
+        async function forceReloadChatMessages(roleId) {
             if (!currentChatRole || currentChatRole.id !== roleId) return;
             
             const chatMessages = document.getElementById('chat-messages');
@@ -26565,7 +26624,7 @@ ${commenterInfo}
             const role = roles.find(r => r.id === roleId);
             const roleAvatar = role ? role.avatar : '';
             const roleName = role ? role.name : '';
-            const userAvatar = localStorage.getItem('userAvatar') || '';
+            const userAvatar = await getImageData('userAvatar') || '';
             
             const totalMessages = roleMessages.length;
             const startIndex = Math.max(0, totalMessages - visibleMessageCount);
@@ -26599,7 +26658,7 @@ ${commenterInfo}
             });
         }
 
-        function openMusicRoom() {
+        async function openMusicRoom() {
             const overlay = document.getElementById('music-room-overlay');
             if (overlay) {
                 overlay.classList.add('active');
@@ -26621,7 +26680,7 @@ ${commenterInfo}
             }
             
             if (!savedRightImg) {
-                const savedUserAvatar = localStorage.getItem('userAvatar');
+                const savedUserAvatar = await getImageData('userAvatar');
                 if (savedUserAvatar && userAvatarImg) {
                     userAvatarImg.src = savedUserAvatar;
                 }
@@ -29149,7 +29208,7 @@ ${recentHistory.map(msg => {
             `;
         }
 
-        function loadChatMessages(roleId) {
+        async function loadChatMessages(roleId) {
             if (!currentChatRole || currentChatRole.id !== roleId) {
                 console.log(`[ChatIsolation] 跳过加载消息: 请求角色 ${roleId} 与当前角色 ${currentChatRole ? currentChatRole.id : 'null'} 不匹配`);
                 return;
@@ -29163,7 +29222,7 @@ ${recentHistory.map(msg => {
             const role = roles.find(r => r.id === roleId);
             const roleAvatar = role ? role.avatar : '';
             const roleName = role ? role.name : '';
-            const userAvatar = localStorage.getItem('userAvatar') || '';
+            const userAvatar = await getImageData('userAvatar') || '';
             
             if (roleMessages.length === 0) {
                 chatMessages.innerHTML = '';
@@ -29226,7 +29285,7 @@ ${recentHistory.map(msg => {
             });
         }
         
-        function loadMoreMessages() {
+        async function loadMoreMessages() {
             if (!currentChatRole) return;
             
             const roleId = currentChatRole.id;
@@ -29239,7 +29298,7 @@ ${recentHistory.map(msg => {
             const role = roles.find(r => r.id === roleId);
             const roleAvatar = role ? role.avatar : '';
             const roleName = role ? role.name : '';
-            const userAvatar = localStorage.getItem('userAvatar') || '';
+            const userAvatar = await getImageData('userAvatar') || '';
             
             const startIndex = Math.max(0, totalMessages - visibleMessageCount);
             const messagesToShow = roleMessages.slice(startIndex);
@@ -29699,7 +29758,7 @@ ${recentHistory.map(msg => {
             }
         }
 
-        function addMessage(roleId, type, content, quoteInfo = null) {
+        async function addMessage(roleId, type, content, quoteInfo = null) {
             if (!messages[roleId]) {
                 messages[roleId] = [];
             }
@@ -29728,7 +29787,7 @@ ${recentHistory.map(msg => {
                 const role = roles.find(r => r.id === roleId);
                 const roleAvatar = role ? role.avatar : '';
                 const roleName = role ? role.name : '';
-                const userAvatar = localStorage.getItem('userAvatar') || '';
+                const userAvatar = await getImageData('userAvatar') || '';
                 
                 const message = document.createElement('div');
                 message.className = `message ${type} ${type === 'sent' ? 'message-sending' : 'message-enter'}`;
@@ -32240,27 +32299,27 @@ ${recentHistory.map(msg => {
             reader.readAsDataURL(file);
         }
 
-        function applyAvatar(dataUrl) {
-            setTimeout(function() {
+        async function applyAvatar(dataUrl) {
+            setTimeout(async function() {
                 try {
                     const imgElement = document.getElementById('profile-avatar-img');
                     imgElement.src = dataUrl;
                     
-                    try {
-                        localStorage.setItem('userAvatar', dataUrl);
-                        console.log('头像已保存到 localStorage');
-                    } catch (storageError) {
-                        console.warn('localStorage 存储失败，可能是大小超限:', storageError);
+                    const saved = await setImageData('userAvatar', dataUrl);
+                    if (saved) {
+                        console.log('头像已保存');
+                    } else {
+                        console.warn('头像保存失败');
                     }
                     
                     showAvatarLoading(false);
                     showAvatarToast('头像更新成功！', 'success');
                 } catch (error) {
-                        console.error('应用头像失败:', error);
-                        showAvatarLoading(false);
-                        showAvatarToast('应用头像失败: ' + (error.message || '未知错误'), 'error');
-                    }
-                }, 300);
+                    console.error('应用头像失败:', error);
+                    showAvatarLoading(false);
+                    showAvatarToast('应用头像失败: ' + (error.message || '未知错误'), 'error');
+                }
+            }, 300);
         }
 
         function validateAvatarFile(file) {
@@ -32308,8 +32367,8 @@ ${recentHistory.map(msg => {
             }, 2500);
         }
 
-        function loadSavedAvatar() {
-            const savedAvatar = localStorage.getItem('userAvatar');
+        async function loadSavedAvatar() {
+            const savedAvatar = await getImageData('userAvatar');
             if (savedAvatar) {
                 const img = document.getElementById('profile-avatar-img');
                 img.src = savedAvatar;
