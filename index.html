@@ -14209,7 +14209,6 @@
                         <li>✏️ 修改了编辑消息a跳b的情况</li>
                         <li>🖼️ 修了一下大图片数据导入失效的问题</li>
                         <li>🔄 朋友圈去除默认消息，增加了刷新中和成功的提示</li>
-                        <li>🔧 修复了导入机制，安卓不太会卡百分之50了</li>
                     </ul>
                 </div>
             </div>
@@ -18682,42 +18681,17 @@ ${role.tags && role.tags.length > 0 ? `- 性格特点：${role.tags.join('、')}
             db: null,
             
             async init() {
-                if (this.db) {
-                    return this.db;
-                }
-                
                 return new Promise((resolve, reject) => {
                     const request = indexedDB.open(this.dbName, 1);
                     
-                    let timeoutId = setTimeout(() => {
-                        console.error('IndexedDB 初始化超时');
-                        reject(new Error('IndexedDB 初始化超时'));
-                    }, 10000);
-                    
                     request.onerror = () => {
-                        clearTimeout(timeoutId);
                         console.error('IndexedDB 打开失败:', request.error);
                         reject(request.error);
                     };
                     
-                    request.onblocked = () => {
-                        console.warn('IndexedDB 被其他标签页阻塞，请关闭其他使用此应用的标签页');
-                    };
-                    
                     request.onsuccess = () => {
-                        clearTimeout(timeoutId);
                         this.db = request.result;
                         console.log('IndexedDB 初始化成功');
-                        
-                        this.db.onclose = () => {
-                            console.log('IndexedDB 连接已关闭');
-                            this.db = null;
-                        };
-                        
-                        this.db.onerror = (event) => {
-                            console.error('IndexedDB 数据库错误:', event.target.error);
-                        };
-                        
                         resolve(this.db);
                     };
                     
@@ -18739,32 +18713,13 @@ ${role.tags && role.tags.length > 0 ? `- 性格特点：${role.tags.join('、')}
                     const store = transaction.objectStore(this.storeName);
                     const request = store.put({ key: key, data: data });
                     
-                    let timeoutId = setTimeout(() => {
-                        console.error('IndexedDB 保存超时:', key);
-                        reject(new Error('IndexedDB 保存超时'));
-                    }, 30000);
-                    
-                    transaction.oncomplete = () => {
-                        clearTimeout(timeoutId);
+                    request.onsuccess = () => {
                         console.log('图片保存到 IndexedDB 成功:', key);
                         resolve(true);
                     };
                     
-                    transaction.onerror = () => {
-                        clearTimeout(timeoutId);
-                        console.error('图片保存到 IndexedDB 失败:', transaction.error);
-                        reject(transaction.error);
-                    };
-                    
-                    transaction.onabort = () => {
-                        clearTimeout(timeoutId);
-                        console.error('IndexedDB 事务被中止:', key);
-                        reject(new Error('IndexedDB 事务被中止'));
-                    };
-                    
                     request.onerror = () => {
-                        clearTimeout(timeoutId);
-                        console.error('图片保存请求失败:', request.error);
+                        console.error('图片保存到 IndexedDB 失败:', request.error);
                         reject(request.error);
                     };
                 });
@@ -18778,21 +18733,6 @@ ${role.tags && role.tags.length > 0 ? `- 性格特点：${role.tags.join('、')}
                     const store = transaction.objectStore(this.storeName);
                     const request = store.get(key);
                     
-                    let timeoutId = setTimeout(() => {
-                        console.error('IndexedDB 加载超时:', key);
-                        reject(new Error('IndexedDB 加载超时'));
-                    }, 10000);
-                    
-                    transaction.oncomplete = () => {
-                        clearTimeout(timeoutId);
-                    };
-                    
-                    transaction.onerror = () => {
-                        clearTimeout(timeoutId);
-                        console.error('从 IndexedDB 加载图片失败:', transaction.error);
-                        reject(transaction.error);
-                    };
-                    
                     request.onsuccess = () => {
                         if (request.result) {
                             resolve(request.result.data);
@@ -18802,8 +18742,7 @@ ${role.tags && role.tags.length > 0 ? `- 性格特点：${role.tags.join('、')}
                     };
                     
                     request.onerror = () => {
-                        clearTimeout(timeoutId);
-                        console.error('从 IndexedDB 加载图片请求失败:', request.error);
+                        console.error('从 IndexedDB 加载图片失败:', request.error);
                         reject(request.error);
                     };
                 });
@@ -18817,26 +18756,13 @@ ${role.tags && role.tags.length > 0 ? `- 性格特点：${role.tags.join('、')}
                     const store = transaction.objectStore(this.storeName);
                     const request = store.delete(key);
                     
-                    let timeoutId = setTimeout(() => {
-                        console.error('IndexedDB 删除超时:', key);
-                        reject(new Error('IndexedDB 删除超时'));
-                    }, 10000);
-                    
-                    transaction.oncomplete = () => {
-                        clearTimeout(timeoutId);
+                    request.onsuccess = () => {
                         console.log('从 IndexedDB 删除图片成功:', key);
                         resolve(true);
                     };
                     
-                    transaction.onerror = () => {
-                        clearTimeout(timeoutId);
-                        console.error('从 IndexedDB 删除图片失败:', transaction.error);
-                        reject(transaction.error);
-                    };
-                    
                     request.onerror = () => {
-                        clearTimeout(timeoutId);
-                        console.error('从 IndexedDB 删除图片请求失败:', request.error);
+                        console.error('从 IndexedDB 删除图片失败:', request.error);
                         reject(request.error);
                     };
                 });
@@ -18850,26 +18776,11 @@ ${role.tags && role.tags.length > 0 ? `- 性格特点：${role.tags.join('、')}
                     const store = transaction.objectStore(this.storeName);
                     const request = store.getAllKeys();
                     
-                    let timeoutId = setTimeout(() => {
-                        console.error('IndexedDB getAllKeys 超时');
-                        reject(new Error('IndexedDB getAllKeys 超时'));
-                    }, 10000);
-                    
-                    transaction.oncomplete = () => {
-                        clearTimeout(timeoutId);
-                    };
-                    
-                    transaction.onerror = () => {
-                        clearTimeout(timeoutId);
-                        reject(transaction.error);
-                    };
-                    
                     request.onsuccess = () => {
                         resolve(request.result);
                     };
                     
                     request.onerror = () => {
-                        clearTimeout(timeoutId);
                         reject(request.error);
                     };
                 });
@@ -18898,26 +18809,13 @@ ${role.tags && role.tags.length > 0 ? `- 性格特点：${role.tags.join('、')}
                     const store = transaction.objectStore(this.storeName);
                     const request = store.clear();
                     
-                    let timeoutId = setTimeout(() => {
-                        console.error('IndexedDB 清除超时');
-                        reject(new Error('IndexedDB 清除超时'));
-                    }, 30000);
-                    
-                    transaction.oncomplete = () => {
-                        clearTimeout(timeoutId);
+                    request.onsuccess = () => {
                         console.log('IndexedDB 所有数据已清除');
                         resolve(true);
                     };
                     
-                    transaction.onerror = () => {
-                        clearTimeout(timeoutId);
-                        console.error('IndexedDB 清除失败:', transaction.error);
-                        reject(transaction.error);
-                    };
-                    
                     request.onerror = () => {
-                        clearTimeout(timeoutId);
-                        console.error('IndexedDB 清除请求失败:', request.error);
+                        console.error('IndexedDB 清除失败:', request.error);
                         reject(request.error);
                     };
                 });
@@ -20695,6 +20593,33 @@ ${conversationHistory.slice(-10).map(msg => `${msg.type === 'sent' ? '用户' : 
             }
         }
 
+        function showErrorModal(title, message) {
+            var existingModal = document.getElementById('error-modal');
+            if (existingModal) {
+                existingModal.remove();
+            }
+            
+            var modal = document.createElement('div');
+            modal.id = 'error-modal';
+            modal.className = 'preset-modal';
+            modal.style.cssText = 'position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; z-index: 100000;';
+            modal.innerHTML = `
+                <div class="preset-modal-content" style="background: #fff; border-radius: 16px; padding: 24px; max-width: 400px; width: 90%; text-align: center; box-shadow: 0 10px 40px rgba(0,0,0,0.3);">
+                    <div style="font-size: 48px; margin-bottom: 16px;">❌</div>
+                    <h3 style="margin-bottom: 12px; color: #ff3b30; font-size: 18px;">${title}</h3>
+                    <div style="color: #666; font-size: 14px; line-height: 1.6; margin-bottom: 20px; white-space: pre-wrap; text-align: left; background: #f5f5f5; padding: 12px; border-radius: 8px; max-height: 300px; overflow-y: auto;">${message}</div>
+                    <button onclick="this.closest('#error-modal').remove()" style="padding: 12px 32px; background: #ff3b30; color: #fff; border: none; border-radius: 8px; font-size: 15px; cursor: pointer; font-weight: 500;">确定</button>
+                </div>
+            `;
+            document.body.appendChild(modal);
+            
+            modal.addEventListener('click', function(e) {
+                if (e.target === modal) {
+                    modal.remove();
+                }
+            });
+        }
+
         function calculateChecksum(data) {
             var hash = 0;
             var str = JSON.stringify(data);
@@ -21164,7 +21089,19 @@ ${conversationHistory.slice(-10).map(msg => `${msg.type === 'sent' ? '用户' : 
                 showStorageProgress('正在导入数据...', 50);
                 console.log('步骤 6/6: 正在导入数据...');
                 
-                await ImageStorage.init();
+                try {
+                    await ImageStorage.init();
+                    console.log('IndexedDB 初始化成功');
+                } catch (initError) {
+                    console.error('IndexedDB 初始化失败:', initError);
+                    hideStorageProgress();
+                    showErrorModal('IndexedDB 初始化失败', '无法初始化图片存储系统，错误信息：\n' + (initError.message || initError));
+                    if (typeof startAutoSave === 'function') {
+                        startAutoSave();
+                    }
+                    event.target.value = '';
+                    return;
+                }
                 
                 if (conflictStrategy === 'overwrite') {
                     console.log('覆盖模式：清除所有旧数据...');
@@ -21178,6 +21115,7 @@ ${conversationHistory.slice(-10).map(msg => `${msg.type === 'sent' ? '用户' : 
                 var skippedCount = 0;
                 var overwrittenCount = 0;
                 var migratedToIndexedDB = 0;
+                var errorDetails = [];
                 
                 var imagePatterns = [
                     'icon_', 'Avatar', 'Wallpaper', 'Background', 'Image',
@@ -21207,37 +21145,65 @@ ${conversationHistory.slice(-10).map(msg => `${msg.type === 'sent' ? '用户' : 
                 var batchSize = 50;
                 
                 for (var i = 0; i < newKeys.length; i++) {
-                    var key = newKeys[i];
-                    var value = importData.data[key];
-                    
-                    var exists = existingKeys.has(key);
-                    var isImage = isImageKey(key, value);
-                    var useIndexedDB = shouldUseIndexedDB(key, value);
-                    
-                    if (useIndexedDB) {
-                        console.log('检测到图片数据，存储到 IndexedDB:', key, '大小:', (value.length / 1024).toFixed(1), 'KB');
-                        try {
-                            await ImageStorage.save(key, value);
-                            migratedToIndexedDB++;
-                            importedCount++;
-                            console.log('图片已存储到 IndexedDB:', key);
-                        } catch (e) {
-                            console.error('IndexedDB 存储失败:', key, e);
+                    try {
+                        var key = newKeys[i];
+                        var value = importData.data[key];
+                        
+                        if (value === undefined || value === null) {
+                            console.warn('跳过空值:', key);
                             skippedCount++;
+                            continue;
                         }
-                        continue;
-                    }
-                    
-                    if (conflictStrategy === 'overwrite') {
-                        try {
-                            localStorage.setItem(key, value);
-                            var verifyValue = localStorage.getItem(key);
-                            if (verifyValue === value) {
+                        
+                        var exists = existingKeys.has(key);
+                        var isImage = isImageKey(key, value);
+                        var useIndexedDB = shouldUseIndexedDB(key, value);
+                        
+                        if (useIndexedDB) {
+                            console.log('检测到图片数据，存储到 IndexedDB:', key, '大小:', (value.length / 1024).toFixed(1), 'KB');
+                            try {
+                                await ImageStorage.save(key, value);
+                                migratedToIndexedDB++;
                                 importedCount++;
-                            } else {
-                                console.error('验证失败:', key, '期望长度:', value.length, '实际长度:', verifyValue ? verifyValue.length : 0);
+                                console.log('图片已存储到 IndexedDB:', key);
+                            } catch (e) {
+                                console.error('IndexedDB 存储失败:', key, e);
+                                errorDetails.push('IndexedDB存储失败: ' + key + ' - ' + (e.message || e));
+                                skippedCount++;
+                            }
+                            continue;
+                        }
+                        
+                        if (conflictStrategy === 'overwrite') {
+                            try {
+                                localStorage.setItem(key, value);
+                                var verifyValue = localStorage.getItem(key);
+                                if (verifyValue === value) {
+                                    importedCount++;
+                                } else {
+                                    console.error('验证失败:', key, '期望长度:', value.length, '实际长度:', verifyValue ? verifyValue.length : 0);
+                                    if (isImage && value.length > 50000) {
+                                        console.log('尝试将图片迁移到 IndexedDB:', key);
+                                        try {
+                                            await ImageStorage.save(key, value);
+                                            migratedToIndexedDB++;
+                                            importedCount++;
+                                            console.log('图片已迁移到 IndexedDB:', key);
+                                        } catch (e2) {
+                                            console.error('IndexedDB 迁移也失败:', key, e2);
+                                            errorDetails.push('存储失败: ' + key);
+                                            skippedCount++;
+                                        }
+                                    } else {
+                                        errorDetails.push('验证失败: ' + key);
+                                        skippedCount++;
+                                    }
+                                }
+                            } catch (e) {
+                                console.error('存储失败:', key, e);
+                                errorDetails.push('存储失败: ' + key + ' - ' + (e.message || e));
                                 if (isImage && value.length > 50000) {
-                                    console.log('尝试将图片迁移到 IndexedDB:', key);
+                                    console.log('localStorage 存储失败，尝试迁移到 IndexedDB:', key);
                                     try {
                                         await ImageStorage.save(key, value);
                                         migratedToIndexedDB++;
@@ -21251,74 +21217,66 @@ ${conversationHistory.slice(-10).map(msg => `${msg.type === 'sent' ? '用户' : 
                                     skippedCount++;
                                 }
                             }
-                        } catch (e) {
-                            console.error('存储失败:', key, e);
-                            if (isImage && value.length > 50000) {
-                                console.log('localStorage 存储失败，尝试迁移到 IndexedDB:', key);
-                                try {
-                                    await ImageStorage.save(key, value);
-                                    migratedToIndexedDB++;
-                                    importedCount++;
-                                    console.log('图片已迁移到 IndexedDB:', key);
-                                } catch (e2) {
-                                    console.error('IndexedDB 迁移也失败:', key, e2);
+                        } else if (exists) {
+                            switch (conflictStrategy) {
+                                case 'skip':
                                     skippedCount++;
-                                }
-                            } else {
-                                skippedCount++;
-                            }
-                        }
-                    } else if (exists) {
-                        switch (conflictStrategy) {
-                            case 'skip':
-                                skippedCount++;
-                                break;
-                            case 'merge':
-                            default:
-                                try {
-                                    localStorage.setItem(key, value);
-                                    overwrittenCount++;
-                                    importedCount++;
-                                } catch (e) {
-                                    console.error('存储失败:', key, e);
-                                    if (isImage && value.length > 50000) {
-                                        try {
-                                            await ImageStorage.save(key, value);
-                                            migratedToIndexedDB++;
-                                            importedCount++;
-                                        } catch (e2) {
+                                    break;
+                                case 'merge':
+                                default:
+                                    try {
+                                        localStorage.setItem(key, value);
+                                        overwrittenCount++;
+                                        importedCount++;
+                                    } catch (e) {
+                                        console.error('存储失败:', key, e);
+                                        errorDetails.push('存储失败: ' + key + ' - ' + (e.message || e));
+                                        if (isImage && value.length > 50000) {
+                                            try {
+                                                await ImageStorage.save(key, value);
+                                                migratedToIndexedDB++;
+                                                importedCount++;
+                                            } catch (e2) {
+                                                errorDetails.push('IndexedDB也失败: ' + key);
+                                                skippedCount++;
+                                            }
+                                        } else {
                                             skippedCount++;
                                         }
-                                    } else {
+                                    }
+                                    break;
+                            }
+                        } else {
+                            try {
+                                localStorage.setItem(key, value);
+                                importedCount++;
+                            } catch (e) {
+                                console.error('存储失败:', key, e);
+                                errorDetails.push('存储失败: ' + key + ' - ' + (e.message || e));
+                                if (isImage && value.length > 50000) {
+                                    try {
+                                        await ImageStorage.save(key, value);
+                                        migratedToIndexedDB++;
+                                        importedCount++;
+                                    } catch (e2) {
+                                        errorDetails.push('IndexedDB也失败: ' + key);
                                         skippedCount++;
                                     }
-                                }
-                                break;
-                        }
-                    } else {
-                        try {
-                            localStorage.setItem(key, value);
-                            importedCount++;
-                        } catch (e) {
-                            console.error('存储失败:', key, e);
-                            if (isImage && value.length > 50000) {
-                                try {
-                                    await ImageStorage.save(key, value);
-                                    migratedToIndexedDB++;
-                                    importedCount++;
-                                } catch (e2) {
+                                } else {
                                     skippedCount++;
                                 }
-                            } else {
-                                skippedCount++;
                             }
                         }
-                    }
-                    
-                    if (i % batchSize === 0 || i === totalItems - 1) {
-                        var progress = 50 + ((i + 1) / totalItems) * 45;
-                        showStorageProgress('正在导入数据项 ' + (i + 1) + '/' + totalItems, progress);
-                        await new Promise(function(resolve) { setTimeout(resolve, 0); });
+                        
+                        if (i % batchSize === 0 || i === totalItems - 1) {
+                            var progress = 50 + ((i + 1) / totalItems) * 45;
+                            showStorageProgress('正在导入数据项 ' + (i + 1) + '/' + totalItems, progress);
+                            await new Promise(function(resolve) { setTimeout(resolve, 0); });
+                        }
+                    } catch (itemError) {
+                        console.error('处理数据项时发生错误:', newKeys[i], itemError);
+                        errorDetails.push('处理失败: ' + newKeys[i] + ' - ' + (itemError.message || itemError));
+                        skippedCount++;
                     }
                 }
 
@@ -21330,21 +21288,29 @@ ${conversationHistory.slice(-10).map(msg => `${msg.type === 'sent' ? '用户' : 
                     console.log('检测到 IndexedDB 数据，正在导入...');
                     
                     try {
-                        await ImageStorage.init();
                         var idbKeys = Object.keys(importData.indexedDBData);
+                        var idbSuccessCount = 0;
+                        var idbFailCount = 0;
                         for (var k = 0; k < idbKeys.length; k++) {
                             var idbKey = idbKeys[k];
                             var idbValue = importData.indexedDBData[idbKey];
                             try {
                                 await ImageStorage.save(idbKey, idbValue);
+                                idbSuccessCount++;
                                 console.log('IndexedDB 导入成功:', idbKey);
                             } catch (e) {
                                 console.error('IndexedDB 导入失败:', idbKey, e);
+                                errorDetails.push('IndexedDB图片导入失败: ' + idbKey + ' - ' + (e.message || e));
+                                idbFailCount++;
                             }
                         }
-                        console.log('IndexedDB 数据导入完成，共', idbKeys.length, '项');
+                        console.log('IndexedDB 数据导入完成，成功:', idbSuccessCount, '失败:', idbFailCount);
+                        if (idbFailCount > 0) {
+                            console.warn('有 ' + idbFailCount + ' 项图片数据导入失败');
+                        }
                     } catch (e) {
                         console.error('IndexedDB 初始化失败:', e);
+                        errorDetails.push('IndexedDB初始化失败: ' + (e.message || e));
                     }
                 }
                 
@@ -21417,7 +21383,20 @@ ${conversationHistory.slice(-10).map(msg => `${msg.type === 'sent' ? '用户' : 
                 
                 closeSettings();
                 
-                showImportSuccessModal(resultMsg);
+                if (errorDetails.length > 0) {
+                    var errorSummary = '部分数据导入时遇到问题：\n\n';
+                    var displayErrors = errorDetails.slice(0, 10);
+                    displayErrors.forEach(function(err) {
+                        errorSummary += '• ' + err + '\n';
+                    });
+                    if (errorDetails.length > 10) {
+                        errorSummary += '\n... 还有 ' + (errorDetails.length - 10) + ' 个错误未显示';
+                    }
+                    errorSummary += '\n\n成功导入: ' + importedCount + ' 项\n跳过: ' + skippedCount + ' 项';
+                    showErrorModal('导入完成但有错误', errorSummary);
+                } else {
+                    showImportSuccessModal(resultMsg);
+                }
                 
             } catch (error) {
                 console.error('=== 导入失败 ===');
@@ -21430,19 +21409,19 @@ ${conversationHistory.slice(-10).map(msg => `${msg.type === 'sent' ? '用户' : 
                     startAutoSave();
                 }
                 
-                var userFriendlyError = '导入失败: ';
+                var userFriendlyError = '';
                 
                 if (error.name === 'SyntaxError') {
-                    userFriendlyError += 'JSON 格式错误，请检查文件内容是否正确';
+                    userFriendlyError = 'JSON 格式错误，请检查文件内容是否正确\n\n错误详情: ' + (error.message || '');
                 } else if (error.message && error.message.includes('文件读取')) {
-                    userFriendlyError += error.message;
+                    userFriendlyError = error.message;
                 } else {
-                    userFriendlyError += error.message || '未知错误';
+                    userFriendlyError = (error.message || '未知错误') + '\n\n错误类型: ' + (error.name || '未知');
                 }
                 
-                userFriendlyError += '\n\n请打开浏览器控制台 (F12) 查看详细的错误信息';
+                userFriendlyError += '\n\n堆栈信息:\n' + (error.stack || '无');
                 
-                showStorageStatus(userFriendlyError, 'error');
+                showErrorModal('导入失败', userFriendlyError);
             }
             
             event.target.value = '';
