@@ -15062,6 +15062,15 @@
                                 <button class="btn-secondary" onclick="debugLocalStorage()" style="width: 100%; color: rgb(51, 51, 51); margin-top: 8px;">
                                     查看localStorage状态
                                 </button>
+                                <div id="debug-localstorage-result" style="margin-top: 12px; display: none;">
+                                    <div style="background: rgba(0,0,0,0.03); border-radius: 12px; padding: 12px; font-size: 13px; color: #333; max-height: 300px; overflow-y: auto;">
+                                        <div id="debug-localstorage-content"></div>
+                                    </div>
+                                    <div style="margin-top: 8px; display: flex; gap: 8px;">
+                                        <button onclick="clearImportError()" style="flex: 1; padding: 6px 12px; font-size: 12px; background: rgba(255,149,0,0.1); border: 1px solid rgba(255,149,0,0.2); border-radius: 6px; color: #ff9500; cursor: pointer;">清除记录</button>
+                                        <button onclick="clearDebugResult()" style="flex: 1; padding: 6px 12px; font-size: 12px; background: rgba(255,59,48,0.1); border: 1px solid rgba(255,59,48,0.2); border-radius: 6px; color: #ff3b30; cursor: pointer;">关闭</button>
+                                    </div>
+                                </div>
                             </div>
                             <div class="form-group" style="margin-top: 16px;">
                                 <label style="color: rgb(51, 51, 51);">数据清理:</label>
@@ -18679,17 +18688,29 @@ ${role.tags && role.tags.length > 0 ? `- 性格特点：${role.tags.join('、')}
             dbName: 'XiaoShuJiImages',
             storeName: 'images',
             db: null,
+            initPromise: null,
             
             async init() {
-                return new Promise((resolve, reject) => {
+                if (this.initPromise) {
+                    return this.initPromise;
+                }
+                
+                this.initPromise = new Promise((resolve, reject) => {
+                    const timeoutId = setTimeout(() => {
+                        reject(new Error('IndexedDB 初始化超时'));
+                    }, 5000);
+                    
                     const request = indexedDB.open(this.dbName, 1);
                     
                     request.onerror = () => {
+                        clearTimeout(timeoutId);
                         console.error('IndexedDB 打开失败:', request.error);
+                        this.initPromise = null;
                         reject(request.error);
                     };
                     
                     request.onsuccess = () => {
+                        clearTimeout(timeoutId);
                         this.db = request.result;
                         console.log('IndexedDB 初始化成功');
                         resolve(this.db);
@@ -18702,26 +18723,66 @@ ${role.tags && role.tags.length > 0 ? `- 性格特点：${role.tags.join('、')}
                             console.log('IndexedDB 存储创建成功');
                         }
                     };
+                    
+                    request.onblocked = () => {
+                        console.warn('IndexedDB 被阻塞，请关闭其他使用该数据库的标签页');
+                    };
+                }).catch(err => {
+                    this.initPromise = null;
+                    throw err;
                 });
+                
+                return this.initPromise;
             },
             
             async save(key, data) {
-                if (!this.db) await this.init();
+                if (!this.db) {
+                    try {
+                        await this.init();
+                    } catch (e) {
+                        console.error('IndexedDB 初始化失败，跳过图片存储:', e);
+                        throw e;
+                    }
+                }
                 
                 return new Promise((resolve, reject) => {
-                    const transaction = this.db.transaction([this.storeName], 'readwrite');
-                    const store = transaction.objectStore(this.storeName);
-                    const request = store.put({ key: key, data: data });
+                    const timeoutId = setTimeout(() => {
+                        reject(new Error('IndexedDB 保存超时: ' + key));
+                    }, 10000);
                     
-                    request.onsuccess = () => {
-                        console.log('图片保存到 IndexedDB 成功:', key);
-                        resolve(true);
-                    };
-                    
-                    request.onerror = () => {
-                        console.error('图片保存到 IndexedDB 失败:', request.error);
-                        reject(request.error);
-                    };
+                    try {
+                        const transaction = this.db.transaction([this.storeName], 'readwrite');
+                        const store = transaction.objectStore(this.storeName);
+                        const request = store.put({ key: key, data: data });
+                        
+                        request.onsuccess = () => {
+                            clearTimeout(timeoutId);
+                            console.log('图片保存到 IndexedDB 成功:', key);
+                            resolve(true);
+                        };
+                        
+                        request.onerror = () => {
+                            clearTimeout(timeoutId);
+                            console.error('图片保存到 IndexedDB 失败:', request.error);
+                            reject(request.error);
+                        };
+                        
+                        transaction.onabort = () => {
+                            clearTimeout(timeoutId);
+                            console.error('IndexedDB 事务被中止:', key);
+                            reject(new Error('事务被中止'));
+                        };
+                        
+                        transaction.onerror = () => {
+                            clearTimeout(timeoutId);
+                            console.error('IndexedDB 事务错误:', key);
+                            reject(new Error('事务错误'));
+                        };
+                    } catch (e) {
+                        clearTimeout(timeoutId);
+                        console.error('IndexedDB 操作异常:', e);
+                        reject(e);
+                    }
                 });
             },
             
@@ -21062,7 +21123,20 @@ ${conversationHistory.slice(-10).map(msg => `${msg.type === 'sent' ? '用户' : 
                 showStorageProgress('正在导入数据...', 50);
                 console.log('步骤 6/6: 正在导入数据...');
                 
-                await ImageStorage.init();
+                var indexedDBAvailable = false;
+                try {
+                    await Promise.race([
+                        ImageStorage.init(),
+                        new Promise(function(_, reject) { 
+                            setTimeout(function() { reject(new Error('IndexedDB 初始化超时')); }, 5000); 
+                        })
+                    ]);
+                    indexedDBAvailable = true;
+                    console.log('IndexedDB 可用');
+                } catch (e) {
+                    console.warn('IndexedDB 不可用，将使用 localStorage:', e.message);
+                    indexedDBAvailable = false;
+                }
                 
                 if (conflictStrategy === 'overwrite') {
                     console.log('覆盖模式：清除所有旧数据...');
@@ -21098,7 +21172,16 @@ ${conversationHistory.slice(-10).map(msg => `${msg.type === 'sent' ? '用户' : 
                     if (!value || typeof value !== 'string') return false;
                     var isImage = isImageKey(key, value);
                     var isLarge = value.length > 50000;
-                    return isImage && isLarge;
+                    return indexedDBAvailable && isImage && isLarge;
+                }
+                
+                async function saveToIndexedDBWithTimeout(key, value) {
+                    return Promise.race([
+                        ImageStorage.save(key, value),
+                        new Promise(function(_, reject) { 
+                            setTimeout(function() { reject(new Error('IndexedDB 保存超时')); }, 8000); 
+                        })
+                    ]);
                 }
                 
                 var totalItems = newKeys.length;
@@ -21112,16 +21195,23 @@ ${conversationHistory.slice(-10).map(msg => `${msg.type === 'sent' ? '用户' : 
                     var isImage = isImageKey(key, value);
                     var useIndexedDB = shouldUseIndexedDB(key, value);
                     
-                    if (useIndexedDB) {
+                    if (useIndexedDB && indexedDBAvailable) {
                         console.log('检测到图片数据，存储到 IndexedDB:', key, '大小:', (value.length / 1024).toFixed(1), 'KB');
                         try {
-                            await ImageStorage.save(key, value);
+                            await saveToIndexedDBWithTimeout(key, value);
                             migratedToIndexedDB++;
                             importedCount++;
                             console.log('图片已存储到 IndexedDB:', key);
                         } catch (e) {
-                            console.error('IndexedDB 存储失败:', key, e);
-                            skippedCount++;
+                            console.error('IndexedDB 存储失败，尝试 localStorage:', key, e.message);
+                            try {
+                                localStorage.setItem(key, value);
+                                importedCount++;
+                                console.log('图片已降级存储到 localStorage:', key);
+                            } catch (e2) {
+                                console.error('localStorage 也失败，跳过:', key, e2);
+                                skippedCount++;
+                            }
                         }
                         continue;
                     }
@@ -21134,15 +21224,15 @@ ${conversationHistory.slice(-10).map(msg => `${msg.type === 'sent' ? '用户' : 
                                 importedCount++;
                             } else {
                                 console.error('验证失败:', key, '期望长度:', value.length, '实际长度:', verifyValue ? verifyValue.length : 0);
-                                if (isImage && value.length > 50000) {
+                                if (isImage && value.length > 50000 && indexedDBAvailable) {
                                     console.log('尝试将图片迁移到 IndexedDB:', key);
                                     try {
-                                        await ImageStorage.save(key, value);
+                                        await saveToIndexedDBWithTimeout(key, value);
                                         migratedToIndexedDB++;
                                         importedCount++;
                                         console.log('图片已迁移到 IndexedDB:', key);
                                     } catch (e2) {
-                                        console.error('IndexedDB 迁移也失败:', key, e2);
+                                        console.error('IndexedDB 迁移也失败:', key, e2.message);
                                         skippedCount++;
                                     }
                                 } else {
@@ -21151,15 +21241,15 @@ ${conversationHistory.slice(-10).map(msg => `${msg.type === 'sent' ? '用户' : 
                             }
                         } catch (e) {
                             console.error('存储失败:', key, e);
-                            if (isImage && value.length > 50000) {
+                            if (isImage && value.length > 50000 && indexedDBAvailable) {
                                 console.log('localStorage 存储失败，尝试迁移到 IndexedDB:', key);
                                 try {
-                                    await ImageStorage.save(key, value);
+                                    await saveToIndexedDBWithTimeout(key, value);
                                     migratedToIndexedDB++;
                                     importedCount++;
                                     console.log('图片已迁移到 IndexedDB:', key);
                                 } catch (e2) {
-                                    console.error('IndexedDB 迁移也失败:', key, e2);
+                                    console.error('IndexedDB 迁移也失败:', key, e2.message);
                                     skippedCount++;
                                 }
                             } else {
@@ -21179,9 +21269,9 @@ ${conversationHistory.slice(-10).map(msg => `${msg.type === 'sent' ? '用户' : 
                                     importedCount++;
                                 } catch (e) {
                                     console.error('存储失败:', key, e);
-                                    if (isImage && value.length > 50000) {
+                                    if (isImage && value.length > 50000 && indexedDBAvailable) {
                                         try {
-                                            await ImageStorage.save(key, value);
+                                            await saveToIndexedDBWithTimeout(key, value);
                                             migratedToIndexedDB++;
                                             importedCount++;
                                         } catch (e2) {
@@ -21199,9 +21289,9 @@ ${conversationHistory.slice(-10).map(msg => `${msg.type === 'sent' ? '用户' : 
                             importedCount++;
                         } catch (e) {
                             console.error('存储失败:', key, e);
-                            if (isImage && value.length > 50000) {
+                            if (isImage && value.length > 50000 && indexedDBAvailable) {
                                 try {
-                                    await ImageStorage.save(key, value);
+                                    await saveToIndexedDBWithTimeout(key, value);
                                     migratedToIndexedDB++;
                                     importedCount++;
                                 } catch (e2) {
@@ -21223,27 +21313,28 @@ ${conversationHistory.slice(-10).map(msg => `${msg.type === 'sent' ? '用户' : 
                 showStorageProgress('完成！', 100);
                 console.log('导入完成！统计:', { imported: importedCount, overwritten: overwrittenCount, skipped: skippedCount, migratedToIndexedDB: migratedToIndexedDB });
                 
-                if (importData.indexedDBData && Object.keys(importData.indexedDBData).length > 0) {
+                if (importData.indexedDBData && Object.keys(importData.indexedDBData).length > 0 && indexedDBAvailable) {
                     showStorageProgress('正在导入图片数据到 IndexedDB...', 95);
                     console.log('检测到 IndexedDB 数据，正在导入...');
                     
                     try {
-                        await ImageStorage.init();
                         var idbKeys = Object.keys(importData.indexedDBData);
                         for (var k = 0; k < idbKeys.length; k++) {
                             var idbKey = idbKeys[k];
                             var idbValue = importData.indexedDBData[idbKey];
                             try {
-                                await ImageStorage.save(idbKey, idbValue);
+                                await saveToIndexedDBWithTimeout(idbKey, idbValue);
                                 console.log('IndexedDB 导入成功:', idbKey);
                             } catch (e) {
-                                console.error('IndexedDB 导入失败:', idbKey, e);
+                                console.error('IndexedDB 导入失败:', idbKey, e.message);
                             }
                         }
                         console.log('IndexedDB 数据导入完成，共', idbKeys.length, '项');
                     } catch (e) {
-                        console.error('IndexedDB 初始化失败:', e);
+                        console.error('IndexedDB 导入过程出错:', e.message);
                     }
+                } else if (importData.indexedDBData && Object.keys(importData.indexedDBData).length > 0) {
+                    console.warn('IndexedDB 不可用，跳过 IndexedDB 数据导入');
                 }
                 
                 console.log('=== 最终验证 ===');
@@ -21339,6 +21430,18 @@ ${conversationHistory.slice(-10).map(msg => `${msg.type === 'sent' ? '用户' : 
                 }
                 
                 userFriendlyError += '\n\n请打开浏览器控制台 (F12) 查看详细的错误信息';
+                
+                try {
+                    var errorInfo = {
+                        timestamp: new Date().toLocaleString(),
+                        message: userFriendlyError,
+                        details: error.stack || error.message || '无详细信息'
+                    };
+                    localStorage.setItem('lastImportError', JSON.stringify(errorInfo));
+                    console.log('已保存导入错误信息到 localStorage');
+                } catch (e) {
+                    console.error('保存错误信息失败:', e);
+                }
                 
                 showStorageStatus(userFriendlyError, 'error');
             }
@@ -21495,24 +21598,110 @@ ${conversationHistory.slice(-10).map(msg => `${msg.type === 'sent' ? '用户' : 
             console.log('总键数:', Object.keys(localStorage).length);
             console.log('所有键:', Object.keys(localStorage));
             
+            var resultContainer = document.getElementById('debug-localstorage-result');
+            var contentContainer = document.getElementById('debug-localstorage-content');
+            
+            if (!resultContainer || !contentContainer) {
+                console.error('找不到调试结果显示容器');
+                return;
+            }
+            
+            var html = '';
+            
+            html += '<div style="margin-bottom: 12px; padding-bottom: 12px; border-bottom: 1px solid rgba(0,0,0,0.1);">';
+            html += '<strong style="color: #007aff;">基本信息</strong><br>';
+            html += '<span style="color: #666;">总键数: </span>' + Object.keys(localStorage).length + '<br>';
+            html += '</div>';
+            
             var keys = ['wechatRoles', 'wechatMessages', 'wechatMoments', 'simsRolesData', 'worldbookEntries', 'apiUrl', 'apiKey', 'selectedModel'];
+            html += '<div style="margin-bottom: 12px; padding-bottom: 12px; border-bottom: 1px solid rgba(0,0,0,0.1);">';
+            html += '<strong style="color: #007aff;">核心数据</strong><br>';
+            
             keys.forEach(function(key) {
                 var value = localStorage.getItem(key);
                 if (value) {
                     console.log(key + ': 存在 (长度: ' + value.length + ')');
+                    html += '<div style="margin-top: 6px;">';
+                    html += '<span style="color: #34c759;">✓</span> ' + key + ': ';
+                    html += '<span style="color: #666;">存在 (长度: ' + value.length + ')</span>';
+                    
                     if (key === 'wechatRoles') {
                         try {
                             var parsed = JSON.parse(value);
-                            console.log('  - 角色数量:', Array.isArray(parsed) ? parsed.length : '非数组');
+                            var count = Array.isArray(parsed) ? parsed.length : '非数组';
+                            console.log('  - 角色数量:', count);
+                            html += '<br><span style="color: #666; margin-left: 20px;">角色数量: ' + count + '</span>';
                         } catch (e) {
                             console.log('  - 解析失败');
+                            html += '<br><span style="color: #ff3b30; margin-left: 20px;">解析失败: ' + e.message + '</span>';
                         }
                     }
+                    
+                    if (key === 'wechatMessages') {
+                        try {
+                            var parsed = JSON.parse(value);
+                            if (typeof parsed === 'object' && parsed !== null) {
+                                var msgKeys = Object.keys(parsed);
+                                html += '<br><span style="color: #666; margin-left: 20px;">会话数: ' + msgKeys.length + '</span>';
+                            }
+                        } catch (e) {
+                            html += '<br><span style="color: #ff3b30; margin-left: 20px;">解析失败: ' + e.message + '</span>';
+                        }
+                    }
+                    
+                    html += '</div>';
                 } else {
                     console.log(key + ': 不存在');
+                    html += '<div style="margin-top: 6px;">';
+                    html += '<span style="color: #ff9500;">○</span> ' + key + ': ';
+                    html += '<span style="color: #999;">不存在</span>';
+                    html += '</div>';
                 }
             });
+            html += '</div>';
+            
+            var lastImportError = localStorage.getItem('lastImportError');
+            html += '<div style="margin-bottom: 12px;">';
+            html += '<strong style="color: #ff3b30;">最近导入错误</strong><br>';
+            if (lastImportError) {
+                try {
+                    var errorData = JSON.parse(lastImportError);
+                    html += '<div style="margin-top: 6px; padding: 8px; background: rgba(255,59,48,0.1); border-radius: 8px;">';
+                    html += '<div style="color: #666; font-size: 12px;">时间: ' + (errorData.timestamp || '未知') + '</div>';
+                    html += '<div style="color: #ff3b30; margin-top: 4px;">' + (errorData.message || '未知错误') + '</div>';
+                    if (errorData.details) {
+                        html += '<div style="color: #666; font-size: 11px; margin-top: 4px; word-break: break-all;">' + errorData.details + '</div>';
+                    }
+                    html += '</div>';
+                } catch (e) {
+                    html += '<span style="color: #666;">解析错误记录失败</span>';
+                }
+            } else {
+                html += '<span style="color: #34c759;">无导入错误记录</span>';
+            }
+            html += '</div>';
+            
+            contentContainer.innerHTML = html;
+            resultContainer.style.display = 'block';
         }
+        
+        window.debugLocalStorage = debugLocalStorage;
+        
+        function clearDebugResult() {
+            var resultContainer = document.getElementById('debug-localstorage-result');
+            if (resultContainer) {
+                resultContainer.style.display = 'none';
+            }
+        }
+        
+        window.clearDebugResult = clearDebugResult;
+        
+        function clearImportError() {
+            localStorage.removeItem('lastImportError');
+            debugLocalStorage();
+        }
+        
+        window.clearImportError = clearImportError;
 
         function confirmClearAllData() {
             const existingModal = document.getElementById('clear-all-data-modal');
