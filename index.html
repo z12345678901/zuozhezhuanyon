@@ -14338,6 +14338,10 @@
                         <div class="icon-container"><img src="" alt="外卖"></div>
                         <div class="app-name" style="color: rgb(0, 0, 0);">外卖</div>
                     </div>
+                    <div class="app-icon" data-app="diary">
+                        <div class="icon-container"><img src="" alt="日记"></div>
+                        <div class="app-name" style="color: rgb(0, 0, 0);">日记</div>
+                    </div>
                 </div>
         
         <div class="dock">
@@ -17166,7 +17170,7 @@
                 };
                 
                 messages[currentChatRole.id].push(newMessage);
-                localStorage.setItem('wechatMessages', JSON.stringify(messages));
+                StorageManager.setSync('wechatMessages', JSON.stringify(messages));
             }
 
             async function fetchCallReply(userMessage) {
@@ -17178,9 +17182,9 @@
                 isCallLoading = true;
                 addTypingIndicator();
 
-                const savedApiUrl = localStorage.getItem('apiUrl') || '';
-                const apiKey = localStorage.getItem('apiKey') || '';
-                const selectedModel = localStorage.getItem('selectedModel') || '';
+                const savedApiUrl = StorageManager.getSync('apiUrl') || '';
+                const apiKey = StorageManager.getSync('apiKey') || '';
+                const selectedModel = StorageManager.getSync('selectedModel') || '';
                 
                 const chatEndpoint = getChatEndpoint(savedApiUrl);
 
@@ -17562,7 +17566,7 @@ ${role.tags && role.tags.length > 0 ? `- 性格特点：${role.tags.join('、')}
                     roleId: currentChatRole.id
                 });
                 
-                localStorage.setItem('wechatMessages', JSON.stringify(messages));
+                StorageManager.setSync('wechatMessages', JSON.stringify(messages));
                 
                 const message = document.createElement('div');
                 message.className = 'message received message-enter';
@@ -18557,17 +18561,7 @@ ${role.tags && role.tags.length > 0 ? `- 性格特点：${role.tags.join('、')}
         
         // 模拟人生相关变量
         let currentSelectedRoleId = null;
-        let simsRolesData = (function() {
-            try {
-                const saved = localStorage.getItem('simsRolesData');
-                if (saved && saved.trim() !== '') {
-                    return JSON.parse(saved);
-                }
-                return {};
-            } catch {
-                return {};
-            }
-        })();
+        let simsRolesData = {};
         
         function getDefaultNeeds() {
             return {
@@ -18590,17 +18584,7 @@ ${role.tags && role.tags.length > 0 ? `- 性格特点：${role.tags.join('、')}
         let simsNeeds = getDefaultNeeds();
         let simsThoughtMessages = [];
         let simsUsedThoughtMessages = [];
-        let selectedSimsWorldbookIds = (function() {
-            try {
-                const saved = localStorage.getItem('selectedSimsWorldbookIds');
-                if (saved && saved.trim() !== '') {
-                    return JSON.parse(saved);
-                }
-                return [];
-            } catch {
-                return [];
-            }
-        })();
+        let selectedSimsWorldbookIds = [];
         
         const thoughtMessages = [
             "今天心情不错，想要做些什么好呢？",
@@ -18667,6 +18651,277 @@ ${role.tags && role.tags.length > 0 ? `- 性格特点：${role.tags.join('、')}
         
         let thoughtBubbleInterval = null;
         let needsUpdateInterval = null;
+        
+        const StorageManager = {
+            dbName: 'XiaoShuJiStorage',
+            storeName: 'data',
+            db: null,
+            initialized: false,
+            memoryCache: new Map(),
+            cacheReady: false,
+            
+            async init() {
+                if (this.initialized && this.db) return this.db;
+                
+                return new Promise((resolve, reject) => {
+                    const request = indexedDB.open(this.dbName, 1);
+                    
+                    request.onerror = () => {
+                        console.error('StorageManager IndexedDB 打开失败:', request.error);
+                        reject(request.error);
+                    };
+                    
+                    request.onsuccess = async () => {
+                        this.db = request.result;
+                        this.initialized = true;
+                        console.log('StorageManager 初始化成功');
+                        
+                        if (!this.cacheReady) {
+                            await this._loadCache();
+                        }
+                        
+                        resolve(this.db);
+                    };
+                    
+                    request.onupgradeneeded = (event) => {
+                        const db = event.target.result;
+                        if (!db.objectStoreNames.contains(this.storeName)) {
+                            db.createObjectStore(this.storeName, { keyPath: 'key' });
+                            console.log('StorageManager 存储创建成功');
+                        }
+                    };
+                });
+            },
+            
+            async _loadCache() {
+                if (!this.db) await this.init();
+                
+                return new Promise((resolve, reject) => {
+                    const transaction = this.db.transaction([this.storeName], 'readonly');
+                    const store = transaction.objectStore(this.storeName);
+                    const request = store.getAll();
+                    
+                    request.onsuccess = () => {
+                        const items = request.result || [];
+                        this.memoryCache.clear();
+                        items.forEach(item => {
+                            this.memoryCache.set(item.key, item.data);
+                        });
+                        this.cacheReady = true;
+                        console.log('StorageManager 缓存加载完成，共', items.length, '项');
+                        resolve();
+                    };
+                    
+                    request.onerror = () => {
+                        console.error('StorageManager 缓存加载失败:', request.error);
+                        resolve();
+                    };
+                });
+            },
+            
+            async getItem(key) {
+                if (!this.cacheReady) {
+                    await this._loadCache();
+                }
+                return this.memoryCache.get(key) || null;
+            },
+            
+            async setItem(key, value) {
+                if (!this.db) await this.init();
+                
+                this.memoryCache.set(key, value);
+                
+                return new Promise((resolve, reject) => {
+                    const transaction = this.db.transaction([this.storeName], 'readwrite');
+                    const store = transaction.objectStore(this.storeName);
+                    const request = store.put({ key: key, data: value });
+                    
+                    request.onsuccess = () => {
+                        resolve(true);
+                    };
+                    
+                    request.onerror = () => {
+                        console.error('StorageManager 存储失败:', key, request.error);
+                        reject(request.error);
+                    };
+                });
+            },
+            
+            async removeItem(key) {
+                if (!this.db) await this.init();
+                
+                this.memoryCache.delete(key);
+                
+                return new Promise((resolve, reject) => {
+                    const transaction = this.db.transaction([this.storeName], 'readwrite');
+                    const store = transaction.objectStore(this.storeName);
+                    const request = store.delete(key);
+                    
+                    request.onsuccess = () => {
+                        resolve(true);
+                    };
+                    
+                    request.onerror = () => {
+                        console.error('StorageManager 删除失败:', key, request.error);
+                        reject(request.error);
+                    };
+                });
+            },
+            
+            async clear() {
+                if (!this.db) await this.init();
+                
+                this.memoryCache.clear();
+                
+                return new Promise((resolve, reject) => {
+                    const transaction = this.db.transaction([this.storeName], 'readwrite');
+                    const store = transaction.objectStore(this.storeName);
+                    const request = store.clear();
+                    
+                    request.onsuccess = () => {
+                        console.log('StorageManager 已清除所有数据');
+                        resolve(true);
+                    };
+                    
+                    request.onerror = () => {
+                        console.error('StorageManager 清除失败:', request.error);
+                        reject(request.error);
+                    };
+                });
+            },
+            
+            async getAllKeys() {
+                if (!this.cacheReady) {
+                    await this._loadCache();
+                }
+                return Array.from(this.memoryCache.keys());
+            },
+            
+            async exportAll() {
+                const keys = await this.getAllKeys();
+                const data = {};
+                for (const key of keys) {
+                    data[key] = await this.getItem(key);
+                }
+                return data;
+            },
+            
+            async importAll(data, progressCallback) {
+                const keys = Object.keys(data);
+                const total = keys.length;
+                
+                for (let i = 0; i < keys.length; i++) {
+                    const key = keys[i];
+                    const value = data[key];
+                    await this.setItem(key, value);
+                    
+                    if (progressCallback && (i % 100 === 0 || i === total - 1)) {
+                        progressCallback(i + 1, total);
+                    }
+                }
+            },
+            
+            async migrateFromLocalStorage(progressCallback) {
+                console.log('开始从 localStorage 迁移数据到 IndexedDB...');
+                
+                const keys = Object.keys(localStorage);
+                const total = keys.length;
+                let migrated = 0;
+                
+                for (let i = 0; i < keys.length; i++) {
+                    const key = keys[i];
+                    const value = localStorage.getItem(key);
+                    
+                    if (value !== null) {
+                        try {
+                            await this.setItem(key, value);
+                            migrated++;
+                        } catch (e) {
+                            console.error('迁移失败:', key, e);
+                        }
+                    }
+                    
+                    if (progressCallback && (i % 50 === 0 || i === total - 1)) {
+                        progressCallback(i + 1, total);
+                    }
+                }
+                
+                console.log('迁移完成，共迁移', migrated, '项数据');
+                return migrated;
+            },
+            
+            getSync(key) {
+                return this.memoryCache.get(key) || null;
+            },
+            
+            setSync(key, value) {
+                this.memoryCache.set(key, value);
+                this.setItem(key, value).catch(e => {
+                    console.error('异步存储失败:', key, e);
+                });
+                return true;
+            }
+        };
+        
+        async function initializeStorage() {
+            try {
+                console.log('=== 初始化存储系统 ===');
+                
+                await StorageManager.init();
+                
+                const localStorageKeys = Object.keys(localStorage);
+                const storageManagerKeys = await StorageManager.getAllKeys();
+                
+                if (localStorageKeys.length > 0 && storageManagerKeys.length === 0) {
+                    console.log('检测到 localStorage 数据，开始迁移到 IndexedDB...');
+                    
+                    const migrationStatus = document.createElement('div');
+                    migrationStatus.id = 'migration-status';
+                    migrationStatus.style.cssText = 'position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: rgba(0,0,0,0.9); color: white; padding: 30px 40px; border-radius: 16px; z-index: 99999; text-align: center; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;';
+                    migrationStatus.innerHTML = '<div style="font-size: 18px; margin-bottom: 15px;">正在迁移数据到新存储系统...</div><div id="migration-progress" style="font-size: 14px; color: #aaa;">准备中...</div>';
+                    document.body.appendChild(migrationStatus);
+                    
+                    let migrated = 0;
+                    const total = localStorageKeys.length;
+                    
+                    for (let i = 0; i < localStorageKeys.length; i++) {
+                        const key = localStorageKeys[i];
+                        const value = localStorage.getItem(key);
+                        
+                        if (value !== null) {
+                            try {
+                                await StorageManager.setItem(key, value);
+                                migrated++;
+                            } catch (e) {
+                                console.error('迁移失败:', key, e);
+                            }
+                        }
+                        
+                        const progressEl = document.getElementById('migration-progress');
+                        if (progressEl) {
+                            progressEl.textContent = `${i + 1} / ${total} 项`;
+                        }
+                    }
+                    
+                    if (migrationStatus) {
+                        migrationStatus.innerHTML = '<div style="font-size: 18px; margin-bottom: 15px;">✅ 迁移完成！</div><div style="font-size: 14px; color: #aaa;">已迁移 ' + migrated + ' 项数据</div>';
+                        setTimeout(() => {
+                            migrationStatus.remove();
+                        }, 2000);
+                    }
+                    
+                    console.log('数据迁移完成，共迁移', migrated, '项');
+                } else {
+                    console.log('存储系统已就绪，IndexedDB 中有', storageManagerKeys.length, '项数据');
+                }
+                
+                await ImageStorage.init();
+                
+                console.log('=== 存储系统初始化完成 ===');
+            } catch (e) {
+                console.error('存储系统初始化失败:', e);
+            }
+        }
         
         const ImageStorage = {
             dbName: 'XiaoShuJiImages',
@@ -18816,7 +19071,7 @@ ${role.tags && role.tags.length > 0 ? `- 性格特点：${role.tags.join('、')}
         };
         
         async function getImageData(key) {
-            let data = localStorage.getItem(key);
+            let data = StorageManager.getSync(key);
             if (data) {
                 return data;
             }
@@ -18828,7 +19083,7 @@ ${role.tags && role.tags.length > 0 ? `- 性格特点：${role.tags.join('、')}
                     return data;
                 }
             } catch (e) {
-                console.warn('从 IndexedDB 读取图片失败:', key, e);
+                console.warn('从 ImageStorage 读取图片失败:', key, e);
             }
             
             return null;
@@ -18839,25 +19094,25 @@ ${role.tags && role.tags.length > 0 ? `- 性格特点：${role.tags.join('、')}
                 try {
                     await ImageStorage.init();
                     await ImageStorage.save(key, data);
-                    localStorage.removeItem(key);
-                    console.log('大图片已存储到 IndexedDB:', key);
+                    StorageManager.removeItem(key);
+                    console.log('大图片已存储到 ImageStorage:', key);
                     return true;
                 } catch (e) {
-                    console.warn('IndexedDB 存储失败，回退到 localStorage:', e);
+                    console.warn('ImageStorage 存储失败，回退到 StorageManager:', e);
                 }
             }
             
             try {
-                localStorage.setItem(key, data);
+                StorageManager.setSync(key, data);
                 return true;
             } catch (e) {
-                console.error('localStorage 存储失败:', e);
+                console.error('StorageManager 存储失败:', e);
                 try {
                     await ImageStorage.init();
                     await ImageStorage.save(key, data);
                     return true;
                 } catch (e2) {
-                    console.error('IndexedDB 存储也失败:', e2);
+                    console.error('ImageStorage 存储也失败:', e2);
                     return false;
                 }
             }
@@ -18868,6 +19123,8 @@ ${role.tags && role.tags.length > 0 ? `- 性格特点：${role.tags.join('、')}
             { id: 'worldbook', name: '世界书', svg: '<img src="" alt="世界书">' },
             { id: 'netease', name: '网易云', svg: '<img src="" alt="网易云">' },
             { id: 'forum', name: '微博', svg: '<img src="" alt="微博">' },
+            { id: 'waimai', name: '外卖', svg: '<img src="" alt="外卖">' },
+            { id: 'diary', name: '日记', svg: '<img src="" alt="日记">' },
             { id: 'home', name: '模拟人生', svg: '<img src="" alt="模拟人生">' },
             { id: 'settings', name: '设置', svg: '<img src="" alt="设置">' },
             { id: 'anniversary', name: '纪念日', svg: '<img src="" alt="纪念日">' }
@@ -19261,10 +19518,9 @@ ${role.tags && role.tags.length > 0 ? `- 性格特点：${role.tags.join('、')}
             
             simsNeeds = getRoleNeeds(roleId);
             
-            // 恢复思想气泡数据
             try {
-                const savedThoughts = localStorage.getItem(`simsThoughts_${roleId}`);
-                const savedUsedThoughts = localStorage.getItem(`simsUsedThoughts_${roleId}`);
+                const savedThoughts = StorageManager.getSync(`simsThoughts_${roleId}`);
+                const savedUsedThoughts = StorageManager.getSync(`simsUsedThoughts_${roleId}`);
                 if (savedThoughts) {
                     simsThoughtMessages = JSON.parse(savedThoughts);
                 } else {
@@ -19330,7 +19586,7 @@ ${role.tags && role.tags.length > 0 ? `- 性格特点：${role.tags.join('、')}
                         const simsMain = simsPanel.querySelector('.sims-main');
                         const backgroundStyle = `url('${event.target.result}') center/cover no-repeat`;
                         simsMain.style.background = backgroundStyle;
-                        localStorage.setItem('simsBackground', backgroundStyle);
+                        StorageManager.setSync('simsBackground', backgroundStyle);
                     };
                     reader.readAsDataURL(file);
                 }
@@ -19437,7 +19693,7 @@ ${role.tags && role.tags.length > 0 ? `- 性格特点：${role.tags.join('、')}
             
             if (needsChanged) {
                 simsRolesData[currentSelectedRoleId] = { ...simsNeeds };
-                localStorage.setItem('simsRolesData', JSON.stringify(simsRolesData));
+                StorageManager.setSync('simsRolesData', JSON.stringify(simsRolesData));
                 updateAllNeeds();
             }
         }
@@ -19560,8 +19816,8 @@ ${conversationHistory.slice(-10).map(msg => `${msg.type === 'sent' ? '用户' : 
                         simsThoughtMessages = result.thoughts;
                         simsUsedThoughtMessages = [...simsUsedThoughtMessages, ...result.thoughts];
                         if (currentSelectedRoleId) {
-                            localStorage.setItem(`simsThoughts_${currentSelectedRoleId}`, JSON.stringify(result.thoughts));
-                            localStorage.setItem(`simsUsedThoughts_${currentSelectedRoleId}`, JSON.stringify(simsUsedThoughtMessages));
+                            StorageManager.setSync(`simsThoughts_${currentSelectedRoleId}`, JSON.stringify(result.thoughts));
+                            StorageManager.setSync(`simsUsedThoughts_${currentSelectedRoleId}`, JSON.stringify(simsUsedThoughtMessages));
                         }
                     }
                     
@@ -19576,7 +19832,7 @@ ${conversationHistory.slice(-10).map(msg => `${msg.type === 'sent' ? '用户' : 
                     
                     if (currentSelectedRoleId) {
                         simsRolesData[currentSelectedRoleId] = { ...simsNeeds };
-                        localStorage.setItem('simsRolesData', JSON.stringify(simsRolesData));
+                        StorageManager.setSync('simsRolesData', JSON.stringify(simsRolesData));
                     }
                     
                     showToast('✅ 刷新成功！');
@@ -20599,20 +20855,22 @@ ${conversationHistory.slice(-10).map(msg => `${msg.type === 'sent' ? '用户' : 
             try {
                 showStorageProgress('正在准备导出...', 0);
                 
+                await StorageManager.init();
                 await ImageStorage.init();
                 
-                var allKeys = Object.keys(localStorage);
+                var allKeys = await StorageManager.getAllKeys();
                 var totalItems = allKeys.length;
                 
                 var exportData = {
-                    version: '3.0',
+                    version: '4.0',
                     exportDate: new Date().toISOString(),
                     appName: 'xiaoshuji',
                     data: {},
                     indexedDBData: {},
                     metadata: {
                         itemCount: totalItems,
-                        exportTimestamp: Date.now()
+                        exportTimestamp: Date.now(),
+                        storageType: 'IndexedDB'
                     }
                 };
 
@@ -20626,11 +20884,11 @@ ${conversationHistory.slice(-10).map(msg => `${msg.type === 'sent' ? '用户' : 
                     'momentsCover', 'momentsAvatar', 'wechatBackgrounds'
                 ];
 
-                showStorageProgress('正在读取 localStorage...', 20);
+                showStorageProgress('正在读取数据...', 20);
                 
                 for (var i = 0; i < allKeys.length; i++) {
                     var key = allKeys[i];
-                    var value = localStorage.getItem(key);
+                    var value = await StorageManager.getItem(key);
                     if (value !== null) {
                         var isImageKey = imagePatterns.some(function(pattern) {
                             return key.indexOf(pattern) !== -1;
@@ -20642,7 +20900,7 @@ ${conversationHistory.slice(-10).map(msg => `${msg.type === 'sent' ? '用户' : 
                             exportData.data[key] = value;
                         }
                         
-                        if (isImageKey || (value.indexOf('data:image') === 0)) {
+                        if (isImageKey || (value.indexOf && value.indexOf('data:image') === 0)) {
                             imageKeys.push(key);
                         }
                         
@@ -20661,9 +20919,13 @@ ${conversationHistory.slice(-10).map(msg => `${msg.type === 'sent' ? '用户' : 
                         } catch (e) {
                         }
                     }
+                    
+                    if (i % 100 === 0 || i === totalItems - 1) {
+                        showStorageProgress('正在读取数据... ' + (i + 1) + '/' + totalItems, 20 + (i / totalItems) * 30);
+                    }
                 }
 
-                showStorageProgress('正在读取 IndexedDB...', 50);
+                showStorageProgress('正在读取图片数据...', 50);
                 
                 try {
                     var indexedDBKeys = await ImageStorage.getAllKeys();
@@ -20678,13 +20940,15 @@ ${conversationHistory.slice(-10).map(msg => `${msg.type === 'sent' ? '用户' : 
                         }
                     }
                 } catch (e) {
-                    console.error('读取 IndexedDB 失败:', e);
+                    console.error('读取图片数据失败:', e);
                 }
 
                 exportData.metadata.imageKeys = imageKeys;
                 exportData.metadata.imageCount = imageKeys.length;
 
                 exportData.checksum = calculateChecksum(exportData.data);
+                
+                showStorageProgress('正在生成文件...', 80);
                 
                 var jsonString = JSON.stringify(exportData, null, 2);
                 var blob = new Blob([jsonString], { type: 'application/json' });
@@ -20693,14 +20957,6 @@ ${conversationHistory.slice(-10).map(msg => `${msg.type === 'sent' ? '用户' : 
                 console.log('导出数据大小:', sizeInMB, 'MB');
                 
                 showStorageProgress('导出完成!', 100);
-                
-                if (blob.size > 4.5 * 1024 * 1024) {
-                    var sizeWarning = '警告：导出数据大小为 ' + sizeInMB + ' MB，接近或超过 iOS Safari 的 5MB localStorage 限制！\n\n导入时可能会出现数据截断问题。建议：\n1. 删除一些不需要的图片数据\n2. 压缩图片后再上传\n\n是否继续导出？';
-                    if (!confirm(sizeWarning)) {
-                        showStorageStatus('导出已取消', 'warning');
-                        return;
-                    }
-                }
 
                 var timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19);
                 var fileName = 'xiaoshuji_backup_' + timestamp + '.json';
@@ -20717,6 +20973,7 @@ ${conversationHistory.slice(-10).map(msg => `${msg.type === 'sent' ? '用户' : 
                 if (imageKeys.length > 0) {
                     statusMsg += '（含 ' + imageKeys.length + ' 项图片资源）';
                 }
+                statusMsg += '，文件大小: ' + sizeInMB + ' MB';
                 showStorageStatus(statusMsg, 'success');
             } catch (error) {
                 console.error('导出失败:', error);
@@ -20902,15 +21159,6 @@ ${conversationHistory.slice(-10).map(msg => `${msg.type === 'sent' ? '用户' : 
             var fileSizeMB = (file.size / (1024 * 1024)).toFixed(2);
             console.log('文件大小:', fileSizeMB, 'MB');
             
-            if (file.size > 4.5 * 1024 * 1024) {
-                var sizeWarning = '警告：导入文件大小为 ' + fileSizeMB + ' MB，接近或超过 iOS Safari 的 5MB localStorage 限制！\n\n这可能导致数据截断或导入失败。建议：\n1. 使用较小的存档文件\n2. 在电脑浏览器上导入后同步\n\n是否继续尝试导入？';
-                if (!confirm(sizeWarning)) {
-                    showStorageStatus('导入已取消', 'warning');
-                    event.target.value = '';
-                    return;
-                }
-            }
-            
             if (typeof stopAutoSave === 'function') {
                 stopAutoSave();
                 console.log('[Import] 已停止自动保存');
@@ -20931,7 +21179,7 @@ ${conversationHistory.slice(-10).map(msg => `${msg.type === 'sent' ? '用户' : 
             showStorageProgress('正在读取文件...', 0);
             
             try {
-                console.log('步骤 1/6: 正在读取文件...');
+                console.log('步骤 1/7: 正在读取文件...');
                 var fileContent = await new Promise(function(resolve, reject) {
                     var reader = new FileReader();
                     reader.onload = function(e) { 
@@ -20945,8 +21193,8 @@ ${conversationHistory.slice(-10).map(msg => `${msg.type === 'sent' ? '用户' : 
                     reader.readAsText(file);
                 });
 
-                showStorageProgress('正在解析数据...', 20);
-                console.log('步骤 2/6: 正在解析 JSON...');
+                showStorageProgress('正在解析数据...', 15);
+                console.log('步骤 2/7: 正在解析 JSON...');
                 var importData;
                 try {
                     importData = JSON.parse(fileContent);
@@ -20955,8 +21203,8 @@ ${conversationHistory.slice(-10).map(msg => `${msg.type === 'sent' ? '用户' : 
                     throw new Error('JSON 解析失败：' + parseError.message + '\n\n请确保文件内容是有效的 JSON 格式');
                 }
 
-                showStorageProgress('正在验证数据...', 40);
-                console.log('步骤 3/6: 正在验证数据...');
+                showStorageProgress('正在验证数据...', 30);
+                console.log('步骤 3/7: 正在验证数据...');
                 var validation = validateData(importData);
                 
                 if (validation.checks) {
@@ -20981,10 +21229,10 @@ ${conversationHistory.slice(-10).map(msg => `${msg.type === 'sent' ? '用户' : 
                     return;
                 }
 
-                console.log('步骤 4/6: 分析数据...');
-                var conflictStrategyElement = document.getElementById('import-conflict-strategy');
-                var conflictStrategy = conflictStrategyElement ? conflictStrategyElement.value : 'merge';
-                var existingKeys = new Set(Object.keys(localStorage));
+                showStorageProgress('正在初始化存储...', 40);
+                console.log('步骤 4/7: 正在初始化 StorageManager...');
+                await StorageManager.init();
+                var existingKeys = new Set(await StorageManager.getAllKeys());
                 var newKeys = Object.keys(importData.data);
                 
                 var conflictCount = 0;
@@ -20995,8 +21243,7 @@ ${conversationHistory.slice(-10).map(msg => `${msg.type === 'sent' ? '用户' : 
                 console.log('数据统计:', {
                     现有数据项: existingKeys.size,
                     导入数据项: newKeys.length,
-                    冲突项数: conflictCount,
-                    冲突策略: conflictStrategy
+                    冲突项数: conflictCount
                 });
                 
                 console.log('导入数据键名列表:', newKeys.slice(0, 20).join(', '), newKeys.length > 20 ? '...' : '');
@@ -21006,6 +21253,9 @@ ${conversationHistory.slice(-10).map(msg => `${msg.type === 'sent' ? '用户' : 
                     : '未知';
                 var version = importData.version || '1.0';
                 var itemCount = newKeys.length;
+
+                var conflictStrategyElement = document.getElementById('import-conflict-strategy');
+                var conflictStrategy = conflictStrategyElement ? conflictStrategyElement.value : 'merge';
 
                 var strategyText = '';
                 switch (conflictStrategy) {
@@ -21028,7 +21278,7 @@ ${conversationHistory.slice(-10).map(msg => `${msg.type === 'sent' ? '用户' : 
                     }
                 });
 
-                console.log('步骤 5/6: 等待用户确认...');
+                console.log('步骤 5/7: 等待用户确认...');
                 
                 var userConfirmed = await showImportConfirmModal({
                     exportDate: exportDate,
@@ -21051,111 +21301,32 @@ ${conversationHistory.slice(-10).map(msg => `${msg.type === 'sent' ? '用户' : 
                 }
 
                 showStorageProgress('正在导入数据...', 50);
-                console.log('步骤 6/6: 正在导入数据...');
-                
-                await ImageStorage.init();
+                console.log('步骤 6/7: 正在导入数据到 IndexedDB...');
                 
                 if (conflictStrategy === 'overwrite') {
                     console.log('覆盖模式：清除所有旧数据...');
-                    console.log('清除前localStorage键数:', Object.keys(localStorage).length);
-                    localStorage.clear();
-                    console.log('清除后localStorage键数:', Object.keys(localStorage).length);
+                    await StorageManager.clear();
                     existingKeys = new Set();
                 }
                 
                 var importedCount = 0;
                 var skippedCount = 0;
                 var overwrittenCount = 0;
-                var migratedToIndexedDB = 0;
-                
-                var imagePatterns = [
-                    'icon_', 'Avatar', 'Wallpaper', 'Background', 'Image',
-                    'circleWidgetImage', 'customWallpaper', 'chatWallpaper_',
-                    'characterDetailImage_', 'detailImages_', 'userAvatar',
-                    'musicRoomBackground', 'musicRoomImage', 'neteaseVinyl',
-                    'cover_', 'photo_', 'picture_', 'img_', 'image_',
-                    'momentsCover', 'momentsAvatar', 'wechatBackgrounds'
-                ];
-                
-                function isImageKey(key, value) {
-                    var hasPattern = imagePatterns.some(function(pattern) {
-                        return key.toLowerCase().indexOf(pattern.toLowerCase()) !== -1;
-                    });
-                    var isBase64Image = value && typeof value === 'string' && value.indexOf('data:image') === 0;
-                    return hasPattern || isBase64Image;
-                }
-                
-                function shouldUseIndexedDB(key, value) {
-                    if (!value || typeof value !== 'string') return false;
-                    var isImage = isImageKey(key, value);
-                    var isLarge = value.length > 50000;
-                    return isImage && isLarge;
-                }
-                
                 var totalItems = newKeys.length;
-                var batchSize = 50;
                 
                 for (var i = 0; i < newKeys.length; i++) {
                     var key = newKeys[i];
                     var value = importData.data[key];
                     
                     var exists = existingKeys.has(key);
-                    var isImage = isImageKey(key, value);
-                    var useIndexedDB = shouldUseIndexedDB(key, value);
-                    
-                    if (useIndexedDB) {
-                        console.log('检测到图片数据，存储到 IndexedDB:', key, '大小:', (value.length / 1024).toFixed(1), 'KB');
-                        try {
-                            await ImageStorage.save(key, value);
-                            migratedToIndexedDB++;
-                            importedCount++;
-                            console.log('图片已存储到 IndexedDB:', key);
-                        } catch (e) {
-                            console.error('IndexedDB 存储失败:', key, e);
-                            skippedCount++;
-                        }
-                        continue;
-                    }
                     
                     if (conflictStrategy === 'overwrite') {
                         try {
-                            localStorage.setItem(key, value);
-                            var verifyValue = localStorage.getItem(key);
-                            if (verifyValue === value) {
-                                importedCount++;
-                            } else {
-                                console.error('验证失败:', key, '期望长度:', value.length, '实际长度:', verifyValue ? verifyValue.length : 0);
-                                if (isImage && value.length > 50000) {
-                                    console.log('尝试将图片迁移到 IndexedDB:', key);
-                                    try {
-                                        await ImageStorage.save(key, value);
-                                        migratedToIndexedDB++;
-                                        importedCount++;
-                                        console.log('图片已迁移到 IndexedDB:', key);
-                                    } catch (e2) {
-                                        console.error('IndexedDB 迁移也失败:', key, e2);
-                                        skippedCount++;
-                                    }
-                                } else {
-                                    skippedCount++;
-                                }
-                            }
+                            await StorageManager.setItem(key, value);
+                            importedCount++;
                         } catch (e) {
                             console.error('存储失败:', key, e);
-                            if (isImage && value.length > 50000) {
-                                console.log('localStorage 存储失败，尝试迁移到 IndexedDB:', key);
-                                try {
-                                    await ImageStorage.save(key, value);
-                                    migratedToIndexedDB++;
-                                    importedCount++;
-                                    console.log('图片已迁移到 IndexedDB:', key);
-                                } catch (e2) {
-                                    console.error('IndexedDB 迁移也失败:', key, e2);
-                                    skippedCount++;
-                                }
-                            } else {
-                                skippedCount++;
-                            }
+                            skippedCount++;
                         }
                     } else if (exists) {
                         switch (conflictStrategy) {
@@ -21165,58 +21336,38 @@ ${conversationHistory.slice(-10).map(msg => `${msg.type === 'sent' ? '用户' : 
                             case 'merge':
                             default:
                                 try {
-                                    localStorage.setItem(key, value);
+                                    await StorageManager.setItem(key, value);
                                     overwrittenCount++;
                                     importedCount++;
                                 } catch (e) {
                                     console.error('存储失败:', key, e);
-                                    if (isImage && value.length > 50000) {
-                                        try {
-                                            await ImageStorage.save(key, value);
-                                            migratedToIndexedDB++;
-                                            importedCount++;
-                                        } catch (e2) {
-                                            skippedCount++;
-                                        }
-                                    } else {
-                                        skippedCount++;
-                                    }
+                                    skippedCount++;
                                 }
                                 break;
                         }
                     } else {
                         try {
-                            localStorage.setItem(key, value);
+                            await StorageManager.setItem(key, value);
                             importedCount++;
                         } catch (e) {
                             console.error('存储失败:', key, e);
-                            if (isImage && value.length > 50000) {
-                                try {
-                                    await ImageStorage.save(key, value);
-                                    migratedToIndexedDB++;
-                                    importedCount++;
-                                } catch (e2) {
-                                    skippedCount++;
-                                }
-                            } else {
-                                skippedCount++;
-                            }
+                            skippedCount++;
                         }
                     }
                     
-                    if (i % batchSize === 0 || i === totalItems - 1) {
-                        var progress = 50 + ((i + 1) / totalItems) * 45;
+                    if (i % 100 === 0 || i === totalItems - 1) {
+                        var progress = 50 + ((i + 1) / totalItems) * 40;
                         showStorageProgress('正在导入数据项 ' + (i + 1) + '/' + totalItems, progress);
                         await new Promise(function(resolve) { setTimeout(resolve, 0); });
                     }
                 }
 
                 showStorageProgress('完成！', 100);
-                console.log('导入完成！统计:', { imported: importedCount, overwritten: overwrittenCount, skipped: skippedCount, migratedToIndexedDB: migratedToIndexedDB });
+                console.log('导入完成！统计:', { imported: importedCount, overwritten: overwrittenCount, skipped: skippedCount });
                 
                 if (importData.indexedDBData && Object.keys(importData.indexedDBData).length > 0) {
-                    showStorageProgress('正在导入图片数据到 IndexedDB...', 95);
-                    console.log('检测到 IndexedDB 数据，正在导入...');
+                    showStorageProgress('正在导入图片数据...', 92);
+                    console.log('检测到 IndexedDB 图片数据，正在导入...');
                     
                     try {
                         await ImageStorage.init();
@@ -21226,41 +21377,27 @@ ${conversationHistory.slice(-10).map(msg => `${msg.type === 'sent' ? '用户' : 
                             var idbValue = importData.indexedDBData[idbKey];
                             try {
                                 await ImageStorage.save(idbKey, idbValue);
-                                console.log('IndexedDB 导入成功:', idbKey);
+                                console.log('图片导入成功:', idbKey);
                             } catch (e) {
-                                console.error('IndexedDB 导入失败:', idbKey, e);
+                                console.error('图片导入失败:', idbKey, e);
                             }
                         }
-                        console.log('IndexedDB 数据导入完成，共', idbKeys.length, '项');
+                        console.log('图片数据导入完成，共', idbKeys.length, '项');
                     } catch (e) {
-                        console.error('IndexedDB 初始化失败:', e);
+                        console.error('ImageStorage 初始化失败:', e);
                     }
                 }
                 
-                console.log('=== 最终验证 ===');
-                console.log('localStorage总键数:', Object.keys(localStorage).length);
-                var wechatRolesCheck = localStorage.getItem('wechatRoles');
-                var simsRolesDataCheck = localStorage.getItem('simsRolesData');
-                var wechatMessagesCheck = localStorage.getItem('wechatMessages');
-                var worldbookEntriesCheck = localStorage.getItem('worldbookEntries');
+                console.log('步骤 7/7: 最终验证...');
+                console.log('StorageManager总键数:', (await StorageManager.getAllKeys()).length);
+                var wechatRolesCheck = await StorageManager.getItem('wechatRoles');
+                var simsRolesDataCheck = await StorageManager.getItem('simsRolesData');
+                var wechatMessagesCheck = await StorageManager.getItem('wechatMessages');
+                var worldbookEntriesCheck = await StorageManager.getItem('worldbookEntries');
                 console.log('wechatRoles:', wechatRolesCheck !== null ? '存在(长度:' + wechatRolesCheck.length + ')' : '不存在');
                 console.log('simsRolesData:', simsRolesDataCheck !== null ? '存在(长度:' + simsRolesDataCheck.length + ')' : '不存在');
                 console.log('wechatMessages:', wechatMessagesCheck !== null ? '存在(长度:' + wechatMessagesCheck.length + ')' : '不存在');
                 console.log('worldbookEntries:', worldbookEntriesCheck !== null ? '存在(长度:' + worldbookEntriesCheck.length + ')' : '不存在');
-                
-                console.log('=== 壁纸和图标验证 ===');
-                var customWallpaperCheck = localStorage.getItem('customWallpaper');
-                var oldWallpaperCheck = localStorage.getItem('wallpaper');
-                var circleWidgetImageCheck = localStorage.getItem('circleWidgetImage');
-                console.log('customWallpaper:', customWallpaperCheck !== null ? '存在(长度:' + customWallpaperCheck.length + ')' : '不存在');
-                console.log('wallpaper(旧):', oldWallpaperCheck !== null ? '存在(长度:' + oldWallpaperCheck.length + ')' : '不存在');
-                console.log('circleWidgetImage:', circleWidgetImageCheck !== null ? '存在(长度:' + circleWidgetImageCheck.length + ')' : '不存在');
-                
-                var iconApps = ['wechat', 'worldbook', 'netease', 'forum', 'home', 'anniversary', 'settings'];
-                iconApps.forEach(function(appId) {
-                    var iconCheck = localStorage.getItem('icon_' + appId);
-                    console.log('icon_' + appId + ':', iconCheck !== null ? '存在(长度:' + iconCheck.length + ')' : '不存在');
-                });
                 
                 if (wechatRolesCheck) {
                     try {
@@ -21286,8 +21423,8 @@ ${conversationHistory.slice(-10).map(msg => `${msg.type === 'sent' ? '用户' : 
                 if (skippedCount > 0) {
                     resultMsg += '，跳过 ' + skippedCount + ' 项';
                 }
-                if (migratedToIndexedDB > 0) {
-                    resultMsg += '，' + migratedToIndexedDB + ' 项大图片已迁移到 IndexedDB';
+                if (importData.indexedDBData && Object.keys(importData.indexedDBData).length > 0) {
+                    resultMsg += '，' + Object.keys(importData.indexedDBData).length + ' 项图片已导入';
                 }
                 
                 if (importData.metadata && importData.metadata.imageCount) {
@@ -21355,7 +21492,7 @@ ${conversationHistory.slice(-10).map(msg => `${msg.type === 'sent' ? '用户' : 
             isDataInitialized = false;
             
             try {
-                const savedRoles = localStorage.getItem('wechatRoles');
+                const savedRoles = StorageManager.getSync('wechatRoles');
                 if (savedRoles && savedRoles.trim() !== '') {
                     roles = JSON.parse(savedRoles);
                 } else {
@@ -21368,7 +21505,7 @@ ${conversationHistory.slice(-10).map(msg => `${msg.type === 'sent' ? '用户' : 
             }
             
             try {
-                const savedMessages = localStorage.getItem('wechatMessages');
+                const savedMessages = StorageManager.getSync('wechatMessages');
                 if (savedMessages && savedMessages.trim() !== '') {
                     messages = JSON.parse(savedMessages);
                 } else {
@@ -21381,7 +21518,7 @@ ${conversationHistory.slice(-10).map(msg => `${msg.type === 'sent' ? '用户' : 
             }
             
             try {
-                const savedMoments = localStorage.getItem('wechatMoments');
+                const savedMoments = StorageManager.getSync('wechatMoments');
                 if (savedMoments && savedMoments.trim() !== '') {
                     moments = JSON.parse(savedMoments);
                 } else {
@@ -21394,7 +21531,7 @@ ${conversationHistory.slice(-10).map(msg => `${msg.type === 'sent' ? '用户' : 
             }
             
             try {
-                const saved = localStorage.getItem('simsRolesData');
+                const saved = StorageManager.getSync('simsRolesData');
                 if (saved && saved.trim() !== '') {
                     simsRolesData = JSON.parse(saved);
                 } else {
@@ -21407,7 +21544,7 @@ ${conversationHistory.slice(-10).map(msg => `${msg.type === 'sent' ? '用户' : 
             }
             
             try {
-                const savedIds = localStorage.getItem('selectedSimsWorldbookIds');
+                const savedIds = StorageManager.getSync('selectedSimsWorldbookIds');
                 if (savedIds && savedIds.trim() !== '') {
                     selectedSimsWorldbookIds = JSON.parse(savedIds);
                 } else {
@@ -21419,7 +21556,7 @@ ${conversationHistory.slice(-10).map(msg => `${msg.type === 'sent' ? '用户' : 
             }
             
             try {
-                const savedWorldbookEntries = localStorage.getItem('worldbookEntries');
+                const savedWorldbookEntries = StorageManager.getSync('worldbookEntries');
                 if (savedWorldbookEntries && savedWorldbookEntries.trim() !== '') {
                     worldbookEntries = JSON.parse(savedWorldbookEntries);
                 } else {
@@ -21432,7 +21569,7 @@ ${conversationHistory.slice(-10).map(msg => `${msg.type === 'sent' ? '用户' : 
             }
             
             try {
-                const savedWorldbookFolders = localStorage.getItem('worldbookFolders');
+                const savedWorldbookFolders = StorageManager.getSync('worldbookFolders');
                 if (savedWorldbookFolders && savedWorldbookFolders.trim() !== '') {
                     worldbookFolders = JSON.parse(savedWorldbookFolders);
                 } else {
@@ -23010,7 +23147,7 @@ ${conversationHistory.slice(-10).map(msg => `${msg.type === 'sent' ? '用户' : 
         });
 
         window.addEventListener('load', async function() {
-            await ImageStorage.init();
+            await initializeStorage();
             await applyWallpaper();
             await loadAllIcons();
             await loadWidgets();
@@ -23256,7 +23393,7 @@ ${conversationHistory.slice(-10).map(msg => `${msg.type === 'sent' ? '用户' : 
             });
             
             if (cleanedMessages > 0) {
-                localStorage.setItem('wechatMessages', JSON.stringify(messages));
+                StorageManager.setSync('wechatMessages', JSON.stringify(messages));
                 console.log(`[DataClean] 已清理 ${cleanedMessages} 个孤立角色的聊天记录`);
             }
             
@@ -26039,7 +26176,7 @@ ${commenterInfo}
             
             setTimeout(() => {
                 delete messages[role.id];
-                localStorage.setItem('wechatMessages', JSON.stringify(messages));
+                StorageManager.setSync('wechatMessages', JSON.stringify(messages));
                 loadMessages();
                 showToast('已隐藏聊天记录');
             }, 400);
@@ -28841,24 +28978,24 @@ ${recentHistory.map(msg => {
                 }
                 
                 roles = roles.filter(r => r.id !== roleId);
-                localStorage.setItem('wechatRoles', JSON.stringify(roles));
+                StorageManager.setSync('wechatRoles', JSON.stringify(roles));
                 
                 if (messages[roleId]) {
                     delete messages[roleId];
-                    localStorage.setItem('wechatMessages', JSON.stringify(messages));
+                    StorageManager.setSync('wechatMessages', JSON.stringify(messages));
                 }
                 
                 const wallpaperKey = 'chatWallpaper_' + roleId;
-                localStorage.removeItem(wallpaperKey);
+                StorageManager.removeItem(wallpaperKey);
                 
                 const backgroundKey = 'characterBackground_' + roleId;
-                localStorage.removeItem(backgroundKey);
+                StorageManager.removeItem(backgroundKey);
                 
                 const detailImagesKey = 'detailImages_' + roleId;
-                localStorage.removeItem(detailImagesKey);
+                StorageManager.removeItem(detailImagesKey);
                 
                 const customCssKey = 'roleCustomCss_' + roleId;
-                localStorage.removeItem(customCssKey);
+                StorageManager.removeItem(customCssKey);
                 
                 RoleStatusManager.clearStatus(roleId);
                 
@@ -28882,10 +29019,10 @@ ${recentHistory.map(msg => {
                 console.error('删除好友失败，正在回滚:', error);
                 
                 roles = originalRoles;
-                localStorage.setItem('wechatRoles', JSON.stringify(roles));
+                StorageManager.setSync('wechatRoles', JSON.stringify(roles));
                 
                 messages = originalMessages;
-                localStorage.setItem('wechatMessages', JSON.stringify(messages));
+                StorageManager.setSync('wechatMessages', JSON.stringify(messages));
                 
                 if (error.momentsResult && error.momentsResult.originalMoments) {
                     restoreRoleMoments(error.momentsResult.originalMoments);
@@ -29010,7 +29147,7 @@ ${recentHistory.map(msg => {
             roles[roleIndex].group = group;
             currentDetailRole.group = group;
             
-            localStorage.setItem('wechatRoles', JSON.stringify(roles));
+            StorageManager.setSync('wechatRoles', JSON.stringify(roles));
             
             document.getElementById('detail-group').textContent = groupNamesMap[group] || '默认分组';
             
@@ -29071,7 +29208,7 @@ ${recentHistory.map(msg => {
             roles[roleIndex].remark = value;
             currentDetailRole.remark = value;
             
-            localStorage.setItem('wechatRoles', JSON.stringify(roles));
+            StorageManager.setSync('wechatRoles', JSON.stringify(roles));
             
             document.getElementById('detail-remark').textContent = value || '无';
             
@@ -30942,7 +31079,7 @@ ${recentHistory.map(msg => {
             };
 
             roles.push(newRole);
-            localStorage.setItem('wechatRoles', JSON.stringify(roles));
+            StorageManager.setSync('wechatRoles', JSON.stringify(roles));
 
             loadMessages();
             loadContacts();
@@ -31190,7 +31327,7 @@ ${recentHistory.map(msg => {
             };
             
             roles.push(newRole);
-            localStorage.setItem('wechatRoles', JSON.stringify(roles));
+            StorageManager.setSync('wechatRoles', JSON.stringify(roles));
             
             // 重新加载消息列表和通讯录
             loadMessages();
@@ -32639,16 +32776,16 @@ ${recentHistory.map(msg => {
                     localStorage.setItem('momentsUsername', momentsNameInput.value.trim());
                 }
                 if (typeof simsRolesData !== 'undefined' && simsRolesData) {
-                    localStorage.setItem('simsRolesData', JSON.stringify(simsRolesData));
+                    StorageManager.setSync('simsRolesData', JSON.stringify(simsRolesData));
                 }
                 if (typeof selectedSimsWorldbookIds !== 'undefined' && selectedSimsWorldbookIds) {
-                    localStorage.setItem('selectedSimsWorldbookIds', JSON.stringify(selectedSimsWorldbookIds));
+                    StorageManager.setSync('selectedSimsWorldbookIds', JSON.stringify(selectedSimsWorldbookIds));
                 }
                 if (typeof simsThoughtMessages !== 'undefined' && currentSelectedRoleId && simsThoughtMessages.length > 0) {
-                    localStorage.setItem(`simsThoughts_${currentSelectedRoleId}`, JSON.stringify(simsThoughtMessages));
+                    StorageManager.setSync(`simsThoughts_${currentSelectedRoleId}`, JSON.stringify(simsThoughtMessages));
                 }
                 if (typeof simsUsedThoughtMessages !== 'undefined' && currentSelectedRoleId && simsUsedThoughtMessages.length > 0) {
-                    localStorage.setItem(`simsUsedThoughts_${currentSelectedRoleId}`, JSON.stringify(simsUsedThoughtMessages));
+                    StorageManager.setSync(`simsUsedThoughts_${currentSelectedRoleId}`, JSON.stringify(simsUsedThoughtMessages));
                 }
                 console.log('[AutoSave] 数据已自动保存');
             } catch (e) {
