@@ -32152,39 +32152,115 @@ ${recentHistory.map(msg => {
             const file = event.target.files[0];
             if (!file) return;
 
+            console.log('头像上传开始 - 文件信息:', {
+                name: file.name,
+                size: (file.size / 1024 / 1024) + ' MB',
+                type: file.type,
+                lastModified: new Date(file.lastModified)
+            });
+
             const validationResult = validateAvatarFile(file);
             if (!validationResult.valid) {
+                console.log('验证失败:', validationResult.message);
                 showAvatarToast(validationResult.message, 'error');
                 return;
             }
 
             showAvatarLoading(true);
 
+            try {
+                compressAndUploadAvatar(file);
+            } catch (error) {
+                console.error('上传过程出错:', error);
+                showAvatarLoading(false);
+                showAvatarToast('上传失败: ' + (error.message || '未知错误'), 'error');
+            }
+        }
+
+        function compressAndUploadAvatar(file) {
             const reader = new FileReader();
             
             reader.onload = function(e) {
-                setTimeout(function() {
-                    const img = document.getElementById('profile-avatar-img');
-                    img.src = e.target.result;
-                    
-                    localStorage.setItem('userAvatar', e.target.result);
-                    
-                    showAvatarLoading(false);
-                    showAvatarToast('头像更新成功！', 'success');
-                }, 500);
+                const img = new Image();
+                img.onload = function() {
+                    try {
+                        const canvas = document.createElement('canvas');
+                        let width = img.width;
+                        let height = img.height;
+                        
+                        const maxSize = 1024;
+                        if (width > maxSize || height > maxSize) {
+                            if (width > height) {
+                                height = Math.round(height * maxSize / width);
+                                width = maxSize;
+                            } else {
+                                width = Math.round(width * maxSize / height);
+                                height = maxSize;
+                            }
+                        }
+                        
+                        canvas.width = width;
+                        canvas.height = height;
+                        
+                        const ctx = canvas.getContext('2d');
+                        ctx.drawImage(img, 0, 0, width, height);
+                        
+                        const quality = 0.85;
+                        const compressedDataUrl = canvas.toDataURL('image/jpeg', quality);
+                        
+                        console.log('压缩完成 - 原始大小:', e.target.result.length, '压缩后大小:', compressedDataUrl.length);
+                        
+                        applyAvatar(compressedDataUrl);
+                    } catch (compressError) {
+                        console.error('压缩失败，尝试直接使用:', compressError);
+                        applyAvatar(e.target.result);
+                    }
+                };
+                
+                img.onerror = function() {
+                    console.error('图片加载失败，尝试直接使用');
+                    applyAvatar(e.target.result);
+                };
+                
+                img.src = e.target.result;
             };
 
             reader.onerror = function() {
+                console.error('FileReader 读取失败');
                 showAvatarLoading(false);
                 showAvatarToast('文件读取失败，请重试', 'error');
             };
 
             reader.onabort = function() {
+                console.log('上传已取消');
                 showAvatarLoading(false);
                 showAvatarToast('上传已取消', 'info');
             };
 
             reader.readAsDataURL(file);
+        }
+
+        function applyAvatar(dataUrl) {
+            setTimeout(function() {
+                try {
+                    const imgElement = document.getElementById('profile-avatar-img');
+                    imgElement.src = dataUrl;
+                    
+                    try {
+                        localStorage.setItem('userAvatar', dataUrl);
+                        console.log('头像已保存到 localStorage');
+                    } catch (storageError) {
+                        console.warn('localStorage 存储失败，可能是大小超限:', storageError);
+                    }
+                    
+                    showAvatarLoading(false);
+                    showAvatarToast('头像更新成功！', 'success');
+                } catch (error) {
+                        console.error('应用头像失败:', error);
+                        showAvatarLoading(false);
+                        showAvatarToast('应用头像失败: ' + (error.message || '未知错误'), 'error');
+                    }
+                }, 300);
         }
 
         function validateAvatarFile(file) {
