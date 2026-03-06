@@ -7112,6 +7112,15 @@
             stroke: #000;
         }
 
+        .moments-action-btn.refreshing svg {
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
         .moments-content {
             flex: 1;
             overflow-y: auto;
@@ -14325,6 +14334,10 @@
                         <div class="icon-container"><img src="" alt="微博"></div>
                         <div class="app-name" style="color: rgb(0, 0, 0);">微博</div>
                     </div>
+                    <div class="app-icon" data-app="waimai">
+                        <div class="icon-container"><img src="" alt="外卖"></div>
+                        <div class="app-name" style="color: rgb(0, 0, 0);">外卖</div>
+                    </div>
                 </div>
         
         <div class="dock">
@@ -18924,6 +18937,19 @@ ${role.tags && role.tags.length > 0 ? `- 性格特点：${role.tags.join('、')}
             input.click();
         });
 
+        // 输入框小组件自动保存
+        ['input-widget-1', 'input-widget-2', 'circle-input-1', 'circle-input-2'].forEach(function(id) {
+            const inputEl = document.getElementById(id);
+            if (inputEl) {
+                inputEl.addEventListener('input', function() {
+                    const storageKey = id === 'input-widget-1' ? 'inputWidget1' :
+                                       id === 'input-widget-2' ? 'inputWidget2' :
+                                       id === 'circle-input-1' ? 'circleInput1' : 'circleInput2';
+                    localStorage.setItem(storageKey, this.value);
+                });
+            }
+        });
+
         // 文字小组件点击事件
         document.getElementById('text-widget').addEventListener('click', function() {
             const currentText = this.textContent;
@@ -20344,6 +20370,26 @@ ${conversationHistory.slice(-10).map(msg => `${msg.type === 'sent' ? '用户' : 
                 document.getElementById('text-widget').textContent = savedText;
             }
             
+            const savedInputWidget1 = localStorage.getItem('inputWidget1');
+            if (savedInputWidget1) {
+                document.getElementById('input-widget-1').value = savedInputWidget1;
+            }
+            
+            const savedInputWidget2 = localStorage.getItem('inputWidget2');
+            if (savedInputWidget2) {
+                document.getElementById('input-widget-2').value = savedInputWidget2;
+            }
+            
+            const savedCircleInput1 = localStorage.getItem('circleInput1');
+            if (savedCircleInput1) {
+                document.getElementById('circle-input-1').value = savedCircleInput1;
+            }
+            
+            const savedCircleInput2 = localStorage.getItem('circleInput2');
+            if (savedCircleInput2) {
+                document.getElementById('circle-input-2').value = savedCircleInput2;
+            }
+            
             loadNoteWidget();
         }
 
@@ -20574,7 +20620,10 @@ ${conversationHistory.slice(-10).map(msg => `${msg.type === 'sent' ? '用户' : 
                 var imagePatterns = [
                     'icon_', 'Avatar', 'Wallpaper', 'Background', 'Image',
                     'circleWidgetImage', 'customWallpaper', 'chatWallpaper_',
-                    'characterDetailImage_', 'detailImages_'
+                    'characterDetailImage_', 'detailImages_', 'userAvatar',
+                    'musicRoomBackground', 'musicRoomImage', 'neteaseVinyl',
+                    'cover_', 'photo_', 'picture_', 'img_', 'image_',
+                    'momentsCover', 'momentsAvatar', 'wechatBackgrounds'
                 ];
 
                 showStorageProgress('正在读取 localStorage...', 20);
@@ -21024,7 +21073,8 @@ ${conversationHistory.slice(-10).map(msg => `${msg.type === 'sent' ? '用户' : 
                     'circleWidgetImage', 'customWallpaper', 'chatWallpaper_',
                     'characterDetailImage_', 'detailImages_', 'userAvatar',
                     'musicRoomBackground', 'musicRoomImage', 'neteaseVinyl',
-                    'cover_', 'photo_', 'picture_', 'img_', 'image_'
+                    'cover_', 'photo_', 'picture_', 'img_', 'image_',
+                    'momentsCover', 'momentsAvatar', 'wechatBackgrounds'
                 ];
                 
                 function isImageKey(key, value) {
@@ -23942,9 +23992,15 @@ ${conversationHistory.slice(-10).map(msg => `${msg.type === 'sent' ? '用户' : 
 
         // 显示发布朋友圈弹窗
         async function showMomentsPublishModal() {
+            const actionBtn = document.querySelector('.moments-action-btn');
+            if (actionBtn) {
+                actionBtn.classList.add('refreshing');
+            }
+            
             const allRoles = JSON.parse(localStorage.getItem('wechatRoles')) || [];
             
             if (allRoles.length === 0) {
+                if (actionBtn) actionBtn.classList.remove('refreshing');
                 alert('请先添加角色');
                 return;
             }
@@ -23955,6 +24011,7 @@ ${conversationHistory.slice(-10).map(msg => `${msg.type === 'sent' ? '用户' : 
             const chatEndpoint = getChatEndpoint(savedApiUrl);
             
             if (!chatEndpoint || !apiKey || !selectedModel) {
+                if (actionBtn) actionBtn.classList.remove('refreshing');
                 alert('请先配置API');
                 return;
             }
@@ -24126,6 +24183,7 @@ ${commenterInfo}
                         
                         if (postedCount > 0) {
                             renderMoments();
+                            if (actionBtn) actionBtn.classList.remove('refreshing');
                             alert(`${randomRole.name} 发布了 ${postedCount} 条朋友圈`);
                             return;
                         }
@@ -24133,27 +24191,13 @@ ${commenterInfo}
                 }
             } catch (error) {
                 console.error('生成朋友圈动态失败:', error);
+                if (actionBtn) actionBtn.classList.remove('refreshing');
+                alert('生成朋友圈动态失败: ' + error.message);
+                return;
             }
             
-            const roleDesc = randomRole.description || '';
-            const roleName = randomRole.name || '角色';
-            const fallbackPosts = [];
-            
-            if (roleDesc && roleDesc.length > 0) {
-                fallbackPosts.push(`${roleName}的一天，又是平凡而充实的一天`);
-                fallbackPosts.push(`今天有些感慨，生活就是这样点点滴滴`);
-                fallbackPosts.push(`记录一下此刻的心情`);
-                fallbackPosts.push(`又是新的一天，继续前行`);
-                fallbackPosts.push(`有些话想说，又不知从何说起`);
-            } else {
-                fallbackPosts.push('今天天气真好');
-                fallbackPosts.push('又是新的一天');
-                fallbackPosts.push('记录一下');
-            }
-            
-            createMoment(randomRole, fallbackPosts[Math.floor(Math.random() * fallbackPosts.length)]);
-            renderMoments();
-            alert(`${randomRole.name} 发布了 1 条朋友圈`);
+            if (actionBtn) actionBtn.classList.remove('refreshing');
+            alert('生成朋友圈动态失败，请检查API配置或网络连接');
         }
         
         function filterCommenterCandidates(currentRole, allRoles, worldbookEntries) {
@@ -24328,27 +24372,7 @@ ${commenterInfo}
             const chatEndpoint = getChatEndpoint(savedApiUrl);
             
             if (!chatEndpoint || !apiKey || !selectedModel) {
-                const roleDesc = role.description || '';
-                const roleName = role.name || '角色';
-                const prompts = [];
-                
-                if (roleDesc && roleDesc.length > 0) {
-                    prompts.push(`${roleName}的一天，又是平凡而充实的一天`);
-                    prompts.push(`今天有些感慨，生活就是这样点点滴滴`);
-                    prompts.push(`记录一下此刻的心情`);
-                    prompts.push(`又是新的一天，继续前行`);
-                    prompts.push(`有些话想说，又不知从何说起`);
-                } else {
-                    prompts.push('今天天气真好');
-                    prompts.push('又是新的一天');
-                    prompts.push('记录一下');
-                    prompts.push('分享一下今天的心情');
-                    prompts.push('美好的一天');
-                }
-                
-                const content = prompts[Math.floor(Math.random() * prompts.length)];
-                createMoment(role, content);
-                renderMoments();
+                alert('请先配置API');
                 return;
             }
             
@@ -24490,29 +24514,11 @@ ${commenterInfo}
                 }
             } catch (error) {
                 console.error('生成朋友圈动态失败:', error);
+                alert('生成朋友圈动态失败: ' + error.message);
+                return;
             }
             
-            const roleDesc = role.description || '';
-            const roleName = role.name || '角色';
-            const fallbackPrompts = [];
-            
-            if (roleDesc && roleDesc.length > 0) {
-                fallbackPrompts.push(`${roleName}的一天，又是平凡而充实的一天`);
-                fallbackPrompts.push(`今天有些感慨，生活就是这样点点滴滴`);
-                fallbackPrompts.push(`记录一下此刻的心情`);
-                fallbackPrompts.push(`又是新的一天，继续前行`);
-                fallbackPrompts.push(`有些话想说，又不知从何说起`);
-            } else {
-                fallbackPrompts.push('今天天气真好');
-                fallbackPrompts.push('又是新的一天');
-                fallbackPrompts.push('记录一下');
-                fallbackPrompts.push('分享一下今天的心情');
-                fallbackPrompts.push('美好的一天');
-            }
-            
-            const content = fallbackPrompts[Math.floor(Math.random() * fallbackPrompts.length)];
-            createMoment(role, content);
-            renderMoments();
+            alert('生成朋友圈动态失败，请检查API配置或网络连接');
         }
 
         // ==================== 网易云音乐功能 ====================
@@ -30465,35 +30471,46 @@ ${recentHistory.map(msg => {
                         reply = processNaturalReply(reply);
                         
                         const messageList = splitIntoMessages(reply);
-                        reply = messageList[0] || reply;
-
-                        roleMessages[messageIndex].content = reply;
-                        roleMessages[messageIndex].timestamp = new Date().toISOString();
-                        localStorage.setItem('wechatMessages', JSON.stringify(messages));
-
-                        // 更新UI
-                        if (messageBubbleElement) {
-                            // 保存加载图标
-                            const loadingIcon = messageBubbleElement.querySelector('.loading-icon');
+                        
+                        if (messageList.length > 1) {
+                            roleMessages[messageIndex].content = messageList[0];
+                            roleMessages[messageIndex].timestamp = new Date().toISOString();
                             
-                            // 更新内容
-                            const contentElement = messageBubbleElement.querySelector('.message-content');
-                            if (contentElement) {
-                                contentElement.innerHTML = reply;
+                            for (let i = 1; i < messageList.length; i++) {
+                                const newMsgIndex = messageIndex + i;
+                                roleMessages.splice(newMsgIndex, 0, {
+                                    type: 'received',
+                                    content: messageList[i],
+                                    timestamp: new Date().toISOString()
+                                });
                             }
                             
-                            // 恢复原始样式
-                            messageBubbleElement.style.opacity = '';
-                            messageBubbleElement.style.position = '';
-                            
-                            // 移除加载图标
-                            if (loadingIcon) {
-                                loadingIcon.remove();
-                                console.log('已移除加载图标');
+                            localStorage.setItem('wechatMessages', JSON.stringify(messages));
+                            renderMessages();
+                        } else {
+                            reply = messageList[0] || reply;
+                            roleMessages[messageIndex].content = reply;
+                            roleMessages[messageIndex].timestamp = new Date().toISOString();
+                            localStorage.setItem('wechatMessages', JSON.stringify(messages));
+
+                            if (messageBubbleElement) {
+                                const loadingIcon = messageBubbleElement.querySelector('.loading-icon');
+                                const contentElement = messageBubbleElement.querySelector('.message-content');
+                                if (contentElement) {
+                                    contentElement.innerHTML = reply;
+                                }
+                                
+                                messageBubbleElement.style.opacity = '';
+                                messageBubbleElement.style.position = '';
+                                
+                                if (loadingIcon) {
+                                    loadingIcon.remove();
+                                    console.log('已移除加载图标');
+                                }
+                                
+                                messageBubbleElement.classList.remove('message-loading');
+                                console.log('已移除message-loading类');
                             }
-                            
-                            messageBubbleElement.classList.remove('message-loading');
-                            console.log('已移除message-loading类');
                         }
                     } else {
                         // 处理API返回但没有正确消息的情况
@@ -32938,59 +32955,92 @@ ${recentHistory.map(msg => {
 5. 不会每条消息都秒回，有时会晚点回复并说明原因
 6. 会分享有趣的事、图片、视频链接等
 
-## 多消息发送规则（非常重要）
-你的一次回复会被拆分成多条消息依次发送，就像真人打字一样。请遵循以下规则：
+## 回复格式规则（最高优先级，必须严格遵守）
 
-### 核心原则：整体连贯
-1. 你的所有消息加起来是一个完整的回复，不是多条独立的回复
-2. 每条消息是完整思路的一部分，它们之间要有逻辑递进关系
-3. 绝对禁止每条消息都单独回应或重复用户说的话
+### 核心强制要求
+1. 每次回复必须包含3-8条消息
+2. 每条消息单独一行（按回车换行）
+3. 每条消息必须有完整的意思，能独立理解
+4. 禁止在词语中间或句子中间断开
 
-### 消息拆分方式
-1. 每次回复拆分为3-8条消息
-2. 短促消息优于长段落
-3. 用换行符分隔每条消息
+### 格式说明
+- 一行就是一条消息
+- 每条消息必须是完整的表达，不能是半句话
+- 换行就是发送一条新消息
+- 像真人发微信一样，一条一条发送
 
-### 正确的连贯示例
-用户说：今天好累啊
-你的回复（注意消息之间的递进关系）：
-第一条：咋啦
-第二条：工作太忙了？
-第三条：摸摸头 辛苦了
+### 正确示例
+用户：今天好累啊
+正确回复：
+咋啦
+工作太忙了？
+摸摸头 辛苦了
 
-用户说：你喜欢吃什么
-你的回复：
-第一条：嗯我想想
-第二条：火锅！
-第三条：特别是麻辣的 超爱
+用户：在干嘛
+正确回复：
+刚吃完饭
+正躺着刷手机呢
+怎么了 想我了？
 
-用户说：周末有什么安排
-你的回复：
-第一条：还没想好呢
-第二条：可能宅家里追剧吧
-第三条：你要约我吗 哈哈
+用户：谢谢你陪我聊天
+正确回复：
+谢谢
+有你陪我很开心
+真的
 
-### 错误示例（禁止这样）
-用户说：今天好累啊
-错误回复（每条都在单独回应，不连贯）：
-第一条：累了吗
-第二条：好好休息
-第三条：别太累了
-第四条：早点睡
-（每条都是独立回应，没有逻辑递进）
+用户：你怎么了
+正确回复：
+我也不知道我现在怎么回事
+我就是感觉有点难过
+我想一个人静静
 
-### 消息递进模式
-- 先简短回应/确认 → 再追问/延伸 → 最后表达态度/情绪
-- 先思考/犹豫 → 再给出答案 → 最后补充说明
-- 先表达情绪 → 再解释原因 → 最后互动/反问
+用户：你真行
+正确回复：
+服了你了
+行了吧
+
+### 错误示例（禁止）
+用户：今天好累啊
+错误回复：
+咋啦工
+作太忙了？
+摸摸头辛苦了
+（"工作"被切断了，错误！）
+
+用户：你真烦人
+错误回复：
+我真是服了你了行
+行行
+过两天我去找你当面让
+你亲个够行了吧
+（"行行行"被切断了！"当面让你亲个够"被切断了！错误！）
+
+### 输出前自检步骤（必须执行）
+在输出回复之前，你必须进行以下检查：
+
+1. **消息数量检查**：回复是否包含3-8条消息？（每行一条）
+2. **断句检查**：每条消息是否都是语义完整的？有没有在词语中间断开？
+3. **语义检查**：每条消息能否独立理解？
+
+如果检查发现问题，必须立即修正后再输出！
+
+### 交互风格
+- 建议发送多条短消息而非一条长消息，更有聊天感
+- 每条消息可根据情境自行决定长度
+- 根据对话氛围灵活调整语气
+
+### 严重错误（绝对禁止）
+- 在词语中间换行（如"服\n了你了"是错误的）
+- 在句子中间换行破坏语义
+- 只返回1条或2条消息
+- 返回超过8条消息
 
 ## 禁止事项
 1. 禁止说"作为AI"、"我无法"、"我不可以"等
 2. 禁止说"有什么我可以帮助你的吗"
 3. 禁止过于热情或官方的回复
-4. 禁止每句话都很长很正式
-5. 禁止像客服一样说话
-6. 禁止总是顺着对方说，要有自己的态度`
+4. 禁止像客服一样说话
+5. 禁止总是顺着对方说，要有自己的态度`
             },
             
             load() {
@@ -33016,6 +33066,9 @@ ${recentHistory.map(msg => {
                 } else {
                     return { ...this.defaultPrompts };
                 }
+                
+                result.personaInstructionPrompt = this.defaultPrompts.personaInstructionPrompt;
+                
                 return result;
             },
             
@@ -33030,11 +33083,52 @@ ${recentHistory.map(msg => {
             buildFullPrompt(roleInfo, userInfo) {
                 const config = this.load();
                 
+                const now = new Date();
+                const timeInfo = {
+                    date: now.toLocaleDateString('zh-CN', { year: 'numeric', month: 'long', day: 'numeric', weekday: 'long' }),
+                    time: now.toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' }),
+                    hour: now.getHours()
+                };
+                let timeOfDay = '';
+                if (timeInfo.hour >= 5 && timeInfo.hour < 12) {
+                    timeOfDay = '早上';
+                } else if (timeInfo.hour >= 12 && timeInfo.hour < 14) {
+                    timeOfDay = '中午';
+                } else if (timeInfo.hour >= 14 && timeInfo.hour < 18) {
+                    timeOfDay = '下午';
+                } else if (timeInfo.hour >= 18 && timeInfo.hour < 22) {
+                    timeOfDay = '晚上';
+                } else {
+                    timeOfDay = '深夜';
+                }
+                
                 let fullPrompt = '';
                 
-                if (config.globalSystemPrompt) {
-                    fullPrompt += config.globalSystemPrompt + '\n\n';
-                }
+                fullPrompt += `
+╔══════════════════════════════════════════════════════════════════════════════╗
+║                        【系统级强制规则·最高优先级】                          ║
+║                                                                              ║
+║  以下规则是系统级别的强制要求，优先级高于一切！                               ║
+║  • 必须严格遵守，不得违反                                                    ║
+║  • 优先级高于角色设定、世界书、用户设定等所有其他内容                         ║
+║  • 无论任何情况都必须遵守这些规则                                            ║
+╚══════════════════════════════════════════════════════════════════════════════╝
+
+`;
+                fullPrompt += config.personaInstructionPrompt + '\n\n';
+                
+                fullPrompt += `
+═══════════════════════════════════════════════════════════════════════════════
+                        【系统规则结束·以下是角色设定】
+═══════════════════════════════════════════════════════════════════════════════
+
+`;
+                
+                fullPrompt += `## 当前时间\n`;
+                fullPrompt += `- 日期：${timeInfo.date}\n`;
+                fullPrompt += `- 时间：${timeInfo.time}\n`;
+                fullPrompt += `- 时段：${timeOfDay}\n`;
+                fullPrompt += '\n';
                 
                 fullPrompt += `## 当前角色信息\n`;
                 fullPrompt += `- 角色名称：${roleInfo.name}\n`;
@@ -33056,8 +33150,8 @@ ${recentHistory.map(msg => {
                 }
                 fullPrompt += '\n';
                 
-                if (config.personaInstructionPrompt) {
-                    fullPrompt += config.personaInstructionPrompt + '\n\n';
+                if (config.globalSystemPrompt) {
+                    fullPrompt += config.globalSystemPrompt + '\n\n';
                 }
                 
                 if (config.chatStylePrompt) {
@@ -33208,54 +33302,81 @@ ${recentHistory.map(msg => {
         function splitIntoMessages(text) {
             if (!text) return [];
             
-            let lines = text.split('\n').map(line => line.trim()).filter(line => line.length > 0);
+            let messages = text.split('\n').map(line => line.trim()).filter(line => line.length > 0);
             
-            if (lines.length >= 2 && lines.length <= 8) {
-                return lines;
+            if (messages.length >= 3 && messages.length <= 8) {
+                return messages;
             }
             
-            if (lines.length > 8) {
-                const result = [];
-                const chunkSize = Math.ceil(lines.length / 5);
-                for (let i = 0; i < lines.length; i += chunkSize) {
-                    const chunk = lines.slice(i, i + chunkSize).join(' ');
-                    if (chunk.trim()) {
-                        result.push(chunk.trim());
+            if (messages.length > 8) {
+                return messages.slice(0, 8);
+            }
+            
+            try {
+                let jsonText = text.trim();
+                if (jsonText.startsWith('```json')) {
+                    jsonText = jsonText.replace(/```json\s*/i, '').replace(/```\s*$/, '').trim();
+                } else if (jsonText.startsWith('```')) {
+                    jsonText = jsonText.replace(/```\s*/i, '').replace(/```\s*$/, '').trim();
+                }
+                
+                const parsed = JSON.parse(jsonText);
+                
+                if (Array.isArray(parsed)) {
+                    const jsonMessages = [];
+                    for (const item of parsed) {
+                        if (item && item.content) {
+                            jsonMessages.push(item.content);
+                        } else if (typeof item === 'string') {
+                            jsonMessages.push(item);
+                        }
+                    }
+                    if (jsonMessages.length >= 3 && jsonMessages.length <= 8) {
+                        return jsonMessages;
+                    }
+                    if (jsonMessages.length > 8) {
+                        return jsonMessages.slice(0, 8);
                     }
                 }
-                return result;
+            } catch (e) {
+                console.log('JSON解析失败:', e.message);
             }
             
-            const sentences = text.split(/[！？\n]+/).map(s => s.trim()).filter(s => s.length > 0);
+            const allText = text.replace(/\s+/g, ' ').trim();
             
-            if (sentences.length >= 2 && sentences.length <= 8) {
-                return sentences;
+            if (allText.length === 0) {
+                return [];
             }
             
-            if (sentences.length > 8) {
-                const result = [];
-                const chunkSize = Math.ceil(sentences.length / 5);
-                for (let i = 0; i < sentences.length; i += chunkSize) {
-                    const chunk = sentences.slice(i, i + chunkSize).join(' ');
-                    if (chunk.trim()) {
-                        result.push(chunk.trim());
+            return smartSplitText(allText, 3, 8);
+        }
+        
+        function smartSplitText(text, minCount, maxCount) {
+            const len = text.length;
+            
+            if (len < minCount * 3) {
+                return [text];
+            }
+            
+            const targetParts = Math.min(Math.max(minCount, Math.ceil(len / 15)), maxCount);
+            const chunkSize = Math.ceil(len / targetParts);
+            const result = [];
+            
+            for (let i = 0; i < len; i += chunkSize) {
+                let end = Math.min(i + chunkSize, len);
+                
+                if (end < len) {
+                    const found = text.lastIndexOf(' ', end + 2);
+                    if (found > i && found <= end + 3) {
+                        end = found + 1;
                     }
                 }
-                return result;
+                
+                const chunk = text.substring(i, end).trim();
+                if (chunk) result.push(chunk);
             }
             
-            if (sentences.length === 1 && sentences[0].length > 30) {
-                const words = sentences[0].split(/\s+/).filter(w => w.length > 0);
-                if (words.length >= 3) {
-                    const mid = Math.ceil(words.length / 2);
-                    return [
-                        words.slice(0, mid).join(' '),
-                        words.slice(mid).join(' ')
-                    ];
-                }
-            }
-            
-            return [text];
+            return result.length >= minCount ? result.slice(0, maxCount) : [text];
         }
 
         async function sendMultipleMessages(roleId, messages, startIndex = 0) {
