@@ -24786,6 +24786,12 @@ ${conversationHistory.slice(-10).map(msg => `${msg.type === 'sent' ? '用户' : 
                     const data = await response.json();
                     if (data.choices && data.choices[0] && data.choices[0].message) {
                         let reply = data.choices[0].message.content.trim();
+                        
+                        reply = reply.replace(/\[LOCATION:[^\]]+\]/g, '');
+                        reply = reply.replace(/\[MOOD:[^\]]+\]/g, '');
+                        reply = reply.replace(/\[THOUGHT:[^\]]+\]/g, '');
+                        reply = reply.trim();
+                        
                         if (reply.length > 20) {
                             reply = reply.substring(0, 20);
                         }
@@ -24929,13 +24935,13 @@ ${conversationHistory.slice(-10).map(msg => `${msg.type === 'sent' ? '用户' : 
             const userSettings = getUserPersona();
             const userName = userSettings.name || '用户';
             
-            const roleMessages = messages[randomRole.id] || [];
-            const recentMessages = roleMessages.slice(-50);
-            
             const roleWorldbookEntries = worldbookEntries.filter(entry => {
                 if (entry.isGlobal) return true;
                 return entry.roleIds && entry.roleIds.includes(randomRole.id);
             });
+            
+            const roleMessages = messages[randomRole.id] || [];
+            const recentMessages = roleMessages.slice(-30);
             
             let chatContext = '';
             if (recentMessages.length > 0) {
@@ -24953,10 +24959,13 @@ ${conversationHistory.slice(-10).map(msg => `${msg.type === 'sent' ? '用户' : 
                     .join('\n');
             }
             
+            const promptsConfig = PromptsConfig.load();
+            const globalPrompt = promptsConfig.globalSystemPrompt || '';
+            
             const commenterCandidates = filterCommenterCandidates(randomRole, allRoles, roleWorldbookEntries);
             const selectedCommenters = commenterCandidates.slice(0, 4);
             
-            const postCount = Math.floor(Math.random() * 3) + 1;
+            const postCount = 3;
             
             let commenterInfo = '';
             if (selectedCommenters.length > 0) {
@@ -24971,13 +24980,9 @@ ${conversationHistory.slice(-10).map(msg => `${msg.type === 'sent' ? '用户' : 
             
             const selfCommentCount = Math.floor(Math.random() * 2) + 1;
             
-            const systemPrompt = `你是${randomRole.name}，${randomRole.description || ''}。
+            const systemPrompt = `${globalPrompt ? globalPrompt + '\n\n' : ''}你是${randomRole.name}，${randomRole.description || ''}。
 
-${worldbookContext ? `背景设定：\n${worldbookContext}\n` : ''}
-
-${chatContext ? `最近的聊天记录（仅供参考，不要复述）：\n${chatContext}\n` : ''}
-
-请生成${postCount}条微信朋友圈动态，并同步生成评论。
+${worldbookContext ? `背景设定：\n${worldbookContext}\n` : ''}${chatContext ? `【最近的聊天记录】（可选参考：可以从中提取话题作为朋友圈题材，也可以自由发挥其他题材）\n${chatContext}\n\n` : ''}请生成${postCount}条微信朋友圈动态，并同步生成评论。
 
 【输出格式要求】
 每条动态用===DYNAMIC===标记开始，格式如下：
@@ -25009,10 +25014,9 @@ ${commenterInfo}
 3. 不要用表情符号堆砌，要像真人聊天
 4. 可以调侃、吐槽、关心、附和等，风格多样
 5. 动态内容要自然、真实、像普通人发的朋友圈
-6. 严禁复述聊天内容
-7. 主题不要围绕${userName}
-8. 不要使用任何markdown格式
-9. 禁止使用{{user}}、{{、}}等占位符，必须使用真实角色名字`;
+6. 不要使用任何markdown格式
+7. 禁止使用{{user}}、{{、}}等占位符，必须使用真实角色名字
+8. 禁止把用户(${userName})当做评论者，评论者只能是上述列出的角色`;
 
             try {
                 const response = await fetch(chatEndpoint, {
@@ -25295,6 +25299,20 @@ ${commenterInfo}
                     return entry.roleIds && entry.roleIds.includes(role.id);
                 });
                 
+                const roleMessages = messages[role.id] || [];
+                const recentMessages = roleMessages.slice(-30);
+                
+                let chatContext = '';
+                if (recentMessages.length > 0) {
+                    chatContext = recentMessages.map(msg => {
+                        const sender = msg.sender === 'user' ? userName : role.name;
+                        return `${sender}: ${msg.content}`;
+                    }).join('\n');
+                }
+                
+                const promptsConfig = PromptsConfig.load();
+                const globalPrompt = promptsConfig.globalSystemPrompt || '';
+                
                 const commenterCandidates = filterCommenterCandidates(role, allRoles, roleWorldbookEntries);
                 const selectedCommenters = commenterCandidates.slice(0, 4);
                 
@@ -25311,9 +25329,9 @@ ${commenterInfo}
                 
                 const selfCommentCount = Math.floor(Math.random() * 2) + 1;
                 
-                const systemPrompt = `你是${role.name}，${role.description || ''}。
+                const systemPrompt = `${globalPrompt ? globalPrompt + '\n\n' : ''}你是${role.name}，${role.description || ''}。
 
-请生成1条微信朋友圈动态，并同步生成评论。
+${chatContext ? `【最近的聊天记录】（可选参考：可以从中提取话题作为朋友圈题材，也可以自由发挥其他题材）\n${chatContext}\n\n` : ''}请生成1条微信朋友圈动态，并同步生成评论。
 
 【输出格式要求】
 ===DYNAMIC===
@@ -25345,7 +25363,8 @@ ${commenterInfo}
 4. 可以调侃、吐槽、关心、附和等，风格多样
 5. 动态内容要自然、真实、像普通人发的朋友圈
 6. 不要使用任何markdown格式
-7. 禁止使用{{user}}、{{、}}等占位符，必须使用真实角色名字`;
+7. 禁止使用{{user}}、{{、}}等占位符，必须使用真实角色名字
+8. 禁止把用户(${userName})当做评论者，评论者只能是上述列出的角色`;
                 
                 const response = await fetch(chatEndpoint, {
                     method: 'POST',
@@ -25368,6 +25387,11 @@ ${commenterInfo}
                     const data = await response.json();
                     if (data.choices && data.choices[0] && data.choices[0].message) {
                         let content = data.choices[0].message.content.trim();
+                        
+                        content = content.replace(/\[LOCATION:[^\]]+\]/g, '');
+                        content = content.replace(/\[MOOD:[^\]]+\]/g, '');
+                        content = content.replace(/\[THOUGHT:[^\]]+\]/g, '');
+                        content = content.trim();
                         
                         const parts = content.split('===COMMENTS===');
                         const postContent = parts[0] ? parts[0].replace('===DYNAMIC===', '').trim() : '';
@@ -27894,6 +27918,36 @@ ${commenterInfo}
                     reply = reply.replace(/<thinking>[\s\S]*?<\/thinking>/gi, '');
                     reply = reply.replace(/<reasoning>[\s\S]*?<\/reasoning>/gi, '');
                     reply = reply.replace(/<cot>[\s\S]*?<\/cot>/gi, '');
+                    
+                    let extractedLocation = null;
+                    const locationMatch = reply.match(/\[LOCATION:([^\]]+)\]/);
+                    if (locationMatch) {
+                        extractedLocation = locationMatch[1].trim();
+                        reply = reply.replace(/\[LOCATION:[^\]]+\]/g, '');
+                    }
+                    
+                    let extractedMood = null;
+                    const moodMatch = reply.match(/\[MOOD:([^\]]+)\]/);
+                    if (moodMatch) {
+                        extractedMood = moodMatch[1].trim();
+                        reply = reply.replace(/\[MOOD:[^\]]+\]/g, '');
+                    }
+                    
+                    let extractedThought = null;
+                    const thoughtMatch = reply.match(/\[THOUGHT:([^\]]+)\]/);
+                    if (thoughtMatch) {
+                        extractedThought = thoughtMatch[1].trim();
+                        reply = reply.replace(/\[THOUGHT:[^\]]+\]/g, '');
+                    }
+                    
+                    if (extractedLocation || extractedMood || extractedThought) {
+                        InsProfileModule.updateFromAPIResponse(
+                            currentChatRole.id,
+                            extractedLocation,
+                            extractedMood,
+                            extractedThought
+                        );
+                    }
                     
                     reply = reply.trim();
                     
@@ -30561,12 +30615,6 @@ ${recentHistory.map(msg => {
                         
                         await sendMultipleMessages(currentChatRole.id, messageList);
                         isSendingMessages = false;
-                        
-                        if (Math.random() < 0.3) {
-                            setTimeout(() => {
-                                characterPostMoment(currentChatRole);
-                            }, 1000);
-                        }
                     } else if (data.error) {
                         console.error('API返回错误:', data.error);
                         const errorReply = `❌ API错误: ${data.error.message || JSON.stringify(data.error)}`;
@@ -33700,8 +33748,29 @@ ${recentHistory.map(msg => {
                     localStorage.setItem('wechatMessages', JSON.stringify(messages));
                 }
                 if (typeof moments !== 'undefined' && moments) {
-                    localStorage.setItem('wechatMoments', JSON.stringify(moments));
-                    console.log('[AutoSave] moments 已保存，数量:', moments.length);
+                    if (!Array.isArray(moments) || moments.length === 0) {
+                        const savedMoments = localStorage.getItem('wechatMoments');
+                        if (savedMoments) {
+                            try {
+                                const parsedMoments = JSON.parse(savedMoments);
+                                if (Array.isArray(parsedMoments) && parsedMoments.length > 0) {
+                                    console.log('[AutoSave] 跳过保存空的moments，保留现有数据（' + parsedMoments.length + '条动态）');
+                                } else {
+                                    localStorage.setItem('wechatMoments', JSON.stringify(moments));
+                                    console.log('[AutoSave] moments 已保存，数量:', moments.length);
+                                }
+                            } catch (e) {
+                                console.warn('[AutoSave] 解析现有moments失败:', e);
+                                localStorage.setItem('wechatMoments', JSON.stringify(moments));
+                            }
+                        } else {
+                            localStorage.setItem('wechatMoments', JSON.stringify(moments));
+                            console.log('[AutoSave] moments 已保存，数量:', moments.length);
+                        }
+                    } else {
+                        localStorage.setItem('wechatMoments', JSON.stringify(moments));
+                        console.log('[AutoSave] moments 已保存，数量:', moments.length);
+                    }
                 }
                 const momentsCoverImg = document.getElementById('moments-cover-img');
                 if (momentsCoverImg && momentsCoverImg.src && momentsCoverImg.style.display !== 'none') {
