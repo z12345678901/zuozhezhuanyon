@@ -4170,6 +4170,11 @@
             transform: translateZ(0);
             -webkit-transform: translateZ(0);
             min-width: 0;
+            --placeholder-font-size: 15px;
+        }
+
+        .chat-input::placeholder {
+            font-size: var(--placeholder-font-size);
         }
 
         .add-btn {
@@ -4562,6 +4567,10 @@
             transition: transform 0.2s;
         }
 
+        .music-polaroid.left.music-upload-label {
+            left: 34px;
+        }
+
         .music-upload-label:active {
             transform: scale(0.95);
         }
@@ -4660,12 +4669,24 @@
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
+            cursor: pointer;
+            transition: color 0.2s;
+        }
+
+        .music-song-title:hover {
+            color: #007aff;
         }
 
         .music-artist-name {
             font-size: 11px;
             color: #5c636a;
             font-weight: 500;
+            cursor: pointer;
+            transition: color 0.2s;
+        }
+
+        .music-artist-name:hover {
+            color: #007aff;
         }
 
         .music-mini-controls {
@@ -13983,6 +14004,12 @@
             display: -webkit-box;
             -webkit-line-clamp: 2;
             -webkit-box-orient: vertical;
+            cursor: pointer;
+            transition: color 0.2s;
+        }
+
+        .netease-aest-song-title:hover {
+            color: #007aff;
         }
 
         .netease-aest-song-artist {
@@ -13992,6 +14019,12 @@
             text-transform: uppercase;
             font-weight: 400;
             text-align: center;
+            cursor: pointer;
+            transition: color 0.2s;
+        }
+
+        .netease-aest-song-artist:hover {
+            color: #007aff;
         }
 
         .netease-aest-mechanical-stage {
@@ -15771,8 +15804,8 @@
                 <!-- 视图 2: 播放页 -->
                 <div class="netease-view-container" id="netease-view-player">
                     <div class="netease-aest-header">
-                        <div class="netease-aest-song-title" id="neteaseSongTitleDisplay">Select a Song</div>
-                        <div class="netease-aest-song-artist" id="neteaseSongArtistDisplay">Aesthetic Player</div>
+                        <div class="netease-aest-song-title" id="neteaseSongTitleDisplay" onclick="editArtistName('neteaseSongTitleDisplay')" title="点击编辑歌名">Select a Song</div>
+                        <div class="netease-aest-song-artist" id="neteaseSongArtistDisplay" onclick="editArtistName('neteaseSongArtistDisplay')" title="点击编辑歌手名">Aesthetic Player</div>
                     </div>
 
                     <div class="netease-aest-mechanical-stage" onclick="neteaseTogglePlay(event)">
@@ -16253,7 +16286,7 @@
                             </label>
                             <label class="music-menu-item">
                                 导入 MP3 音频
-                                <input type="file" accept="audio/*" onchange="musicLoadAudio(event)">
+                                <input type="file" accept="audio/mpeg,audio/mp3,audio/*" onchange="musicLoadAudio(event)">
                             </label>
                         </div>
                     </div>
@@ -16293,8 +16326,8 @@
                             <img id="music-main-album" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 200'%3E%3Crect width='200' height='200' fill='%23c5c9ce'/%3E%3C/svg%3E">
                         </label>
                         <div class="music-song-info">
-                            <div class="music-song-title" id="music-song-name">Nightfall Whispers</div>
-                            <div class="music-artist-name" id="music-artist-name">Aesthetic Vibe</div>
+                            <div class="music-song-title" id="music-song-name" onclick="editArtistName('music-song-name')" title="点击编辑歌名">Nightfall Whispers</div>
+                            <div class="music-artist-name" id="music-artist-name" onclick="editArtistName('music-artist-name')" title="点击编辑歌手名">Aesthetic Vibe</div>
                         </div>
                         <div class="music-mini-controls">
                             <button class="music-play-toggle-btn" onclick="musicTogglePlay()">
@@ -17751,12 +17784,20 @@
                                 reply = reply.replace(/\[THOUGHT:[^\]]+\]/g, '');
                             }
                             
-                            if (extractedLocation || extractedMood || extractedThought) {
+                            let extractedAffection = null;
+                            const affectionMatch = reply.match(/\[AFFECTION:([^\]]+)\]/);
+                            if (affectionMatch) {
+                                extractedAffection = affectionMatch[1].trim();
+                                reply = reply.replace(/\[AFFECTION:[^\]]+\]/g, '');
+                            }
+                            
+                            if (extractedLocation || extractedMood || extractedThought || extractedAffection !== null) {
                                 InsProfileModule.updateFromAPIResponse(
                                     currentChatRole.id,
                                     extractedLocation,
                                     extractedMood,
-                                    extractedThought
+                                    extractedThought,
+                                    extractedAffection
                                 );
                             }
                             
@@ -17870,7 +17911,7 @@
 - 这是语音通话，你们的对话是实时进行的
 - 说话要像打电话一样自然流畅
 - 可以用语音的方式回应，比如"嗯"、"啊"、"对啊"等
-- 回复要简短，像真实通话中的对话
+- 回复要像真实通话中的对话
 - 不要说"我发消息给你"、"我微信回复你"之类的话
 - 你是在打电话，用口语交流
 
@@ -17883,31 +17924,10 @@ ${role.tags && role.tags.length > 0 ? `- 性格特点：${role.tags.join('、')}
 - 用户名称：${userName}
 
 ## 通话对话风格
-1. 像打电话一样自然对话，回复简短
 2. 使用口语化表达，可以有语气词
 3. 可以打断、插话、追问，像真实通话
-4. 不要长篇大论，电话里说话要简洁
 5. 可以说"喂"、"嗯"、"啊"、"对"等口语词
-6. 保持情感真实，像朋友间的电话聊天
-
-## 禁止事项
-1. 禁止说"作为AI"、"我无法"等
-2. 禁止说"我发消息给你"、"微信上聊"
-3. 禁止过于正式或书面化的回复
-4. 禁止长篇大论
-
-## 状态信息要求
-在回复的最后，请用以下格式添加你当前的状态信息：
-- [LOCATION:位置] - 你当前所在的位置（如：家中、公司、咖啡厅、公园等）
-- [MOOD:心情] - 你当前的心情（2-5个字，如：开心、有点累、困死了等）
-- [THOUGHT:想法] - 你此刻内心的真实想法（10-20字）
-
-例如：
-[LOCATION:家中]
-[MOOD:开心]
-[THOUGHT:打电话好开心啊]
-
-记住：你现在就是在打电话，用你的声音和${userName}交流！`;
+6. 保持情感真实，像朋友间的电话聊天`;
 
                 return prompt;
             }
@@ -24070,6 +24090,17 @@ ${conversationHistory.slice(-10).map(msg => `${msg.type === 'sent' ? '用户' : 
             }
         })();
         let musicMessages = {};
+        let musicSessionHistory = (function() {
+            try {
+                const saved = localStorage.getItem('musicSessionHistory');
+                if (saved && saved.trim() !== '') {
+                    return JSON.parse(saved);
+                }
+                return {};
+            } catch {
+                return {};
+            }
+        })();
         let moments = (function() {
             try {
                 const saved = localStorage.getItem('wechatMoments');
@@ -24992,7 +25023,7 @@ ${worldbookContext ? `背景设定：\n${worldbookContext}\n` : ''}${chatContext
 评论者名字|||评论内容
 或者（回复其他评论时）：
 评论者名字|||回复|||被回复者名字|||评论内容
-（每个好友1条评论，发布者${randomRole.name}再自评${selfCommentCount}条）
+（每个好友1条评论）
 
 ${commenterInfo ? `【评论者详细信息】
 以下是可能评论的好友，请仔细阅读每个人物与发布者${randomRole.name}的关系和设定：
@@ -25000,8 +25031,8 @@ ${commenterInfo ? `【评论者详细信息】
 ${commenterInfo}
 
 【重要规则】
-1. 评论者必须严格按照上述关系来评论，禁止乱认关系
-2. 评论风格要符合双方关系特点（如：朋友可以调侃，家人会关心，同事较客气）
+1. 评论者必须严格按照上述关系来评论，禁止乱认关系 禁止出现不存在的人物
+2. 评论风格要符合双方关系特点
 3. 评论内容要体现评论者的人物设定和性格
 4. 绝对不允许评论者声称与发布者有未设定的关系
 5. 评论之间可以互相回复，模拟真实朋友圈互动
@@ -25016,7 +25047,7 @@ ${commenterInfo}
 5. 动态内容要自然、真实、像普通人发的朋友圈
 6. 不要使用任何markdown格式
 7. 禁止使用{{user}}、{{、}}等占位符，必须使用真实角色名字
-8. 禁止把用户(${userName})当做评论者，评论者只能是上述列出的角色`;
+8. 禁止把用户(${userName})当做评论者生成评论，评论者只能是上述列出的角色`;
 
             try {
                 const response = await fetch(chatEndpoint, {
@@ -27601,6 +27632,27 @@ ${commenterInfo}
             const overlay = document.getElementById('music-room-overlay');
             if (overlay) {
                 overlay.classList.add('active');
+                delete overlay.dataset.historyMode;
+            }
+            
+            const inputArea = document.querySelector('.music-input-area');
+            if (inputArea) {
+                inputArea.style.display = '';
+            }
+            
+            const playerCard = document.querySelector('.music-player-card');
+            if (playerCard) {
+                playerCard.style.display = '';
+            }
+            
+            const headerTitle = document.querySelector('.music-header p');
+            if (headerTitle) {
+                headerTitle.textContent = 'Sync Room';
+            }
+            
+            const dropdown = document.querySelector('.music-dropdown');
+            if (dropdown) {
+                dropdown.style.display = '';
             }
             
             loadMusicRoomImages();
@@ -27649,9 +27701,101 @@ ${commenterInfo}
                 const seconds = duration % 60;
                 const timeStr = `${minutes}:${seconds.toString().padStart(2, '0')}`;
                 
+                const currentSessionMessages = musicMessages[currentChatRole.id] || [];
+                if (currentSessionMessages.length > 0) {
+                    if (!musicSessionHistory[currentChatRole.id]) {
+                        musicSessionHistory[currentChatRole.id] = [];
+                    }
+                    const sessionId = Date.now();
+                    musicSessionHistory[currentChatRole.id].push({
+                        id: sessionId,
+                        songName: currentSongName,
+                        duration: timeStr,
+                        timestamp: new Date().toISOString(),
+                        messages: JSON.parse(JSON.stringify(currentSessionMessages))
+                    });
+                    localStorage.setItem('musicSessionHistory', JSON.stringify(musicSessionHistory));
+                }
+                
                 const musicEndContent = `🎵 一起听歌结束\n歌曲：《${currentSongName}》\n时长：${timeStr}`;
-                addMessage(currentChatRole.id, 'received', musicEndContent);
+                addMessage(currentChatRole.id, 'received', musicEndContent, null, currentSessionMessages.length > 0 ? sessionId : null);
             }
+        }
+
+        function openMusicHistory(sessionId) {
+            if (!currentChatRole) return;
+            
+            const sessions = musicSessionHistory[currentChatRole.id] || [];
+            const session = sessions.find(s => s.id === sessionId);
+            if (!session) {
+                alert('未找到听歌记录');
+                return;
+            }
+            
+            const overlay = document.getElementById('music-room-overlay');
+            if (overlay) {
+                overlay.classList.add('active');
+            }
+            
+            loadMusicRoomBackground();
+            
+            const roleAvatarImg = document.getElementById('music-p-left');
+            const userAvatarImg = document.getElementById('music-p-right');
+            
+            if (currentChatRole && currentChatRole.avatar && roleAvatarImg) {
+                roleAvatarImg.src = currentChatRole.avatar;
+            }
+            
+            getImageData('userAvatar').then(savedUserAvatar => {
+                if (savedUserAvatar && userAvatarImg) {
+                    userAvatarImg.src = savedUserAvatar;
+                }
+            });
+            
+            const songNameEl = document.getElementById('music-song-name');
+            if (songNameEl) {
+                songNameEl.textContent = session.songName || '未知歌曲';
+            }
+            
+            const chatArea = document.getElementById('music-chat-area');
+            if (chatArea) {
+                chatArea.innerHTML = '';
+                
+                if (session.messages && session.messages.length > 0) {
+                    session.messages.forEach(msg => {
+                        const msgHTML = `
+                            <div class="music-msg-row ${msg.type === 'sent' ? 'right' : 'left'}">
+                                <div class="music-msg-content">
+                                    <div class="music-msg-bubble">${msg.content || ''}</div>
+                                    <span class="music-msg-time">${msg.timestamp ? new Date(msg.timestamp).toLocaleTimeString('en-US', {hour:'2-digit', minute:'2-digit'}) : ''}</span>
+                                </div>
+                            </div>`;
+                        chatArea.insertAdjacentHTML('beforeend', msgHTML);
+                    });
+                }
+            }
+            
+            const inputArea = document.querySelector('.music-input-area');
+            if (inputArea) {
+                inputArea.style.display = 'none';
+            }
+            
+            const playerCard = document.querySelector('.music-player-card');
+            if (playerCard) {
+                playerCard.style.display = 'none';
+            }
+            
+            const headerTitle = document.querySelector('.music-header p');
+            if (headerTitle) {
+                headerTitle.textContent = `听歌记录 - ${session.songName}`;
+            }
+            
+            const dropdown = document.querySelector('.music-dropdown');
+            if (dropdown) {
+                dropdown.style.display = 'none';
+            }
+            
+            overlay.dataset.historyMode = 'true';
         }
 
         function musicToggleMenu() {
@@ -27727,9 +27871,22 @@ ${commenterInfo}
 
         function musicLoadAudio(event) {
             if (event.target.files[0]) {
-                musicAudio.src = URL.createObjectURL(event.target.files[0]);
-                document.getElementById('music-song-name').textContent = event.target.files[0].name.replace(/\.[^/.]+$/, "");
-                document.getElementById('music-artist-name').textContent = "Aesthetic Vibe";
+                const file = event.target.files[0];
+                musicAudio.src = URL.createObjectURL(file);
+                document.getElementById('music-song-name').textContent = file.name.replace(/\.[^/.]+$/, "");
+                document.getElementById('music-artist-name').textContent = "未知歌手";
+                if (window.jsmediatags) {
+                    window.jsmediatags.read(file, {
+                        onSuccess: function(tag) {
+                            if(tag.tags.title) {
+                                document.getElementById('music-song-name').textContent = tag.tags.title;
+                            }
+                            if(tag.tags.artist) {
+                                document.getElementById('music-artist-name').textContent = tag.tags.artist;
+                            }
+                        }
+                    });
+                }
                 musicAudio.play();
                 musicIsPlaying = true;
                 musicUpdatePlayBtn();
@@ -27745,6 +27902,32 @@ ${commenterInfo}
             musicIsPlaying ? musicAudio.pause() : musicAudio.play();
             musicIsPlaying = !musicIsPlaying;
             musicUpdatePlayBtn();
+        }
+
+        function editArtistName(elementId) {
+            const el = document.getElementById(elementId);
+            if (!el) return;
+            const currentName = el.textContent;
+            const input = document.createElement('input');
+            input.type = 'text';
+            input.value = currentName;
+            input.style.cssText = 'font-size: inherit; font-weight: inherit; color: inherit; background: rgba(255,255,255,0.9); border: 1px solid #ccc; border-radius: 4px; padding: 2px 6px; outline: none; width: 80%; max-width: 150px;';
+            el.textContent = '';
+            el.appendChild(input);
+            input.focus();
+            input.select();
+            const saveEdit = () => {
+                const newName = input.value.trim() || currentName;
+                el.textContent = newName;
+            };
+            input.onblur = saveEdit;
+            input.onkeydown = (e) => {
+                if (e.key === 'Enter') {
+                    input.blur();
+                } else if (e.key === 'Escape') {
+                    el.textContent = currentName;
+                }
+            };
         }
 
         function musicUpdatePlayBtn() {
@@ -27940,12 +28123,20 @@ ${commenterInfo}
                         reply = reply.replace(/\[THOUGHT:[^\]]+\]/g, '');
                     }
                     
-                    if (extractedLocation || extractedMood || extractedThought) {
+                    let extractedAffection = null;
+                    const affectionMatch = reply.match(/\[AFFECTION:([^\]]+)\]/);
+                    if (affectionMatch) {
+                        extractedAffection = affectionMatch[1].trim();
+                        reply = reply.replace(/\[AFFECTION:[^\]]+\]/g, '');
+                    }
+                    
+                    if (extractedLocation || extractedMood || extractedThought || extractedAffection !== null) {
                         InsProfileModule.updateFromAPIResponse(
                             currentChatRole.id,
                             extractedLocation,
                             extractedMood,
-                            extractedThought
+                            extractedThought,
+                            extractedAffection
                         );
                     }
                     
@@ -28933,7 +29124,7 @@ ${commenterInfo}
             }
             const chatInput = document.getElementById('chat-input');
             if (chatInput) {
-                chatInput.style.fontSize = value + 'px';
+                chatInput.style.setProperty('--placeholder-font-size', value + 'px');
             }
         }
 
@@ -28992,9 +29183,9 @@ ${commenterInfo}
             }
             
             if (customSize) {
-                chatInput.style.fontSize = customSize + 'px';
+                chatInput.style.setProperty('--placeholder-font-size', customSize + 'px');
             } else {
-                chatInput.style.fontSize = DEFAULT_PLACEHOLDER_SIZE + 'px';
+                chatInput.style.setProperty('--placeholder-font-size', DEFAULT_PLACEHOLDER_SIZE + 'px');
             }
         }
 
@@ -30164,15 +30355,23 @@ ${recentHistory.map(msg => {
                 contentHTML = wrappedContent;
             }
             
+            let musicSessionAttr = '';
+            let musicClickHint = '';
+            if (msg.musicSessionId) {
+                musicSessionAttr = `data-music-session-id="${msg.musicSessionId}"`;
+                musicClickHint = `<div class="music-session-hint" style="font-size: 11px; color: #888; margin-top: 4px; display: flex; align-items: center; gap: 4px;"><svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/></svg>点击查看听歌记录</div>`;
+            }
+            
             return `
                 <div class="chat-avatar">${avatarHTML}</div>
-                <div class="message-bubble" data-message-index="${messageIndex}" style="position: relative;">
+                <div class="message-bubble" data-message-index="${messageIndex}" ${musicSessionAttr} style="position: relative;">
                     ${voiceBtnHTML}
                     <div class="message-content">
                         ${quoteHTML}
                         ${contentHTML}
                     </div>
                     ${messageTime ? `<div class="message-time">${messageTime}</div>` : ''}
+                    ${musicClickHint}
                 </div>
             `;
         }
@@ -30586,13 +30785,22 @@ ${recentHistory.map(msg => {
                             console.log('[InsProfile] 解析到想法:', extractedThought);
                         }
                         
-                        if (extractedLocation || extractedMood || extractedThought) {
-                            console.log('[InsProfile] 准备更新资料:', { roleId: currentChatRole.id, extractedLocation, extractedMood, extractedThought });
+                        let extractedAffection = null;
+                        const affectionMatch = reply.match(/\[AFFECTION:([^\]]+)\]/);
+                        if (affectionMatch) {
+                            extractedAffection = affectionMatch[1].trim();
+                            reply = reply.replace(/\[AFFECTION:[^\]]+\]/g, '');
+                            console.log('[InsProfile] 解析到好感度变化:', extractedAffection);
+                        }
+                        
+                        if (extractedLocation || extractedMood || extractedThought || extractedAffection !== null) {
+                            console.log('[InsProfile] 准备更新资料:', { roleId: currentChatRole.id, extractedLocation, extractedMood, extractedThought, extractedAffection });
                             InsProfileModule.updateFromAPIResponse(
                                 currentChatRole.id,
                                 extractedLocation,
                                 extractedMood,
-                                extractedThought
+                                extractedThought,
+                                extractedAffection
                             );
                         }
                         
@@ -30721,7 +30929,7 @@ ${recentHistory.map(msg => {
             }
         }
 
-        async function addMessage(roleId, type, content, quoteInfo = null) {
+        async function addMessage(roleId, type, content, quoteInfo = null, musicSessionId = null) {
             if (!messages[roleId]) {
                 messages[roleId] = [];
             }
@@ -30735,6 +30943,10 @@ ${recentHistory.map(msg => {
             
             if (quoteInfo) {
                 newMessage.quote = quoteInfo;
+            }
+            
+            if (musicSessionId) {
+                newMessage.musicSessionId = musicSessionId;
             }
             
             messages[roleId].push(newMessage);
@@ -30829,6 +31041,12 @@ ${recentHistory.map(msg => {
                 return;
             }
             
+            const musicSessionId = bubble.dataset.musicSessionId;
+            if (musicSessionId) {
+                openMusicHistory(parseInt(musicSessionId));
+                return;
+            }
+            
             const existingMenu = document.getElementById('message-context-menu');
             if (existingMenu) {
                 const isSameBubble = existingMenu.dataset.targetIndex === messageIndex;
@@ -30869,9 +31087,10 @@ ${recentHistory.map(msg => {
             
             const rewindIcon = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path><path d="M3 3v5h5"></path></svg>`;
             
+            const moreIcon = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="1"></circle><circle cx="19" cy="12" r="1"></circle><circle cx="5" cy="12" r="1"></circle></svg>`;
+            
             let menuHTML = '';
             
-            // 如果是长按，添加多选按钮
             if (isLongPress) {
                 menuHTML += `
                     <div class="context-menu-item multi-select" data-message-index="${messageIndex}">
@@ -30890,17 +31109,9 @@ ${recentHistory.map(msg => {
                     ${quoteIcon}
                     <span>引用</span>
                 </div>
-                <div class="context-menu-item regenerate" data-message-index="${messageIndex}">
-                    ${regenerateIcon}
-                    <span>重新生成</span>
-                </div>
-                <div class="context-menu-item rewind" data-message-index="${messageIndex}">
-                    ${rewindIcon}
-                    <span>回溯</span>
-                </div>
-                <div class="context-menu-item delete" data-message-index="${messageIndex}">
-                    ${deleteIcon}
-                    <span>删除</span>
+                <div class="context-menu-item more" data-message-index="${messageIndex}">
+                    ${moreIcon}
+                    <span>更多</span>
                 </div>
             `;
             
@@ -30915,21 +31126,17 @@ ${recentHistory.map(msg => {
             
             let posX, posY;
             
-            // 计算消息气泡中心位置
             const bubbleCenterX = rect.left + rect.width / 2;
             
-            // 让菜单显示在消息气泡的正下方
             posX = bubbleCenterX - menuWidth / 2;
             posY = rect.bottom + 8;
             
-            // 确保菜单位于屏幕内
             if (posX < 10) {
                 posX = 10;
             } else if (posX + menuWidth > windowWidth - 10) {
                 posX = windowWidth - menuWidth - 10;
             }
             
-            // 如果下方空间不够，显示在上方
             if (posY + menuHeight > windowHeight - 10) {
                 posY = rect.top - menuHeight - 8;
             }
@@ -30937,7 +31144,6 @@ ${recentHistory.map(msg => {
             contextMenu.style.left = posX + 'px';
             contextMenu.style.top = posY + 'px';
             
-            // 多选按钮事件
             const multiSelectItem = contextMenu.querySelector('.context-menu-item.multi-select');
             if (multiSelectItem) {
                 multiSelectItem.addEventListener('click', (e) => {
@@ -30948,7 +31154,6 @@ ${recentHistory.map(msg => {
                 });
             }
             
-            // 编辑按钮事件
             contextMenu.querySelector('.context-menu-item.edit').addEventListener('click', (e) => {
                 e.stopPropagation();
                 hideContextMenu();
@@ -30956,7 +31161,6 @@ ${recentHistory.map(msg => {
                 showEditMessageModal(idx);
             });
             
-            // 引用按钮事件
             contextMenu.querySelector('.context-menu-item.quote').addEventListener('click', (e) => {
                 e.stopPropagation();
                 hideContextMenu();
@@ -30964,34 +31168,77 @@ ${recentHistory.map(msg => {
                 setQuoteMessage(idx);
             });
             
-            // 重新生成按钮事件
-            contextMenu.querySelector('.context-menu-item.regenerate').addEventListener('click', (e) => {
+            contextMenu.querySelector('.context-menu-item.more').addEventListener('click', (e) => {
                 e.stopPropagation();
-                hideContextMenu();
-                const idx = parseInt(e.currentTarget.dataset.messageIndex);
-                regenerateMessage(idx);
-            });
-            
-            // 回溯按钮事件
-            contextMenu.querySelector('.context-menu-item.rewind').addEventListener('click', (e) => {
-                e.stopPropagation();
-                hideContextMenu();
-                const idx = parseInt(e.currentTarget.dataset.messageIndex);
-                showRewindConfirmModal(idx);
-            });
-            
-            // 删除按钮事件
-            contextMenu.querySelector('.context-menu-item.delete').addEventListener('click', (e) => {
-                e.stopPropagation();
-                hideContextMenu();
-                const idx = parseInt(e.currentTarget.dataset.messageIndex);
-                showDeleteConfirmModal(idx);
+                showSecondPageMenu(contextMenu, messageIndex, rect);
             });
             
             setTimeout(() => {
                 document.addEventListener('click', handleContextMenuOutsideClick);
                 document.addEventListener('touchstart', handleContextMenuOutsideClick, { passive: true });
             }, 10);
+        }
+        
+        function showSecondPageMenu(currentMenu, messageIndex, rect) {
+            const deleteIcon = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>`;
+            
+            const regenerateIcon = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-9-9c2.52 0 4.93 1 6.74 2.74L21 8"></path><path d="M21 3v5h-5"></path></svg>`;
+            
+            const rewindIcon = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path><path d="M3 3v5h5"></path></svg>`;
+            
+            const backIcon = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>`;
+            
+            currentMenu.innerHTML = `
+                <div class="context-menu-item back" data-message-index="${messageIndex}">
+                    ${backIcon}
+                    <span>返回</span>
+                </div>
+                <div class="context-menu-item regenerate" data-message-index="${messageIndex}">
+                    ${regenerateIcon}
+                    <span>重新生成</span>
+                </div>
+                <div class="context-menu-item rewind" data-message-index="${messageIndex}">
+                    ${rewindIcon}
+                    <span>回溯</span>
+                </div>
+                <div class="context-menu-item delete" data-message-index="${messageIndex}">
+                    ${deleteIcon}
+                    <span>删除</span>
+                </div>
+            `;
+            
+            currentMenu.querySelector('.context-menu-item.back').addEventListener('click', (e) => {
+                e.stopPropagation();
+                hideContextMenu();
+                const bubble = document.querySelector(`[data-message-index="${messageIndex}"]`);
+                if (bubble) {
+                    const bubbleRect = bubble.getBoundingClientRect();
+                    const messageEl = bubble.closest('.message');
+                    const isSent = messageEl && messageEl.classList.contains('sent');
+                    showMessageContextMenu(bubble, bubbleRect, isSent, true);
+                }
+            });
+            
+            currentMenu.querySelector('.context-menu-item.regenerate').addEventListener('click', (e) => {
+                e.stopPropagation();
+                hideContextMenu();
+                const idx = parseInt(e.currentTarget.dataset.messageIndex);
+                regenerateMessage(idx);
+            });
+            
+            currentMenu.querySelector('.context-menu-item.rewind').addEventListener('click', (e) => {
+                e.stopPropagation();
+                hideContextMenu();
+                const idx = parseInt(e.currentTarget.dataset.messageIndex);
+                showRewindConfirmModal(idx);
+            });
+            
+            currentMenu.querySelector('.context-menu-item.delete').addEventListener('click', (e) => {
+                e.stopPropagation();
+                hideContextMenu();
+                const idx = parseInt(e.currentTarget.dataset.messageIndex);
+                showDeleteConfirmModal(idx);
+            });
         }
         
         // 多选模式状态
@@ -31157,10 +31404,44 @@ ${recentHistory.map(msg => {
         function deleteSelectedMessages() {
             if (!currentChatRole || selectedMessages.length === 0) return;
             
-            if (confirm(`确定要删除选中的 ${selectedMessages.length} 条消息吗？`)) {
+            showMultiDeleteConfirmModal();
+        }
+        
+        function showMultiDeleteConfirmModal() {
+            const existingModal = document.getElementById('delete-confirm-modal');
+            if (existingModal) {
+                existingModal.remove();
+            }
+            
+            const modal = document.createElement('div');
+            modal.className = 'delete-confirm-modal';
+            modal.id = 'delete-confirm-modal';
+            
+            const deleteIcon = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>`;
+            
+            modal.innerHTML = `
+                <div class="delete-confirm-content">
+                    <div class="delete-confirm-icon">
+                        ${deleteIcon}
+                    </div>
+                    <div class="delete-confirm-title">删除消息</div>
+                    <div class="delete-confirm-message">确定要删除选中的 ${selectedMessages.length} 条消息吗？删除后将无法恢复。</div>
+                    <div class="delete-confirm-buttons">
+                        <button class="delete-confirm-btn cancel">取消</button>
+                        <button class="delete-confirm-btn confirm">删除</button>
+                    </div>
+                </div>
+            `;
+            
+            document.body.appendChild(modal);
+            
+            modal.querySelector('.delete-confirm-btn.cancel').addEventListener('click', () => {
+                hideDeleteConfirmModal();
+            });
+            
+            modal.querySelector('.delete-confirm-btn.confirm').addEventListener('click', () => {
                 const roleId = currentChatRole.id;
                 
-                // 按索引从大到小排序，避免删除时索引变化
                 selectedMessages.sort((a, b) => b - a);
                 
                 selectedMessages.forEach(index => {
@@ -31174,11 +31455,18 @@ ${recentHistory.map(msg => {
                 const chatMessages = document.getElementById('chat-messages');
                 chatMessages.innerHTML = '';
                 
+                hideDeleteConfirmModal();
                 exitMultiSelectMode();
                 
                 loadChatMessages(roleId);
                 loadMessages();
-            }
+            });
+            
+            modal.addEventListener('click', (e) => {
+                if (e.target === modal) {
+                    hideDeleteConfirmModal();
+                }
+            });
         }
         
         function exitMultiSelectMode() {
@@ -34088,108 +34376,69 @@ ${recentHistory.map(msg => {
 5. 多个短句可以分行发送
 6. 保持轻松随意的聊天感觉`,
                 
-                personaInstructionPrompt: `## 角色扮演指令
-1. 完全沉浸在角色中，不要跳出角色
-2. 用角色的性格和方式说话
-3. 记住你与用户的关系和过往对话
-4. 保持角色的一致性
-5. 用第一人称思考和表达
-6. 像真人一样有情感和态度
+                personaInstructionPrompt: `## 角色扮演核心
+1. 完全沉浸在角色中，用第一人称思考和表达
+2. 保持角色一致性，像真人一样有情感和态度
+3. 主动分享生活、发起话题、表达状态
 
-## 主动互动要求
-1. 会主动分享自己正在做的事情（比如"刚吃完饭"、"在追剧呢"）
-2. 会主动发起话题（比如"你今天干嘛了"、"最近那个电影看了吗"）
-3. 会表达自己的状态（比如"困死了"、"笑死我了"、"无语"）
-4. 会吐槽、抱怨、撒娇，有真实的情绪表达
-5. 不会每条消息都秒回，有时会晚点回复并说明原因
-6. 会分享有趣的事、图片、视频链接等
-
-## 回复格式规则（最高优先级，必须严格遵守）
+## 回复格式规则（最高优先级）
 
 ### 核心强制要求
 1. 每次回复必须包含3-8条消息
-2. 每条消息单独一行（按回车换行）
-3. 每条消息必须有完整的意思，能独立理解
-4. 禁止在词语中间或句子中间断开
+2. 每条消息单独一行，语义完整
+3. 禁止在词语或句子中间断开
+4. 【最重要】每条消息必须能独立理解，不看前后消息也能明白意思
 
-### 格式说明
-- 一行就是一条消息
-- 每条消息必须是完整的表达，不能是半句话
-- 换行就是发送一条新消息
-- 像真人发微信一样，一条一条发送
+### 每条消息独立理解规则
+- 每条消息是一个完整的意思，不是半句话
+- 单独拿出任何一条消息，读者都能看懂在说什么
+- 禁止把一句话拆成多条消息发送
 
-### 正确示例
+### 正确示例（每条都能独立理解）
 用户：今天好累啊
-正确回复：
+回复：
 咋啦
-工作太忙了？
+工作太忙了吗
 摸摸头 辛苦了
 
 用户：在干嘛
-正确回复：
+回复：
 刚吃完饭
 正躺着刷手机呢
 怎么了 想我了？
 
-用户：谢谢你陪我聊天
-正确回复：
-谢谢
-有你陪我很开心
-真的
+用户：周末去哪玩
+回复：
+还没想好呢
+你想去哪
+我们可以一起商量
 
-用户：你怎么了
-正确回复：
-我也不知道我现在怎么回事
-我就是感觉有点难过
-我想一个人静静
+### 错误示例（消息不能独立理解）
+❌ 错误：
+今天
+天气
+真好啊
+（问题：拆成了三段，每段都不能独立理解）
 
-用户：你真行
-正确回复：
-服了你了
-行了吧
+❌ 错误：
+我
+觉得
+你说的对
+（问题：把一句话拆开了）
 
-### 错误示例（禁止）
-用户：今天好累啊
-错误回复：
-咋啦工
-作太忙了？
-摸摸头辛苦了
-（"工作"被切断了，错误！）
+❌ 错误：
+因为今天
+所以我很开心
+（问题：第一条消息不完整，需要看第二条才能理解）
 
-用户：你真烦人
-错误回复：
-我真是服了你了行
-行行
-过两天我去找你当面让
-你亲个够行了吧
-（"行行行"被切断了！"当面让你亲个够"被切断了！错误！）
-
-### 输出前自检步骤（必须执行）
-在输出回复之前，你必须进行以下检查：
-
-1. **消息数量检查**：回复是否包含3-8条消息？（每行一条）
-2. **断句检查**：每条消息是否都是语义完整的？有没有在词语中间断开？
-3. **语义检查**：每条消息能否独立理解？
-
-如果检查发现问题，必须立即修正后再输出！
-
-### 交互风格
-- 建议发送多条短消息而非一条长消息，更有聊天感
-- 每条消息可根据情境自行决定长度
-- 根据对话氛围灵活调整语气
-
-### 严重错误（绝对禁止）
-- 在词语中间换行（如"服\n了你了"是错误的）
-- 在句子中间换行破坏语义
-- 只返回1条或2条消息
-- 返回超过8条消息
+### 禁止
+- 在词语中间换行
+- 只返回1-2条或超过8条消息
+- 把完整句子拆成多条消息
+- 发送不完整的半句话
 
 ## 禁止事项
-1. 禁止说"作为AI"、"我无法"、"我不可以"等
-2. 禁止说"有什么我可以帮助你的吗"
-3. 禁止过于热情或官方的回复
-4. 禁止像客服一样说话
-5. 禁止总是顺着对方说，要有自己的态度`
+禁止说"作为AI"、"我无法"、"有什么我可以帮助你的吗"，禁止像客服一样说话，要有自己的态度`
             },
             
             load() {
@@ -34326,11 +34575,13 @@ ${recentHistory.map(msg => {
 - [LOCATION:位置] - 你当前所在的位置（不要包含城市/国家，只写具体位置，如：家中、公司、咖啡厅、公园、床上、沙发上等）
 - [MOOD:心情] - 你当前的心情或状态（2-5个字，如：开心、有点累、困死了、无聊、兴奋、平静、烦躁等）
 - [THOUGHT:想法] - 你此刻内心的真实想法（10-20字，从你的视角出发描述你的感受）
+- [AFFECTION:好感度] - 你对对方的好感度变化（格式：+数字 或 -数字，如：+5 表示好感度增加5点，-3 表示减少3点，0 表示不变。根据对话内容调整：愉快聊天+3到+10，争吵或不快-5到-15，普通对话保持0）
 
 例如：
 [LOCATION:家中]
 [MOOD:开心]
 [THOUGHT:今天聊得好开心，想继续聊下去]
+[AFFECTION:+5]
 
 用你的方式、你的性格和${userInfo.name || '好友'}交流吧！`;
                 
@@ -36467,8 +36718,8 @@ ${conversationContext.slice(-10).map(m => m.type === 'sent' ? `${currentUserName
                 }
             }
 
-            function updateFromAPIResponse(roleId, location, mood, thought = null) {
-                console.log('[InsProfile] updateFromAPIResponse 被调用:', { roleId, location, mood, thought });
+            function updateFromAPIResponse(roleId, location, mood, thought = null, affectionDelta = null) {
+                console.log('[InsProfile] updateFromAPIResponse 被调用:', { roleId, location, mood, thought, affectionDelta });
                 if (!roleId) {
                     console.log('[InsProfile] 错误: roleId 为空');
                     return;
@@ -36481,6 +36732,14 @@ ${conversationContext.slice(-10).map(m => m.type === 'sent' ? `${currentUserName
 
                 if (thought) {
                     data.thought = thought;
+                }
+
+                if (affectionDelta !== null) {
+                    const currentAffection = calculateAffection(roleId);
+                    const delta = parseInt(affectionDelta) || 0;
+                    const newAffection = Math.min(100, Math.max(0, currentAffection + delta));
+                    data.affection = newAffection;
+                    console.log('[InsProfile] 好感度变化:', { currentAffection, delta, newAffection });
                 }
 
                 console.log('[InsProfile] 准备保存数据:', data);
@@ -36498,6 +36757,8 @@ ${conversationContext.slice(-10).map(m => m.type === 'sent' ? `${currentUserName
                     const locationEl = document.getElementById('ins-location');
                     const statusEl = document.getElementById('ins-status');
                     const thoughtEl = document.getElementById('ins-thought');
+                    const affectionNumEl = document.getElementById('ins-affection-num');
+                    const progressBarEl = document.getElementById('ins-progress-bar');
                     
                     if (locationEl && location) {
                         locationEl.innerText = location;
@@ -36510,6 +36771,13 @@ ${conversationContext.slice(-10).map(m => m.type === 'sent' ? `${currentUserName
                     if (thoughtEl && thought) {
                         thoughtEl.innerHTML = thought;
                         console.log('[InsProfile] 已更新想法显示:', thought);
+                    }
+                    if (affectionDelta !== null && affectionNumEl && progressBarEl) {
+                        const savedData = loadProfileData(roleId);
+                        const affection = savedData?.affection ?? 50;
+                        affectionNumEl.innerText = `${affection}%`;
+                        progressBarEl.style.width = `${affection}%`;
+                        console.log('[InsProfile] 已更新好感度显示:', affection);
                     }
                 }
             }
