@@ -21790,7 +21790,7 @@ ${conversationHistory.slice(-10).map(msg => {
                 return;
             }
             
-            const entries = JSON.parse(localStorage.getItem('worldbookEntries')) || [];
+            const entries = worldbookEntries || [];
             console.log('Worldbook entries:', entries.length);
             
             if (entries.length === 0) {
@@ -21839,7 +21839,7 @@ ${conversationHistory.slice(-10).map(msg => {
         };
         
         window.getSimsWorldbookPrompt = function() {
-            const entries = JSON.parse(localStorage.getItem('worldbookEntries')) || [];
+            const entries = worldbookEntries || [];
             const selectedEntries = entries.filter(e => selectedSimsWorldbookIds.includes(e.id));
             
             if (selectedEntries.length === 0) return '';
@@ -26654,7 +26654,7 @@ ${conversationHistory.slice(-10).map(msg => {
                 actionBtn.classList.add('refreshing');
             }
             
-            const allRoles = JSON.parse(localStorage.getItem('wechatRoles')) || [];
+            const allRoles = roles || [];
             
             if (allRoles.length === 0) {
                 if (actionBtn) actionBtn.classList.remove('refreshing');
@@ -26726,10 +26726,31 @@ ${conversationHistory.slice(-10).map(msg => {
 
 ${worldbookContext ? `背景设定：\n${worldbookContext}\n` : ''}${chatContext ? `【最近的聊天记录】（可选参考：可以从中提取话题作为朋友圈题材，也可以自由发挥其他题材）\n${chatContext}\n\n` : ''}请生成${postCount}条微信朋友圈动态，并同步生成评论。
 
+【朋友圈文风指导 - 纯文字极繁/极简活人感】
+核心全局指令：
+1. 【思维不固定】：每条朋友圈都不需要思维连贯，因为真人的思维就是发散的，朋友圈是用来记录生活中的细节的。
+2. 【最高优先级：表情包绝对禁令】：无论情绪多么激动，绝对、永远不允许使用任何Emoji或颜文字。活人的高级感和发疯感只通过纯文字展现。
+3. 【拒绝升华，只给切片】：朋友圈不是作文，不需要起承转合，不需要总结人生哲理。只描述一个具体的瞬间、一个截屏、一首歌、或者一句没头没尾的话。
+4. 【AI味词汇彻底封杀】：全面禁用"邂逅、解锁、宝藏、治愈、惬意、元气满满、不负韶华、生活的美好、细细品味"等播音腔词汇。
+
+纯文字情绪排版法则：
+- 空格法则：用空格代替大部分逗号。例如：今天好累 真的不想动了
+- 句号法则：一条朋友圈的最后绝不加句号。如果加了，代表极度的冷漠和严肃。
+- 奇怪的标点连用：表达无语、震惊或疲惫时，使用连续的顿号或问号。例如：不是吧、、、 ？？？？ 这很难评......
+- 拟声词拉长：哈哈哈哈哈哈哈（代表敷衍或真笑）、啊啊啊啊啊啊（代表崩溃）、呃（代表无语）。
+
+题材参考（可从中随机选取）：
+1. 荒谬的生活切片：记录日常生活中看到的、听到的、毫无意义但值得记录的瞬间。
+2. 赛博冲浪与分享：分享音乐、文章、截图或烂梗，配文通常极其简短。
+3. 浴室沉思/灵光一闪：突然想到的奇奇怪怪的逻辑、毫无用处的冷知识。
+4. 纯粹的生理/心理状态汇报：把朋友圈当成个人状态指示灯，字数极少。如：活过来了 饿 头痛欲裂、、、
+5. 极其具体的微小崩溃/确幸：不写"今天很倒霉"，而是写具体怎么倒霉。
+6. 没话找话的废话文学：完全没有营养，纯粹为了发动态而发的动态。
+
 【输出格式要求】
 每条动态用===DYNAMIC===标记开始，格式如下：
 ===DYNAMIC===
-动态内容（不超过80字，自然真实）
+动态内容（不超过80字，自然真实，遵循文风指导）
 ===COMMENTS===
 评论者名字|||评论内容
 或者（回复其他评论时）：
@@ -27035,7 +27056,7 @@ ${commenterInfo}
                 const userSettings = getUserPersona();
                 const userName = userSettings.name || '用户';
                 
-                const allRoles = JSON.parse(localStorage.getItem('wechatRoles')) || [];
+                const allRoles = roles || [];
                 const roleWorldbookEntries = worldbookEntries.filter(entry => {
                     if (entry.isGlobal) return true;
                     return entry.roleIds && entry.roleIds.includes(role.id);
@@ -34654,54 +34675,14 @@ ${recentHistory.map(msg => {
         }
 
         // 初始化微信数据
-        function initWechatData() {
+        async function initWechatData() {
             console.log('=== initWechatData 开始 ===');
-            console.log('localStorage键数:', Object.keys(localStorage).length);
             
-            var wechatRolesBefore = localStorage.getItem('wechatRoles');
-            console.log('wechatRoles存在:', wechatRolesBefore !== null);
+            await initializeAppData();
             
-            const savedRoles = localStorage.getItem('wechatRoles');
-            if (savedRoles && savedRoles.trim() !== '') {
-                try {
-                    roles = JSON.parse(savedRoles);
-                    console.log('从localStorage加载roles，数量:', roles.length);
-                } catch (e) {
-                    console.error('roles解析失败:', e);
-                    roles = [];
-                }
-            } else {
-                roles = [];
-                console.log('初始化空roles数组');
-            }
-            
-            const savedMessages = localStorage.getItem('wechatMessages');
-            if (savedMessages) {
-                try {
-                    messages = JSON.parse(savedMessages);
-                    console.log('从localStorage加载messages，角色数:', Object.keys(messages).length);
-                } catch (e) {
-                    console.error('messages解析失败:', e);
-                    messages = {};
-                }
-            } else {
-                messages = {};
-                console.log('初始化空messages对象');
-            }
-            
-            const savedMoments = localStorage.getItem('wechatMoments');
-            if (savedMoments) {
-                try {
-                    moments = JSON.parse(savedMoments);
-                    console.log('从localStorage加载moments，数量:', moments.length);
-                } catch (e) {
-                    console.error('moments解析失败:', e);
-                    moments = [];
-                }
-            } else {
-                moments = [];
-                console.log('初始化空moments数组');
-            }
+            console.log('roles数量:', roles.length);
+            console.log('messages角色数:', Object.keys(messages).length);
+            console.log('moments数量:', moments.length);
             
             loadWechatId();
             loadProfileName();
@@ -35636,8 +35617,8 @@ ${recentHistory.map(msg => {
         }
 
         // 页面加载时初始化微信数据
-        window.addEventListener('load', function() {
-            initWechatData();
+        window.addEventListener('load', async function() {
+            await initWechatData();
             loadSavedAvatar();
             loadMusicRoomBackground();
             loadMusicRoomImages();
@@ -36029,65 +36010,14 @@ ${recentHistory.map(msg => {
                 return;
             }
             try {
-                if (typeof roles !== 'undefined' && roles) {
-                    if (!Array.isArray(roles) || roles.length === 0) {
-                        const savedRoles = localStorage.getItem('wechatRoles');
-                        if (savedRoles) {
-                            try {
-                                const parsedRoles = JSON.parse(savedRoles);
-                                if (Array.isArray(parsedRoles) && parsedRoles.length > 0) {
-                                    console.log('[AutoSave] 跳过保存空的roles，保留现有数据（' + parsedRoles.length + '个角色）');
-                                    return;
-                                }
-                            } catch (e) {
-                                console.warn('[AutoSave] 解析现有roles失败:', e);
-                            }
-                        }
-                    }
+                if (typeof roles !== 'undefined' && roles && Array.isArray(roles) && roles.length > 0) {
                     saveRoles();
                 }
-                if (typeof messages !== 'undefined' && messages) {
-                    const messageKeys = Object.keys(messages);
-                    if (messageKeys.length === 0) {
-                        const savedMessages = localStorage.getItem('wechatMessages');
-                        if (savedMessages) {
-                            try {
-                                const parsedMessages = JSON.parse(savedMessages);
-                                if (parsedMessages && Object.keys(parsedMessages).length > 0) {
-                                    console.log('[AutoSave] 跳过保存空的messages，保留现有数据');
-                                    return;
-                                }
-                            } catch (e) {
-                                console.warn('[AutoSave] 解析现有messages失败:', e);
-                            }
-                        }
-                    }
+                if (typeof messages !== 'undefined' && messages && Object.keys(messages).length > 0) {
                     saveMessages();
                 }
-                if (typeof moments !== 'undefined' && moments) {
-                    if (!Array.isArray(moments) || moments.length === 0) {
-                        const savedMoments = localStorage.getItem('wechatMoments');
-                        if (savedMoments) {
-                            try {
-                                const parsedMoments = JSON.parse(savedMoments);
-                                if (Array.isArray(parsedMoments) && parsedMoments.length > 0) {
-                                    console.log('[AutoSave] 跳过保存空的moments，保留现有数据（' + parsedMoments.length + '条动态）');
-                                } else {
-                                    saveMoments();
-                                    console.log('[AutoSave] moments 已保存，数量:', moments.length);
-                                }
-                            } catch (e) {
-                                console.warn('[AutoSave] 解析现有moments失败:', e);
-                                saveMoments();
-                            }
-                        } else {
-                            saveMoments();
-                            console.log('[AutoSave] moments 已保存，数量:', moments.length);
-                        }
-                    } else {
-                        saveMoments();
-                        console.log('[AutoSave] moments 已保存，数量:', moments.length);
-                    }
+                if (typeof moments !== 'undefined' && moments && Array.isArray(moments) && moments.length > 0) {
+                    saveMoments();
                 }
                 const momentsCoverImg = document.getElementById('moments-cover-img');
                 if (momentsCoverImg && momentsCoverImg.src && momentsCoverImg.style.display !== 'none') {
@@ -36960,7 +36890,7 @@ ${recentHistory.map(msg => {
         let detailSelectedRoles = [];
 
         function getWorldbookRoles() {
-            return JSON.parse(localStorage.getItem('wechatRoles')) || [];
+            return roles || [];
         }
 
         function renderRoleSelector(containerId, selectedRoles, onChange) {
@@ -39472,12 +39402,6 @@ ${conversationContext.slice(-10).map(m => m.type === 'sent' ? `${userName}：${m
         }
 
         initErrorLogging();
-        
-        initializeAppData().then(() => {
-            console.log('应用数据初始化完成');
-        }).catch(err => {
-            console.error('应用数据初始化失败:', err);
-        });
 
     </script>
 
