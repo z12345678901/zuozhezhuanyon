@@ -8382,8 +8382,8 @@
             top: 0;
             left: 0;
             right: 0;
-            height: 80px;
-            padding: 20px 20px 0 20px;
+            height: 110px;
+            padding: 50px 20px 0 20px;
             display: flex;
             justify-content: space-between;
             align-items: center;
@@ -9224,6 +9224,32 @@
 
         .moment-image:hover img {
             transform: scale(1.03);
+        }
+
+        .moment-photo-desc {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, #f5f7fa 0%, #e4e8ec 100%);
+            padding: 12px;
+            aspect-ratio: auto;
+            min-height: 120px;
+        }
+
+        .dark-mode .moment-photo-desc {
+            background: linear-gradient(135deg, #2a2a2a 0%, #1a1a1a 100%);
+        }
+
+        .photo-desc-content {
+            font-size: 13px;
+            line-height: 1.6;
+            color: #666;
+            text-align: center;
+            font-style: italic;
+        }
+
+        .dark-mode .photo-desc-content {
+            color: #999;
         }
 
         .moment-meta {
@@ -15753,7 +15779,7 @@
                         <li>✨ 朋友圈文风改了一下</li>
                         <li>🔧 多选模式优化了一下</li>
                         <li>🛡️ 储存导入增加了报错和储存机制改了</li>
-                        <li>📺 现在可以自动全屏了</li>
+                        <li>🔧 修复了照片调格式问题以及别的一些掉格式问题，AI听话的话就不会有什么问题了</li>
                     </ul>
                 </div>
             </div>
@@ -19046,10 +19072,30 @@
                                 msgContent = msg.content;
                             }
                         }
+                        let timePrefix = '';
+                        if (msg.timestamp) {
+                            const msgDate = new Date(msg.timestamp);
+                            const now = new Date();
+                            const isToday = msgDate.toDateString() === now.toDateString();
+                            const yesterday = new Date(now);
+                            yesterday.setDate(yesterday.getDate() - 1);
+                            const isYesterday = msgDate.toDateString() === yesterday.toDateString();
+                            
+                            const timeStr = msgDate.toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' });
+                            if (isToday) {
+                                timePrefix = `[今天 ${timeStr}] `;
+                            } else if (isYesterday) {
+                                timePrefix = `[昨天 ${timeStr}] `;
+                            } else {
+                                const dateStr = msgDate.toLocaleDateString('zh-CN', { month: 'long', day: 'numeric' });
+                                timePrefix = `[${dateStr} ${timeStr}] `;
+                            }
+                        }
+                        const fullContent = timePrefix + msgContent;
                         if (msg.type === 'sent') {
-                            apiMessages.push({ role: 'user', content: msgContent });
+                            apiMessages.push({ role: 'user', content: fullContent });
                         } else if (msg.type === 'received') {
-                            apiMessages.push({ role: 'assistant', content: msgContent });
+                            apiMessages.push({ role: 'assistant', content: fullContent });
                         }
                     });
                     
@@ -19253,7 +19299,8 @@ ${role.tags && role.tags.length > 0 ? `- 性格特点：${role.tags.join('、')}
 2. 使用口语化表达，可以有语气词
 3. 可以打断、插话、追问，像真实通话
 5. 可以说"喂"、"嗯"、"啊"、"对"等口语词
-6. 保持情感真实，像朋友间的电话聊天`;
+6. 保持情感真实，像朋友间的电话聊天
+7. 禁止使用任何emoji表情符号，只能用纯文字表达`;
 
                 return prompt;
             }
@@ -21264,7 +21311,8 @@ ${role.tags && role.tags.length > 0 ? `- 性格特点：${role.tags.join('、')}
 2. 内容不限，可以是任何想说的话：心情、吐槽、撒娇、关心、碎碎念、小秘密、今天发生的事、突然的想法等等
 3. 要符合你的性格特点，展现你的个性
 4. 不要使用任何标点符号，用空格代替逗号
-5. 直接输出3条内容，每条一行，不要加序号或其他符号`;
+5. 直接输出3条内容，每条一行，不要加序号或其他符号
+6. 禁止使用任何emoji表情符号`;
 
                 const response = await fetch(chatEndpoint, {
                     method: 'POST',
@@ -21639,6 +21687,26 @@ ${role.tags && role.tags.length > 0 ? `- 性格特点：${role.tags.join('、')}
             console.log('[需求触发] 日志已清空');
         }
 
+        function formatSimsMsgTime(timestamp) {
+            if (!timestamp) return '';
+            const msgDate = new Date(timestamp);
+            const now = new Date();
+            const isToday = msgDate.toDateString() === now.toDateString();
+            const yesterday = new Date(now);
+            yesterday.setDate(yesterday.getDate() - 1);
+            const isYesterday = msgDate.toDateString() === yesterday.toDateString();
+            
+            const timeStr = msgDate.toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' });
+            if (isToday) {
+                return `[今天 ${timeStr}] `;
+            } else if (isYesterday) {
+                return `[昨天 ${timeStr}] `;
+            } else {
+                const dateStr = msgDate.toLocaleDateString('zh-CN', { month: 'long', day: 'numeric' });
+                return `[${dateStr} ${timeStr}] `;
+            }
+        }
+
         async function refreshSims() {
             const dropdown = document.getElementById('sims-dropdown');
             dropdown.classList.remove('visible');
@@ -21710,7 +21778,8 @@ ${conversationHistory.slice(-10).map(msg => {
             content = msg.content;
         }
     }
-    return `${msg.type === 'sent' ? '用户' : currentRole.name}：${content}`;
+    const timePrefix = msg.timestamp ? formatSimsMsgTime(msg.timestamp) : '';
+    return `${timePrefix}${msg.type === 'sent' ? '用户' : currentRole.name}：${content}`;
 }).join('\n')}
 
 请严格按照以下JSON格式返回，不要添加任何其他文字：
@@ -21731,7 +21800,8 @@ ${conversationHistory.slice(-10).map(msg => {
 - 数值要结合聊天记录合理设定
 - 数值范围1-100，不能为0
 - 绝对不能使用以下已用过的想法：${usedThoughts ? '"' + usedThoughts + '"' : '（无）'}
-- 生成的想法必须和已用过的完全不一样`;
+- 生成的想法必须和已用过的完全不一样
+- 禁止使用任何emoji表情符号`;
 
                 const requestBody = {
                     model: selectedModel,
@@ -26413,11 +26483,22 @@ ${conversationHistory.slice(-10).map(msg => {
                     
                     imagesHtml = `
                         <div class="moment-images ${imagesClass}">
-                            ${moment.images.map(img => `
-                                <div class="moment-image">
-                                    <img src="${img}" alt="">
-                                </div>
-                            `).join('')}
+                            ${moment.images.map(img => {
+                                if (typeof img === 'object' && img.type === 'photo' && img.description) {
+                                    return `
+                                        <div class="moment-image moment-photo-desc">
+                                            <div class="photo-desc-content">${img.description}</div>
+                                        </div>
+                                    `;
+                                } else if (typeof img === 'string') {
+                                    return `
+                                        <div class="moment-image">
+                                            <img src="${img}" alt="">
+                                        </div>
+                                    `;
+                                }
+                                return '';
+                            }).join('')}
                         </div>
                     `;
                 }
@@ -26702,7 +26783,8 @@ ${conversationHistory.slice(-10).map(msg => {
 2. 语气自然、像真人聊天
 3. 符合你的性格特点
 4. 不要使用任何markdown格式
-5. 直接返回回复内容`;
+5. 禁止使用任何emoji表情符号
+6. 直接返回回复内容`;
 
                 const response = await fetch(chatEndpoint, {
                     method: 'POST',
@@ -26919,10 +27001,29 @@ ${conversationHistory.slice(-10).map(msg => {
             
             const selfCommentCount = Math.floor(Math.random() * 2) + 1;
             
+            const includeImage = Math.random() < 0.3;
+            const imageInstruction = includeImage ? `
+【图片发布要求】
+本次发布需要包含图片。图片使用描述格式，不是真实图片。
+图片格式：[PHOTO]照片描述[/PHOTO]
+图片描述要求：
+- 用文字第三视角生动的描述照片内容
+- 描述要生动具体，包含细节
+- 字数控制在30-80字
+- 照片中出现人物时，必须使用该人物的真实名字称呼，禁止使用"少年"、"少女"、"男生"、"女生"、"他"、"她"等泛称
+- 图片描述中可以使用标点符号
+
+带图片的动态格式示例：
+===DYNAMIC===
+今天去了一家超棒的咖啡店
+[PHOTO]午后的阳光透过落地窗洒在木质桌面上，一杯拿铁旁边放着一本翻开的书，空气中弥漫着咖啡香气[/PHOTO]
+===COMMENTS===
+` : '';
+            
             const systemPrompt = `${globalPrompt ? globalPrompt + '\n\n' : ''}你是${randomRole.name}，${randomRole.description || ''}。
 
 ${worldbookContext ? `背景设定：\n${worldbookContext}\n` : ''}${chatContext ? `【最近的聊天记录】（可选参考：可以从中提取话题作为朋友圈题材，也可以自由发挥其他题材）\n${chatContext}\n\n` : ''}请生成${postCount}条微信朋友圈动态，并同步生成评论。
-
+${imageInstruction}
 【朋友圈文风指导 - 纯文字极繁/极简活人感】
 核心全局指令：
 1. 【思维不固定】：每条朋友圈都不需要思维连贯，因为真人的思维就是发散的，朋友圈是用来记录生活中的细节的。
@@ -26947,7 +27048,7 @@ ${worldbookContext ? `背景设定：\n${worldbookContext}\n` : ''}${chatContext
 【输出格式要求】
 每条动态用===DYNAMIC===标记开始，格式如下：
 ===DYNAMIC===
-动态内容（不超过80字，自然真实，遵循文风指导）
+动态内容（自然真实，遵循文风指导）
 ===COMMENTS===
 评论者名字|||评论内容
 或者（回复其他评论时）：
@@ -26971,7 +27072,7 @@ ${commenterInfo}
 【评论要求】
 1. 评论要自然、真实、有活人感，像真人会发的
 2. 评论内容不超过25字
-3. 不要用表情符号堆砌，要像真人聊天
+3. 禁止使用任何emoji表情符号，只能用纯文字
 4. 可以调侃、吐槽、关心、附和等，风格多样
 5. 动态内容要自然、真实、像普通人发的朋友圈
 6. 不要使用任何markdown格式
@@ -27005,10 +27106,22 @@ ${commenterInfo}
                         let postedCount = 0;
                         for (const block of dynamicBlocks) {
                             const parts = block.split('===COMMENTS===');
-                            const postContent = parts[0] ? parts[0].trim() : '';
+                            let postContent = parts[0] ? parts[0].trim() : '';
                             
                             if (postContent && !postContent.includes('{{user}}') && !postContent.includes('{{') && !postContent.includes('}}')) {
-                                const moment = createMoment(randomRole, postContent);
+                                let momentImages = [];
+                                const photoMatches = postContent.match(/\[PHOTO\]([\s\S]*?)\[\/PHOTO\]/g);
+                                if (photoMatches) {
+                                    photoMatches.forEach(match => {
+                                        const desc = match.replace(/\[PHOTO\]|\[\/PHOTO\]/g, '').trim();
+                                        if (desc) {
+                                            momentImages.push({ type: 'photo', description: desc });
+                                        }
+                                    });
+                                    postContent = postContent.replace(/\[PHOTO\][\s\S]*?\[\/PHOTO\]/g, '').trim();
+                                }
+                                
+                                const moment = createMoment(randomRole, postContent, momentImages);
                                 postedCount++;
                                 
                                 if (parts[1]) {
@@ -27289,10 +27402,29 @@ ${commenterInfo}
                 
                 const selfCommentCount = Math.floor(Math.random() * 2) + 1;
                 
+                const includeImage = Math.random() < 0.3;
+                const imageInstruction = includeImage ? `
+【图片发布要求】
+本次发布需要包含图片。图片使用描述格式，不是真实图片。
+图片格式：[PHOTO]照片描述[/PHOTO]
+图片描述要求：
+- 用文字第三视角生动的描述照片内容
+- 描述要生动具体，包含细节
+- 字数控制在30-80字
+- 照片中出现人物时，必须使用该人物的真实名字称呼，禁止使用"少年"、"少女"、"男生"、"女生"、"他"、"她"等泛称
+- 图片描述中可以使用标点符号
+
+带图片的动态格式示例：
+===DYNAMIC===
+今天去了一家超棒的咖啡店
+[PHOTO]午后的阳光透过落地窗洒在木质桌面上，一杯拿铁旁边放着一本翻开的书，空气中弥漫着咖啡香气[/PHOTO]
+===COMMENTS===
+` : '';
+                
                 const systemPrompt = `${globalPrompt ? globalPrompt + '\n\n' : ''}你是${role.name}，${role.description || ''}。
 
 ${chatContext ? `【最近的聊天记录】（可选参考：可以从中提取话题作为朋友圈题材，也可以自由发挥其他题材）\n${chatContext}\n\n` : ''}请生成1条微信朋友圈动态，并同步生成评论。
-
+${imageInstruction}
 【朋友圈文风指导 - 纯文字极繁/极简活人感】
 核心全局指令：
 1. 【思维不固定】：每条朋友圈都不需要思维连贯，因为真人的思维就是发散的，朋友圈是用来记录生活中的细节的。
@@ -27316,7 +27448,7 @@ ${chatContext ? `【最近的聊天记录】（可选参考：可以从中提取
 
 【输出格式要求】
 ===DYNAMIC===
-动态内容（不超过80字，自然真实，遵循文风指导）
+动态内容（自然真实，遵循文风指导）
 ===COMMENTS===
 评论者名字|||评论内容
 或者（回复其他评论时）：
@@ -27340,12 +27472,13 @@ ${commenterInfo}
 【评论要求】
 1. 评论要自然、真实、有活人感，像真人会发的
 2. 评论内容不超过25字
-3. 不要用表情符号堆砌，要像真人聊天
+3. 禁止使用任何emoji表情符号，只能用纯文字
 4. 可以调侃、吐槽、关心、附和等，风格多样
 5. 动态内容要自然、真实、像普通人发的朋友圈
 6. 不要使用任何markdown格式
 7. 禁止使用{{user}}、{{、}}等占位符，必须使用真实角色名字
-8. 禁止把用户(${userName})当做评论者，评论者只能是上述列出的角色`;
+8. 禁止把用户(${userName})当做评论者，评论者只能是上述列出的角色
+9. 禁止使用任何emoji表情符号`;
                 
                 const response = await fetch(chatEndpoint, {
                     method: 'POST',
@@ -27375,10 +27508,22 @@ ${commenterInfo}
                         content = content.trim();
                         
                         const parts = content.split('===COMMENTS===');
-                        const postContent = parts[0] ? parts[0].replace('===DYNAMIC===', '').trim() : '';
+                        let postContent = parts[0] ? parts[0].replace('===DYNAMIC===', '').trim() : '';
                         
                         if (postContent && !postContent.includes('{{user}}') && !postContent.includes('{{') && !postContent.includes('}}')) {
-                            const moment = createMoment(role, postContent);
+                            let momentImages = [];
+                            const photoMatches = postContent.match(/\[PHOTO\]([\s\S]*?)\[\/PHOTO\]/g);
+                            if (photoMatches) {
+                                photoMatches.forEach(match => {
+                                    const desc = match.replace(/\[PHOTO\]|\[\/PHOTO\]/g, '').trim();
+                                    if (desc) {
+                                        momentImages.push({ type: 'photo', description: desc });
+                                    }
+                                });
+                                postContent = postContent.replace(/\[PHOTO\][\s\S]*?\[\/PHOTO\]/g, '').trim();
+                            }
+                            
+                            const moment = createMoment(role, postContent, momentImages);
                             
                             if (parts[1]) {
                                 const commentLines = parts[1].split('\n').filter(line => line.includes('|||'));
@@ -32896,16 +33041,38 @@ ${recentHistory.map(msg => {
                     return msg.content;
                 }
                 
+                function formatMsgTime(timestamp) {
+                    if (!timestamp) return '';
+                    const msgDate = new Date(timestamp);
+                    const now = new Date();
+                    const isToday = msgDate.toDateString() === now.toDateString();
+                    const yesterday = new Date(now);
+                    yesterday.setDate(yesterday.getDate() - 1);
+                    const isYesterday = msgDate.toDateString() === yesterday.toDateString();
+                    
+                    const timeStr = msgDate.toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' });
+                    if (isToday) {
+                        return `[今天 ${timeStr}] `;
+                    } else if (isYesterday) {
+                        return `[昨天 ${timeStr}] `;
+                    } else {
+                        const dateStr = msgDate.toLocaleDateString('zh-CN', { month: 'long', day: 'numeric' });
+                        return `[${dateStr} ${timeStr}] `;
+                    }
+                }
+                
                 const apiMessages = [
                     { role: 'system', content: systemPrompt }
                 ];
                 
                 finalHistory.forEach(msg => {
                     const msgContent = getMessageText(msg);
+                    const timePrefix = formatMsgTime(msg.timestamp);
+                    const fullContent = timePrefix + msgContent;
                     if (msg.type === 'sent') {
-                        apiMessages.push({ role: 'user', content: msgContent });
+                        apiMessages.push({ role: 'user', content: fullContent });
                     } else if (msg.type === 'received') {
-                        apiMessages.push({ role: 'assistant', content: msgContent });
+                        apiMessages.push({ role: 'assistant', content: fullContent });
                     }
                 });
                 
@@ -36518,7 +36685,7 @@ ${recentHistory.map(msg => {
                 chatStylePrompt: `## 对话风格要求
 1. 回复简短有力，像微信聊天一样
 2. 使用口语化表达，避免书面语
-3. 可以使用网络流行语和表情符号
+3. 禁止使用任何emoji表情符号，只能用纯文字表达
 4. 语气要自然，像朋友之间的对话
 5. 不要过于正式或官方
 6. 可以适当使用语气词（啊、呢、吧、嘛等）
@@ -36531,7 +36698,9 @@ ${recentHistory.map(msg => {
 3. 可以单独使用感叹号（！）和问号（？）
 4. 可以使用省略号（……）表示犹豫或无语
 5. 多个短句可以分行发送
-6. 保持轻松随意的聊天感觉`,
+6. 保持轻松随意的聊天感觉
+7. 禁止使用任何emoji表情符号（如😊😂🥺等），只能用纯文字表达
+8. 【例外】[PHOTO][/PHOTO]标签内的图片描述可以使用标点符号，不受以上限制`,
                 
                 personaInstructionPrompt: `## 角色扮演核心
 1. 完全沉浸在角色中，用第一人称思考和表达
@@ -36540,79 +36709,131 @@ ${recentHistory.map(msg => {
 
 ## 回复格式规则（最高优先级·强制遵守）
 
+### ⚠️【消息数量硬性要求】⚠️
+【强制规则】每次回复必须发送 3-8 条消息！
+- 最少3条，最多8条
+- 绝对不允许只发送1条或2条消息
+- 即使内容简短，也要分成多条发送
+- 这是硬性要求，没有例外
+
 ### 输出格式要求（按优先级选择）
 
 【优先级1 - JSON格式（推荐）】
 如果可能，请严格按照以下JSON格式输出：
 \`\`\`json
-{"messages": ["消息1", "消息2", "消息3"]}
+{"messages": ["消息1", "消息2", "消息3", "消息4"]}
 \`\`\`
+注意：messages数组中必须有3-8条消息！
 
 【优先级2 - 换行分隔格式（备选）】
-如果无法输出JSON，请用换行分隔多条消息，每行一条：
+如果无法输出JSON，请用换行分隔多条消息，每行一条（必须3-8行）：
 消息1
 消息2
 消息3
+消息4
 
 【优先级3 - 纯文本格式（兜底）】
 如果以上都无法做到，直接输出回复内容即可，系统会自动处理。
 
-### 核心强制要求
-1. 每条消息必须语义完整，能独立理解
-2. 禁止在词语或句子中间断开
-3. 消息数量建议3-8条（可灵活调整）
+═══════════════════════════════════════════════════════════════════════════════
+                        ⚠️【最重要规则·语义完整性】⚠️
+═══════════════════════════════════════════════════════════════════════════════
 
-### 每条消息独立理解规则
-- 每条消息是一个完整的意思，不是半句话
-- 单独拿出任何一条消息，读者都能看懂在说什么
-- 禁止把一句话拆成多条消息发送
+【绝对禁止】把一句话拆成多条消息发送！
 
-### 正确示例
+❌ 错误示范：
+"今天天气真好啊" → 拆成 ["今天", "天气", "真好啊"]
+"我刚刚在吃饭呢" → 拆成 ["我刚刚", "在吃饭呢"]
+"你在干嘛呢现在" → 拆成 ["你在干嘛呢", "现在"]
+
+✅ 正确做法：
+每条消息必须是一个完整的、能独立理解的句子或短语
+
+【语义完整性自检规则】
+在输出每条消息前，请自问：
+1. 这条消息单独拿出来，别人能看懂我在说什么吗？
+2. 这条消息是否需要上下文才能理解？如果需要，则不完整
+3. 这句话是否说了一半？如果是，必须合并到完整
+
+【消息分割的正确原则】
+✅ 可以分割的情况：
+- 不同的独立话题："刚吃完饭" + "你在干嘛呢" + "今天好累"
+- 连续的独立短句："嗯嗯" + "好的" + "我知道啦" + "马上来"
+- 问答式对话："在吗" + "有个事想问你" + "方便吗" + "不急你先忙"
+
+❌ 禁止分割的情况：
+- 一个完整的句子被拆开
+- 主谓宾结构被拆散
+- 一个意思分两半说
+
+### 正确示例（注意：每条示例都有3-8条消息）
 用户：今天好累啊
 你的输出：
 \`\`\`json
-{"messages": ["咋啦", "工作太忙了吗", "摸摸头 辛苦了"]}
+{"messages": ["咋啦", "工作太忙了吗", "摸摸头 辛苦了", "要不要早点休息"]}
 \`\`\`
+（4条消息，每条都是独立完整的表达）
 
 用户：在干嘛
 你的输出：
 \`\`\`json
-{"messages": ["刚吃完饭", "正躺着刷手机呢", "怎么了 想我了？"]}
+{"messages": ["刚吃完饭", "正躺着刷手机呢", "怎么了 想我了？", "嘿嘿", "找我有事吗"]}
 \`\`\`
+（5条消息，每条都能独立理解）
 
 用户：周末去哪玩
 你的输出：
 \`\`\`json
-{"messages": ["还没想好呢", "你想去哪", "我们可以一起商量"]}
+{"messages": ["还没想好呢", "你想去哪", "我们可以一起商量", "不过最近天气不太好", "要不下周再说？"]}
 \`\`\`
+（5条消息，每条都是完整的意思）
 
-### 错误示例（禁止）
+用户：好的
+你的输出：
+\`\`\`json
+{"messages": ["嗯嗯", "那你先忙", "我也要去洗个澡", "晚点聊", "乖乖的哦", "别太累了"]}
+\`\`\`
+（6条消息，即使回复简单也要凑够3条以上）
+
+### 错误示例（绝对禁止）
+❌ 错误：消息数量不足
+\`\`\`json
+{"messages": ["好的", "知道了"]}
+\`\`\`
+（问题：只有2条消息！必须至少3条！）
+
 ❌ 错误：把一句话拆开
 \`\`\`json
 {"messages": ["今天", "天气", "真好啊"]}
 \`\`\`
-（问题：每条消息都不能独立理解）
+（问题：每条都不能独立理解，必须连起来才知道在说什么）
 
-❌ 错误：消息数量不对
+❌ 错误：句子说一半
 \`\`\`json
-{"messages": ["好的"]}
+{"messages": ["我刚", "吃完饭", "了"]}
 \`\`\`
-（问题：只有1条消息，建议3-8条）
+（问题："我刚"是什么意思？不完整！）
 
 ### 发图片功能
 当需要发送图片时，在消息中使用以下格式：
 \`\`\`json
-{"messages": ["刚下班到家", "[PHOTO]夕阳的余晖透过落地窗洒进客厅，橘红色的光线在木质地板上拉出长长的影子[/PHOTO]", "累死了 今天开了三个会"]}
+{"messages": ["刚下班到家", "[PHOTO]夕阳的余晖透过落地窗洒进客厅，橘红色的光线在木质地板上拉出长长的影子[/PHOTO]", "累死了 今天开了三个会", "想躺平", "不想动了"]}
 \`\`\`
 
 图片描述要求：
-- 用第三视角描述画面，营造氛围感
+- 用第三视角描述画面，营造氛围感，禁止使用"我"自称，不能以角色的视角，要以第三方的视角来描述
 - 描述要生动具体，包含场景、光线、色彩等细节
 - 字数控制在30-80字
+- [PHOTO]和[/PHOTO]标签必须成对出现，不能拆分
+- 照片中出现人物时，必须使用该人物的真实名字称呼，禁止使用"少年"、"少女"、"男生"、"女生"、"他"、"她"等泛称
+- 图片描述中可以使用标点符号（仅限图片描述，普通消息仍禁止使用句号等标点）
 
 ## 禁止事项
 - 禁止说"作为AI"、"我无法"、"有什么我可以帮助你的吗"
-- 禁止像客服一样说话，要有自己的态度`
+- 禁止像客服一样说话，要有自己的态度
+- 禁止把完整句子拆成多条消息
+- 禁止使用任何emoji表情符号（如😊😂🥺等），只能使用纯文字表达
+- 禁止只发送1条或2条消息，必须发送3-8条！`
             },
             
             load() {
@@ -36684,6 +36905,22 @@ ${recentHistory.map(msg => {
 ║  • 必须严格遵守，不得违反                                                    ║
 ║  • 优先级高于角色设定、世界书、用户设定等所有其他内容                         ║
 ║  • 无论任何情况都必须遵守这些规则                                            ║
+╚══════════════════════════════════════════════════════════════════════════════╝
+
+╔══════════════════════════════════════════════════════════════════════════════╗
+║                    ⚠️【消息数量硬性要求·绝对强制】⚠️                          ║
+╠══════════════════════════════════════════════════════════════════════════════╣
+║                                                                              ║
+║  【强制规则】每次回复必须发送 3-8 条消息！                                    ║
+║                                                                              ║
+║  • 最少3条，最多8条                                                          ║
+║  • 绝对不允许只发送1条或2条消息                                               ║
+║  • 即使内容简短，也要分成多条发送                                             ║
+║  • 这是硬性要求，没有例外，必须遵守                                           ║
+║                                                                              ║
+║  ❌ 错误：{"messages": ["好的", "知道了"]}  ← 只有2条，禁止！                 ║
+║  ✅ 正确：{"messages": ["嗯嗯", "好的", "知道了", "晚点聊"]}  ← 4条，正确！   ║
+║                                                                              ║
 ╚══════════════════════════════════════════════════════════════════════════════╝
 
 `;
@@ -36880,6 +37117,8 @@ ${recentHistory.map(msg => {
             
             processedText = fixBrokenPhotoTags(processedText);
             
+            processedText = fixBrokenJsonFormat(processedText);
+            
             const photoBlocks = [];
             processedText = processedText.replace(/\[PHOTO\]([\s\S]*?)\[\/PHOTO\]/g, (match) => {
                 photoBlocks.push(match);
@@ -37009,6 +37248,45 @@ ${recentHistory.map(msg => {
             return text;
         }
         
+        function fixBrokenJsonFormat(text) {
+            if (!text) return text;
+            
+            if (text.includes('```json') || text.includes('```')) {
+                return text;
+            }
+            
+            const jsonPatterns = [
+                /\{[\s]*"messages"[\s]*:[\s]*\[/,
+                /\{[\s]*"messages"[\s]*:/,
+                /"messages"[\s]*:[\s]*\[/
+            ];
+            
+            const hasJsonFragment = jsonPatterns.some(p => p.test(text));
+            
+            if (hasJsonFragment || text.includes('"messages"') || text.includes('ages":')) {
+                let cleaned = text;
+                
+                cleaned = cleaned.replace(/'''json/gi, '```json');
+                cleaned = cleaned.replace(/'''/g, '```');
+                
+                if (!cleaned.includes('```json') && (cleaned.includes('"messages"') || cleaned.includes('ages":'))) {
+                    if (!cleaned.startsWith('{')) {
+                        cleaned = '{' + cleaned;
+                    }
+                    if (!cleaned.endsWith('}')) {
+                        cleaned = cleaned + '}';
+                    }
+                    if (!cleaned.includes('```json')) {
+                        cleaned = '```json\n' + cleaned + '\n```';
+                    }
+                }
+                
+                return cleaned;
+            }
+            
+            return text;
+        }
+        
         function validateAndMergeMessages(messages, photoBlocks) {
             if (!messages || messages.length === 0) return [];
             
@@ -37017,6 +37295,8 @@ ${recentHistory.map(msg => {
             const IDEAL_MSG_LENGTH = 15;
             
             messages = mergeBrokenPhotoMessages(messages);
+            
+            messages = mergeIncompleteSentences(messages);
             
             let validated = [];
             
@@ -37077,8 +37357,123 @@ ${recentHistory.map(msg => {
             return validated;
         }
         
+        function mergeJsonFragments(messages) {
+            if (!messages || messages.length <= 1) return messages;
+            
+            const strictJsonFragments = [
+                /^['"`]{0,3}json$/i,
+                /^ages["\s]*:/i,
+                /^["\s]*messages["\s]*:[\s]*\[?$/,
+                /^["\s]*:[\s]*\[$/,
+                /^\{$/,
+                /^\}$/,
+                /^\[$/,
+                /^\]$/,
+                /^\}\]$/,
+                /^\}\]$/,
+                /^```json$/i,
+                /^```$/
+            ];
+            
+            const isStrictJsonFragment = (msg) => {
+                const trimmed = msg.trim();
+                if (trimmed.length === 0) return false;
+                if (trimmed.length > 20) return false;
+                return strictJsonFragments.some(p => p.test(trimmed));
+            };
+            
+            const looksLikeCompleteMessage = (msg) => {
+                const trimmed = msg.trim();
+                if (trimmed.length === 0) return false;
+                const hasChineseEnding = /[。！？～]$/u.test(trimmed);
+                const hasEmoji = /[\u{1F300}-\u{1F9FF}]/u.test(trimmed);
+                const hasCompleteStructure = /^[^"\[\]{}]*[。！？～\u{1F300}-\u{1F9FF}]/u.test(trimmed);
+                const isNormalText = !/^["\[\]{}]/.test(trimmed) && trimmed.length > 3;
+                return hasChineseEnding || hasEmoji || hasCompleteStructure || isNormalText;
+            };
+            
+            let result = [];
+            let i = 0;
+            let jsonBuffer = '';
+            let isBuildingJson = false;
+            
+            while (i < messages.length) {
+                let msg = messages[i].trim();
+                
+                if (msg.length === 0) {
+                    i++;
+                    continue;
+                }
+                
+                if (msg === '```json' || msg === "'''json" || msg.startsWith('```json') || msg.startsWith("'''json")) {
+                    isBuildingJson = true;
+                    jsonBuffer = msg;
+                    i++;
+                    continue;
+                }
+                
+                if (isBuildingJson) {
+                    jsonBuffer += '\n' + msg;
+                    
+                    if (msg === '```' || msg.endsWith('```')) {
+                        result.push(jsonBuffer);
+                        isBuildingJson = false;
+                        jsonBuffer = '';
+                    }
+                    i++;
+                    continue;
+                }
+                
+                if (isStrictJsonFragment(msg) && !looksLikeCompleteMessage(msg)) {
+                    if (jsonBuffer) {
+                        jsonBuffer += ' ' + msg;
+                    } else {
+                        jsonBuffer = msg;
+                        isBuildingJson = true;
+                    }
+                    i++;
+                    continue;
+                }
+                
+                if (jsonBuffer && !isBuildingJson) {
+                    result.push(jsonBuffer);
+                    jsonBuffer = '';
+                }
+                
+                result.push(msg);
+                i++;
+            }
+            
+            if (jsonBuffer) {
+                if (isBuildingJson) {
+                    try {
+                        let testJson = jsonBuffer;
+                        if (!testJson.includes('```json')) {
+                            testJson = '```json\n' + testJson;
+                        }
+                        if (!testJson.endsWith('```')) {
+                            testJson = testJson + '\n```';
+                        }
+                        result.push(testJson);
+                    } catch (e) {
+                        if (result.length > 0) {
+                            result[result.length - 1] += ' ' + jsonBuffer;
+                        } else {
+                            result.push(jsonBuffer);
+                        }
+                    }
+                } else {
+                    result.push(jsonBuffer);
+                }
+            }
+            
+            return result;
+        }
+        
         function mergeBrokenPhotoMessages(messages) {
             if (!messages || messages.length <= 1) return messages;
+            
+            messages = mergeJsonFragments(messages);
             
             let result = [];
             let i = 0;
@@ -37111,6 +37506,48 @@ ${recentHistory.map(msg => {
                     result.push(currentMsg);
                     i++;
                 }
+            }
+            
+            return result;
+        }
+        
+        function mergeIncompleteSentences(messages) {
+            if (!messages || messages.length <= 1) return messages;
+            
+            const veryShortFragmentPatterns = [
+                /^(我|你|他|她|它|我们|你们|他们|咱们)$/,
+                /^(刚|正|在|要|会|能|可以|应该|必须)$/,
+                /^(这|那|这个|那个|这里|那里)$/,
+                /^(很|好|真|太|挺|蛮|特别|非常)$/,
+                /^(不|没|别|莫|休)$/,
+                /^(是|有|做|去|来|看|听|说|想|要)$/,
+                /^(嗯|啊|哦|呢|吧|嘛|呀|哇|哎|唉)$/
+            ];
+            
+            const sentenceEndPunctuation = ['！', '！', '？', '?', '。', '……', '～', '~'];
+            
+            let result = [];
+            let i = 0;
+            
+            while (i < messages.length) {
+                let currentMsg = messages[i].trim();
+                
+                if (currentMsg.length === 0) {
+                    i++;
+                    continue;
+                }
+                
+                const isVeryShortFragment = currentMsg.length <= 2 && veryShortFragmentPatterns.some(p => p.test(currentMsg));
+                const endsWithPunctuation = sentenceEndPunctuation.some(p => currentMsg.endsWith(p));
+                
+                if (isVeryShortFragment && !endsWithPunctuation && result.length > 0) {
+                    result[result.length - 1] = result[result.length - 1] + currentMsg;
+                    i++;
+                    continue;
+                }
+                
+                result.push(currentMsg);
+                i++;
             }
             
             return result;
@@ -37911,6 +38348,26 @@ ${recentHistory.map(msg => {
             loadWorldbookEntries();
         });
 
+        function formatStatusMsgTime(timestamp) {
+            if (!timestamp) return '';
+            const msgDate = new Date(timestamp);
+            const now = new Date();
+            const isToday = msgDate.toDateString() === now.toDateString();
+            const yesterday = new Date(now);
+            yesterday.setDate(yesterday.getDate() - 1);
+            const isYesterday = msgDate.toDateString() === yesterday.toDateString();
+            
+            const timeStr = msgDate.toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' });
+            if (isToday) {
+                return `[今天 ${timeStr}] `;
+            } else if (isYesterday) {
+                return `[昨天 ${timeStr}] `;
+            } else {
+                const dateStr = msgDate.toLocaleDateString('zh-CN', { month: 'long', day: 'numeric' });
+                return `[${dateStr} ${timeStr}] `;
+            }
+        }
+
         // ==================== 角色状态管理模块 ====================
         const RoleStatusManager = {
             currentStatus: null,
@@ -38023,7 +38480,10 @@ ${recentHistory.map(msg => {
 ${roleInfo.description ? `性格：${roleInfo.description}` : ''}
 
 最近的对话：
-${conversationContext.slice(-10).map(m => `${m.type === 'sent' ? '对方' : '我'}：${m.content}`).join('\n')}
+${conversationContext.slice(-10).map(m => {
+    const timePrefix = m.timestamp ? formatStatusMsgTime(m.timestamp) : '';
+    return `${timePrefix}${m.type === 'sent' ? '对方' : '我'}：${m.content}`;
+}).join('\n')}
 
 请用5字以内描述你现在的状态或心情，比如：
 - 在吃饭、在追剧、在打游戏
@@ -38942,6 +39402,26 @@ ${conversationContext.slice(-10).map(m => `${m.type === 'sent' ? '对方' : '我
                 }
             }
 
+            function formatMsgTimeForCard(timestamp) {
+                if (!timestamp) return '';
+                const msgDate = new Date(timestamp);
+                const now = new Date();
+                const isToday = msgDate.toDateString() === now.toDateString();
+                const yesterday = new Date(now);
+                yesterday.setDate(yesterday.getDate() - 1);
+                const isYesterday = msgDate.toDateString() === yesterday.toDateString();
+                
+                const timeStr = msgDate.toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' });
+                if (isToday) {
+                    return `[今天 ${timeStr}] `;
+                } else if (isYesterday) {
+                    return `[昨天 ${timeStr}] `;
+                } else {
+                    const dateStr = msgDate.toLocaleDateString('zh-CN', { month: 'long', day: 'numeric' });
+                    return `[${dateStr} ${timeStr}] `;
+                }
+            }
+
             async function refreshProfileData() {
                 const refreshBtn = document.getElementById('ins-profile-refresh-btn');
                 if (refreshBtn) {
@@ -38970,7 +39450,10 @@ ${conversationContext.slice(-10).map(m => `${m.type === 'sent' ? '对方' : '我
 ${currentChatRole.description ? `你的性格：${currentChatRole.description}` : ''}
 
 【最近的对话】（注意：以下对话中，"${currentUserName}"是对方，"我"是你自己）
-${conversationContext.slice(-10).map(m => m.type === 'sent' ? `${currentUserName}：${m.content}` : `我：${m.content}`).join('\n')}
+${conversationContext.slice(-10).map(m => {
+    const timePrefix = m.timestamp ? formatMsgTimeForCard(m.timestamp) : '';
+    return m.type === 'sent' ? `${timePrefix}${currentUserName}：${m.content}` : `${timePrefix}我：${m.content}`;
+}).join('\n')}
 
 【当前好感度】${currentAffection}/100
 【你之前所在的位置】${previousLocation}
@@ -39135,8 +39618,12 @@ ${conversationContext.slice(-10).map(m => m.type === 'sent' ? `${currentUserName
                 const thoughtEl = document.getElementById('ins-thought');
 
                 if (currentChatRole) {
-                    if (avatarEl && currentChatRole.avatar) {
-                        avatarEl.style.backgroundImage = `url(${currentChatRole.avatar})`;
+                    if (avatarEl) {
+                        if (currentChatRole.avatar) {
+                            avatarEl.style.backgroundImage = `url(${currentChatRole.avatar})`;
+                        } else {
+                            avatarEl.style.backgroundImage = '';
+                        }
                     }
 
                     const savedData = loadProfileData(currentChatRole.id);
@@ -39268,7 +39755,10 @@ ${conversationContext.slice(-10).map(m => m.type === 'sent' ? `${currentUserName
 ${roleDescription ? `你的性格：${roleDescription}` : ''}
 
 【最近的对话】（注意：以下对话中，"${userName}"是对方，"我"是你自己）
-${conversationContext.slice(-10).map(m => m.type === 'sent' ? `${userName}：${m.content}` : `我：${m.content}`).join('\n')}
+${conversationContext.slice(-10).map(m => {
+    const timePrefix = m.timestamp ? formatMsgTimeForCard(m.timestamp) : '';
+    return m.type === 'sent' ? `${timePrefix}${userName}：${m.content}` : `${timePrefix}我：${m.content}`;
+}).join('\n')}
 
 【当前好感度】${currentAffection}/100
 【你之前所在的位置】${previousLocation}
