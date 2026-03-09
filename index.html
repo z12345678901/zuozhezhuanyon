@@ -2401,7 +2401,7 @@
             
             .message-content {
                 padding: 6px 10px;
-                font-size: 14px;
+                font-size: 11px;
             }
             
             .chat-header {
@@ -4548,8 +4548,8 @@
             padding: 10px 14px;
             border-radius: 20px;
             line-height: 1.45;
-            font-size: 13px;
-            font-weight: 550;
+            font-size: 12px;
+            font-weight: 450;
             display: inline-block;
             width: fit-content;
             max-width: 100%;
@@ -7132,13 +7132,38 @@
         }
 
         .status-text {
-            font-family: 'Cormorant Garamond', serif;
-            font-style: italic;
-            font-size: 14px;
-            color: #999999;
-            white-space: nowrap;
+            --bg-primary: #ffffff;
+            --bg-secondary: #F2F2F7;
+            --bg-tertiary: #E5E5EA;
+            --text-primary: #000000;
+            --text-secondary: #333333;
+            --text-tertiary: #8E8E93;
+            --border-color: rgba(0, 0, 0, 0.05);
+            --shadow-color: rgba(0, 0, 0, 0.08);
+            --top-bar-base-height: 58px;
+            --safe-area-inset-top: env(safe-area-inset-top);
+            --safe-area-inset-left: env(safe-area-inset-left);
+            --safe-area-inset-right: env(safe-area-inset-right);
+            --safe-area-inset-bottom: env(safe-area-inset-bottom);
+            --primary-blue: #000000;
+            --bg-gray: rgba(233, 233, 235, 0.85);
+            --text-gray: #86868b;
+            --ios-easing: cubic-bezier(0.25, 0.46, 0.45, 0.94);
+            --glass-blur: 12px;
+            --border-top: rgba(255, 255, 255, 0.6);
+            --border-bottom: rgba(200, 200, 205, 0.4);
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            font-size: 11px;
+            color: #86868b;
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+            scrollbar-width: none;
+            max-width: 80px;
             overflow: hidden;
             text-overflow: ellipsis;
+            white-space: nowrap;
         }
 
         .plus-icon {
@@ -16295,12 +16320,14 @@
         <div class="announcement-card">
             <div class="announcement-header">
                 <h2 class="announcement-title">本次更新内容</h2>
-                <div class="announcement-date" id="announcement-date">2026年3月9日</div>
+                <div class="announcement-date" id="announcement-date">2026年3月10日</div>
             </div>
             <div class="announcement-body">
                 <div class="announcement-content">
                     <ul>
                         <li style="color: red; font-weight: bold;">⚠️ 导入存档失败请大退，重新开浏览器或桌面版</li>
+                        <li>✨ 修改了消息页和联系人页</li>
+                        <li>🔧 提示词什么的还是修修修</li>
                         <li>✨ 朋友圈文风改了一下</li>
                         <li>🔧 多选模式优化了一下</li>
                         <li>🛡️ 储存导入增加了报错和储存机制改了</li>
@@ -17296,6 +17323,10 @@
                     <div class="category-content" id="category-voice">
                         <div class="settings-section-inner">
                             <div class="form-group">
+                                <label for="minimax-proxy-url" style="color: rgb(51, 51, 51);">Worker 代理地址:</label>
+                                <input type="text" id="minimax-proxy-url" placeholder="https://minimax-proxy.xxx.workers.dev">
+                            </div>
+                            <div class="form-group">
                                 <label for="minimax-api-key" style="color: rgb(51, 51, 51);">Minimax API Key:</label>
                                 <input type="password" id="minimax-api-key" placeholder="输入Minimax API Key">
                             </div>
@@ -17305,7 +17336,25 @@
                             </div>
                             <div class="form-group">
                                 <label for="minimax-voice-id" style="color: rgb(51, 51, 51);">音色ID:</label>
-                                <input type="text" id="minimax-voice-id" placeholder="输入音色ID，例如：male-qn-qingse">
+                                <select id="minimax-voice-id" style="width: 100%; padding: 8px 12px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 14px;">
+                                    <option value="male-qn-qingse">青涩青年</option>
+                                    <option value="female-shaonv">少女</option>
+                                    <option value="female-yujie">御姐</option>
+                                    <option value="male-qn-jingying">精英青年</option>
+                                    <option value="female-chengshu">成熟女性</option>
+                                    <option value="presenter_male">男主持人</option>
+                                    <option value="presenter_female">女主持人</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="minimax-model" style="color: rgb(51, 51, 51);">模型:</label>
+                                <select id="minimax-model" style="width: 100%; padding: 8px 12px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 14px;">
+                                    <option value="speech-01-2.0">speech-01-2.0 (推荐)</option>
+                                    <option value="speech-2.6-hd">speech-2.6-hd (高清)</option>
+                                    <option value="speech-2.6">speech-2.6</option>
+                                    <option value="speech-01-turbo">speech-01-turbo (低延迟)</option>
+                                    <option value="speech-01">speech-01</option>
+                                </select>
                             </div>
                             <div class="form-group">
                                 <label for="minimax-test-text" style="color: rgb(51, 51, 51);">测试文本:</label>
@@ -19797,9 +19846,49 @@
             function splitCallMessages(text) {
                 if (!text) return [];
                 
+                let processedText = text;
+                
+                try {
+                    let jsonText = processedText.trim();
+                    
+                    const jsonMatch = jsonText.match(/```json\s*([\s\S]*?)\s*```/);
+                    if (jsonMatch) {
+                        jsonText = jsonMatch[1].trim();
+                    } else if (jsonText.startsWith('```')) {
+                        jsonText = jsonText.replace(/```\s*/i, '').replace(/```\s*$/, '').trim();
+                    }
+                    
+                    const jsonStart = jsonText.indexOf('{');
+                    const jsonEnd = jsonText.lastIndexOf('}');
+                    if (jsonStart !== -1 && jsonEnd !== -1 && jsonEnd > jsonStart) {
+                        jsonText = jsonText.substring(jsonStart, jsonEnd + 1);
+                    }
+                    
+                    const parsed = JSON.parse(jsonText);
+                    
+                    if (parsed && parsed.messages && Array.isArray(parsed.messages)) {
+                        const jsonMessages = parsed.messages
+                            .filter(msg => msg && typeof msg === 'string' && msg.trim())
+                            .map(msg => msg.trim());
+                        
+                        if (jsonMessages.length > 0) {
+                            return jsonMessages.slice(0, 4);
+                        }
+                    }
+                } catch (e) {
+                    console.log('通话消息JSON解析失败，尝试提取:', e.message);
+                    
+                    const extractedFromJson = extractMessagesFromBrokenJson(processedText);
+                    if (extractedFromJson && extractedFromJson.length > 0) {
+                        return extractedFromJson.slice(0, 4);
+                    }
+                }
+                
                 const targetCount = Math.floor(Math.random() * 3) + 2;
                 
-                let lines = text.split('\n').map(line => line.trim()).filter(line => line.length > 0);
+                let lines = processedText.split('\n').map(line => line.trim()).filter(line => line.length > 0);
+                
+                lines = filterJsonFragments(lines);
                 
                 if (lines.length >= 2 && lines.length <= 4) {
                     return lines.slice(0, 4);
@@ -19818,7 +19907,7 @@
                     return result.slice(0, 4);
                 }
                 
-                const sentences = text.split(/[！？。]+/).map(s => s.trim()).filter(s => s.length > 0);
+                const sentences = processedText.split(/[！？。]+/).map(s => s.trim()).filter(s => s.length > 0);
                 
                 if (sentences.length >= 2) {
                     if (sentences.length <= 4) {
@@ -19835,7 +19924,7 @@
                     return result.slice(0, 4);
                 }
                 
-                return [text];
+                return [processedText];
             }
 
             async function sendCallMultipleMessages(messageList) {
@@ -33170,12 +33259,41 @@ ${recentHistory.map(msg => {
                 const summaryKey = 'summaryContents_' + roleId;
                 localStorage.removeItem(summaryKey);
                 
+                const wallpaperKey = 'chatWallpaper_' + roleId;
+                localStorage.removeItem(wallpaperKey);
+                
+                const backgroundKey = 'characterBackground_' + roleId;
+                localStorage.removeItem(backgroundKey);
+                
+                const detailImagesKey = 'detailImages_' + roleId;
+                localStorage.removeItem(detailImagesKey);
+                
+                const customCssKey = 'roleCustomCss_' + roleId;
+                localStorage.removeItem(customCssKey);
+                
+                const thoughtsKey = 'simsThoughts_' + roleId;
+                localStorage.removeItem(thoughtsKey);
+                
+                const usedThoughtsKey = 'simsUsedThoughts_' + roleId;
+                localStorage.removeItem(usedThoughtsKey);
+                
+                const placeholderKey = 'customPlaceholder_' + roleId;
+                localStorage.removeItem(placeholderKey);
+                
+                const placeholderSizeKey = 'placeholderSize_' + roleId;
+                localStorage.removeItem(placeholderSizeKey);
+                
+                RoleStatusManager.clearStatus(roleId);
+                
                 if (currentChatRole && currentChatRole.id === roleId) {
                     loadMessages();
                     const chatArea = document.getElementById('chat-area');
                     if (chatArea) {
                         chatArea.innerHTML = '';
                     }
+                    loadChatWallpaper(roleId);
+                    applyRoleCustomCss(roleId);
+                    applyCustomPlaceholder(roleId);
                 }
                 
                 alert(`聊天记录已清除`);
@@ -37931,10 +38049,20 @@ ${recentHistory.map(msg => {
                     }
                 }
             } catch (e) {
-                console.log('JSON解析失败，使用智能语义分割:', e.message);
+                console.log('JSON解析失败，尝试提取消息内容:', e.message);
+                
+                const extractedFromJson = extractMessagesFromBrokenJson(processedText);
+                if (extractedFromJson && extractedFromJson.length > 0) {
+                    const validated = validateAndMergeMessages(extractedFromJson, photoBlocks);
+                    if (validated.length > 0) {
+                        return validated;
+                    }
+                }
             }
             
             let messages = processedText.split('\n').map(line => line.trim()).filter(line => line.length > 0);
+            
+            messages = filterJsonFragments(messages);
             
             messages = messages.map(msg => {
                 photoBlocks.forEach((block, index) => {
@@ -37965,6 +38093,153 @@ ${recentHistory.map(msg => {
                     msg = msg.replace(`__PHOTO_BLOCK_${index}__`, block);
                 });
                 return msg;
+            });
+        }
+        
+        function extractMessagesFromBrokenJson(text) {
+            if (!text) return [];
+            
+            const messages = [];
+            
+            const quotedStrings = text.match(/"([^"\\]|\\.)*"/g);
+            if (quotedStrings) {
+                quotedStrings.forEach(str => {
+                    let content = str.slice(1, -1);
+                    
+                    content = content.replace(/\\n/g, ' ');
+                    content = content.replace(/\\["\\]/g, match => match.slice(1));
+                    content = content.trim();
+                    
+                    content = content.replace(/\[LOCATION:[^\]]*\]?/gi, '');
+                    content = content.replace(/\[MOOD:[^\]]*\]?/gi, '');
+                    content = content.replace(/\[THOUGHT:[^\]]*\]?/gi, '');
+                    content = content.replace(/\[STATUS:[^\]]*\]?/gi, '');
+                    content = content.replace(/\[AFFECTION:[^\]]*\]?/gi, '');
+                    content = content.replace(/\[LOCATION\}?/gi, '');
+                    content = content.replace(/\[MOOD\}?/gi, '');
+                    content = content.replace(/\[THOUGHT\}?/gi, '');
+                    content = content.replace(/\[STATUS\}?/gi, '');
+                    content = content.replace(/\[AFFECTION\}?/gi, '');
+                    content = content.trim();
+                    
+                    if (content.length >= 2 && 
+                        !content.startsWith('messages') &&
+                        !content.match(/^[a-z_]+$/i) &&
+                        !content.match(/^[{}\[\]:,]+$/)) {
+                        
+                        if (!content.match(/^[\s\[\]{}:,]+$/) && 
+                            content.length > 1 &&
+                            !content.match(/^[A-Z_]{2,}$/)) {
+                            messages.push(content);
+                        }
+                    }
+                });
+            }
+            
+            const photoPattern = /\[PHOTO\]([\s\S]*?)\[\/PHOTO\]/g;
+            let photoMatch;
+            while ((photoMatch = photoPattern.exec(text)) !== null) {
+                if (!messages.includes(photoMatch[0])) {
+                    messages.push(photoMatch[0]);
+                }
+            }
+            
+            return messages.filter((msg, index, self) => 
+                self.indexOf(msg) === index && msg.trim().length > 0
+            );
+        }
+        
+        function filterJsonFragments(messages) {
+            if (!messages || messages.length === 0) return [];
+            
+            const jsonFragmentPatterns = [
+                /^\s*```json\s*$/i,
+                /^\s*```\s*$/,
+                /^\s*\{[\s]*$/,
+                /^\s*\}[\s]*$/,
+                /^\s*\[[\s]*$/,
+                /^\s*\][\s]*$/,
+                /^\s*"messages"\s*:\s*\[?\s*$/,
+                /^\s*"messages"\s*:\s*$/,
+                /^\s*ages"\s*:\s*$/,
+                /^\s*,\s*$/,
+                /^\s*:\s*$/,
+                /^\s*\{\s*"messages"/,
+                /^\s*"messages"\s*:\s*\[/,
+            ];
+            
+            const statusTagPatterns = [
+                /^\s*\[LOCATION:?[^\]]*\]?\s*$/i,
+                /^\s*\[MOOD:?[^\]]*\]?\s*$/i,
+                /^\s*\[THOUGHT:?[^\]]*\]?\s*$/i,
+                /^\s*\[STATUS:?[^\]]*\]?\s*$/i,
+                /^\s*\[AFFECTION:?[^\]]*\]?\s*$/i,
+                /^\s*\[LOCATION\}?\s*$/i,
+                /^\s*\[MOOD\}?\s*$/i,
+                /^\s*\[THOUGHT\}?\s*$/i,
+                /^\s*\[STATUS\}?\s*$/i,
+                /^\s*\[AFFECTION\}?\s*$/i,
+            ];
+            
+            const isJsonFragment = (msg) => {
+                const trimmed = msg.trim();
+                if (trimmed.length === 0) return true;
+                
+                if (jsonFragmentPatterns.some(p => p.test(trimmed))) {
+                    return true;
+                }
+                
+                if (statusTagPatterns.some(p => p.test(trimmed))) {
+                    return true;
+                }
+                
+                if (trimmed.startsWith('{"messages"') && !trimmed.endsWith(']}')) {
+                    return true;
+                }
+                
+                if (trimmed.match(/^["\[\]{}:,]+$/)) {
+                    return true;
+                }
+                
+                if (trimmed.match(/^\{[\s]*"messages"[\s]*:[\s]*\[/)) {
+                    return true;
+                }
+                
+                return false;
+            };
+            
+            const looksLikeValidMessage = (msg) => {
+                const trimmed = msg.trim();
+                if (trimmed.length < 2) return false;
+                
+                if (trimmed.includes('[PHOTO]') || trimmed.includes('[/PHOTO]')) {
+                    return true;
+                }
+                
+                const hasChinese = /[\u4e00-\u9fa5]/.test(trimmed);
+                const hasCompleteSentence = /[。！？～]$/.test(trimmed);
+                const hasReasonableLength = trimmed.length >= 2 && trimmed.length <= 100;
+                const isNotJsonSyntax = !trimmed.match(/^["\[\]{}:,]+$/);
+                const isNotStatusTag = !statusTagPatterns.some(p => p.test(trimmed));
+                
+                return (hasChinese || hasCompleteSentence) && hasReasonableLength && isNotJsonSyntax && isNotStatusTag;
+            };
+            
+            return messages.filter(msg => {
+                if (isJsonFragment(msg)) {
+                    return false;
+                }
+                
+                if (looksLikeValidMessage(msg)) {
+                    return true;
+                }
+                
+                const trimmed = msg.trim();
+                return trimmed.length >= 2 && 
+                       !trimmed.startsWith('{') && 
+                       !trimmed.startsWith('[') &&
+                       !trimmed.startsWith('"messages') &&
+                       !trimmed.match(/^["\[\]{}:,]+$/);
             });
         }
         
@@ -39329,11 +39604,31 @@ ${conversationContext.slice(-10).map(m => {
                 }
             }
 
+            function hexToBase64(hexString) {
+                const bytes = new Uint8Array(hexString.length / 2);
+                for (let i = 0; i < hexString.length; i += 2) {
+                    bytes[i / 2] = parseInt(hexString.substr(i, 2), 16);
+                }
+                let binary = '';
+                const chunkSize = 8192;
+                for (let i = 0; i < bytes.length; i += chunkSize) {
+                    const chunk = bytes.subarray(i, i + chunkSize);
+                    binary += String.fromCharCode.apply(null, chunk);
+                }
+                return btoa(binary);
+            }
+
             function saveMinimaxVoiceConfig() {
+                const proxyUrl = document.getElementById('minimax-proxy-url').value.trim();
                 const apiKey = document.getElementById('minimax-api-key').value.trim();
                 const groupId = document.getElementById('minimax-group-id').value.trim();
-                const voiceId = document.getElementById('minimax-voice-id').value.trim();
+                const voiceId = document.getElementById('minimax-voice-id').value;
+                const model = document.getElementById('minimax-model').value;
 
+                if (!proxyUrl) {
+                    showVoiceStatus('请输入 Worker 代理地址', true);
+                    return;
+                }
                 if (!apiKey) {
                     showVoiceStatus('请输入API Key', true);
                     return;
@@ -39342,15 +39637,13 @@ ${conversationContext.slice(-10).map(m => {
                     showVoiceStatus('请输入Group ID', true);
                     return;
                 }
-                if (!voiceId) {
-                    showVoiceStatus('请输入音色ID', true);
-                    return;
-                }
 
                 const config = {
+                    proxyUrl: proxyUrl,
                     apiKey: apiKey,
                     groupId: groupId,
                     voiceId: voiceId,
+                    model: model,
                     savedAt: new Date().toISOString()
                 };
 
@@ -39368,13 +39661,17 @@ ${conversationContext.slice(-10).map(m => {
                     const savedConfig = localStorage.getItem(STORAGE_KEY);
                     if (savedConfig) {
                         const config = JSON.parse(savedConfig);
+                        const proxyUrlInput = document.getElementById('minimax-proxy-url');
                         const apiKeyInput = document.getElementById('minimax-api-key');
                         const groupIdInput = document.getElementById('minimax-group-id');
                         const voiceIdInput = document.getElementById('minimax-voice-id');
+                        const modelInput = document.getElementById('minimax-model');
                         
+                        if (proxyUrlInput) proxyUrlInput.value = config.proxyUrl || '';
                         if (apiKeyInput) apiKeyInput.value = config.apiKey || '';
                         if (groupIdInput) groupIdInput.value = config.groupId || '';
-                        if (voiceIdInput) voiceIdInput.value = config.voiceId || '';
+                        if (voiceIdInput && config.voiceId) voiceIdInput.value = config.voiceId;
+                        if (modelInput && config.model) modelInput.value = config.model;
                     }
                 } catch (e) {
                     console.error('加载语音配置失败:', e);
@@ -39402,6 +39699,11 @@ ${conversationContext.slice(-10).map(m => {
                     return;
                 }
 
+                if (!config.proxyUrl) {
+                    showVoiceStatus('请配置 Worker 代理地址', true);
+                    return;
+                }
+
                 if (!testText) {
                     showVoiceStatus('请输入测试文本', true);
                     return;
@@ -39410,8 +39712,9 @@ ${conversationContext.slice(-10).map(m => {
                 showVoiceStatus('正在生成语音...', false);
 
                 try {
-                    const url = `https://api.minimax.chat/v1/text_to_speech?GroupId=${config.groupId}`;
-                    
+                    const baseUrl = config.proxyUrl.replace(/\/+$/, '');
+                    const url = `${baseUrl}/v1/t2a_v2?GroupId=${encodeURIComponent(config.groupId)}`;
+
                     const response = await fetch(url, {
                         method: 'POST',
                         headers: {
@@ -39419,39 +39722,44 @@ ${conversationContext.slice(-10).map(m => {
                             'Authorization': `Bearer ${config.apiKey}`
                         },
                         body: JSON.stringify({
-                            model: 'speech-01',
+                            model: config.model || 'speech-01-2.0',
                             text: testText,
-                            voice_id: config.voiceId,
-                            speed: 1.0,
-                            vol: 1.0,
-                            pitch: 0
+                            stream: false,
+                            voice_setting: {
+                                voice_id: config.voiceId,
+                                speed: 1.0,
+                                vol: 1.0,
+                                pitch: 0
+                            },
+                            audio_setting: {
+                                sample_rate: 24000,
+                                bitrate: 128000,
+                                format: 'mp3'
+                            }
                         })
                     });
 
-                    const contentType = response.headers.get('Content-Type') || '';
-                    
-                    if (!response.ok || contentType.includes('json')) {
-                        let errorMessage = `HTTP ${response.status}`;
-                        try {
-                            const errorData = await response.json();
-                            if (errorData.message) {
-                                errorMessage = errorData.message;
-                            } else if (errorData.error_msg) {
-                                errorMessage = errorData.error_msg;
-                            } else {
-                                errorMessage = JSON.stringify(errorData);
-                            }
-                        } catch (e) {
-                            errorMessage = await response.text();
-                        }
-                        throw new Error(errorMessage);
+                    if (!response.ok) {
+                        const errText = await response.text();
+                        throw new Error(`HTTP ${response.status}: ${errText}`);
                     }
 
+                    const result = await response.json();
+
+                    if (result.base_resp && result.base_resp.status_code !== 0) {
+                        throw new Error(`Minimax 错误: ${result.base_resp.status_msg} (code: ${result.base_resp.status_code})`);
+                    }
+
+                    const hexAudio = result.data?.audio;
+                    if (!hexAudio) {
+                        throw new Error('响应中没有音频数据');
+                    }
+
+                    const base64Audio = hexToBase64(hexAudio);
                     const audio = document.getElementById('voice-audio');
                     
                     if (audio) {
-                        const blob = await response.blob();
-                        audio.src = URL.createObjectURL(blob);
+                        audio.src = `data:audio/mp3;base64,${base64Audio}`;
                         audio.play();
                         showVoiceStatus('✅ 语音生成成功，正在播放...', false);
                     }
@@ -39468,9 +39776,14 @@ ${conversationContext.slice(-10).map(m => {
                     return null;
                 }
 
+                if (!config.proxyUrl) {
+                    console.error('Worker 代理地址未配置');
+                    return null;
+                }
+
                 try {
-                    const proxyUrl = config.proxyUrl || 'https://api.minimax.chat/v1';
-                    const url = `${proxyUrl}/text_to_speech?GroupId=${config.groupId}`;
+                    const baseUrl = config.proxyUrl.replace(/\/+$/, '');
+                    const url = `${baseUrl}/v1/t2a_v2?GroupId=${encodeURIComponent(config.groupId)}`;
                     
                     const response = await fetch(url, {
                         method: 'POST',
@@ -39479,36 +39792,41 @@ ${conversationContext.slice(-10).map(m => {
                             'Authorization': `Bearer ${config.apiKey}`
                         },
                         body: JSON.stringify({
-                            model: 'speech-01',
+                            model: config.model || 'speech-01-2.0',
                             text: text,
-                            voice_id: config.voiceId,
-                            speed: 1.0,
-                            vol: 1.0,
-                            pitch: 0
+                            stream: false,
+                            voice_setting: {
+                                voice_id: config.voiceId,
+                                speed: 1.0,
+                                vol: 1.0,
+                                pitch: 0
+                            },
+                            audio_setting: {
+                                sample_rate: 24000,
+                                bitrate: 128000,
+                                format: 'mp3'
+                            }
                         })
                     });
 
-                    const contentType = response.headers.get('Content-Type') || '';
-                    
-                    if (!response.ok || contentType.includes('json')) {
-                        let errorMessage = `HTTP ${response.status}`;
-                        try {
-                            const errorData = await response.json();
-                            if (errorData.message) {
-                                errorMessage = errorData.message;
-                            } else if (errorData.error_msg) {
-                                errorMessage = errorData.error_msg;
-                            } else {
-                                errorMessage = JSON.stringify(errorData);
-                            }
-                        } catch (e) {
-                            errorMessage = await response.text();
-                        }
-                        throw new Error(errorMessage);
+                    if (!response.ok) {
+                        const errText = await response.text();
+                        throw new Error(`HTTP ${response.status}: ${errText}`);
                     }
 
-                    const blob = await response.blob();
-                    return URL.createObjectURL(blob);
+                    const result = await response.json();
+
+                    if (result.base_resp && result.base_resp.status_code !== 0) {
+                        throw new Error(`Minimax 错误: ${result.base_resp.status_msg}`);
+                    }
+
+                    const hexAudio = result.data?.audio;
+                    if (!hexAudio) {
+                        throw new Error('响应中没有音频数据');
+                    }
+
+                    const base64Audio = hexToBase64(hexAudio);
+                    return `data:audio/mp3;base64,${base64Audio}`;
                 } catch (error) {
                     console.error('语音合成失败:', error);
                     throw error;
