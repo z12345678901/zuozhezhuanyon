@@ -262,7 +262,19 @@
         }
 
         .dark-mode .wechat-header {
-            background: var(--bg-primary);
+            background: rgba(28, 28, 30, 0.95);
+            backdrop-filter: blur(20px) saturate(180%);
+            -webkit-backdrop-filter: blur(20px) saturate(180%);
+            box-shadow: none;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-top: none;
+            border-bottom-color: rgba(255, 255, 255, 0.05);
+            background-image: none;
+        }
+
+        .dark-mode .wechat-header.scrolled {
+            background: rgba(28, 28, 30, 0.98);
+            box-shadow: none;
         }
 
         .dark-mode .wechat-header-title {
@@ -565,6 +577,85 @@
             background: var(--bg-secondary);
         }
 
+        .dark-mode .contacts-micro-header {
+            background: transparent;
+        }
+
+        .dark-mode .moments-back-btn {
+            background: rgba(255, 255, 255, 0.15);
+            border-color: rgba(255, 255, 255, 0.2);
+        }
+
+        .dark-mode .moments-back-btn svg {
+            stroke: #FFF;
+        }
+
+        .dark-mode .contacts-title-serif {
+            color: var(--text-primary);
+        }
+
+        .dark-mode .contacts-title-star {
+            color: var(--text-tertiary);
+        }
+
+        .dark-mode .contacts-title-desc {
+            color: var(--text-tertiary);
+        }
+
+        .dark-mode .contacts-tab-item {
+            color: var(--text-tertiary);
+        }
+
+        .dark-mode .contacts-tab-item.active {
+            color: var(--text-primary);
+        }
+
+        .dark-mode .contacts-tab-item::after {
+            background: var(--text-primary);
+        }
+
+        .dark-mode .contact-item {
+            background: transparent;
+        }
+
+        .dark-mode .contact-item + .contact-item {
+            border-top-color: rgba(255, 255, 255, 0.1);
+        }
+
+        .dark-mode .contact-item:hover {
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .dark-mode .avatar-wrap {
+            border-color: rgba(255, 255, 255, 0.1);
+        }
+
+        .dark-mode .avatar-deco {
+            background: var(--bg-secondary);
+            color: var(--text-primary);
+        }
+
+        .dark-mode .name-text, .dark-mode .contact-name {
+            color: var(--text-primary);
+        }
+
+        .dark-mode .aesthetic-badge {
+            border-color: rgba(255, 255, 255, 0.1);
+            color: var(--text-tertiary);
+        }
+
+        .dark-mode .status-text {
+            color: var(--text-tertiary);
+        }
+
+        .dark-mode .plus-icon {
+            color: var(--text-tertiary);
+        }
+
+        .dark-mode .contact-item:hover .plus-icon {
+            color: var(--text-primary);
+        }
+
         .dark-mode .message-list {
             background: var(--bg-primary);
         }
@@ -726,6 +817,112 @@
             --color-gray-light: #6B7280;
             --color-border: rgba(255, 255, 255, 0.1);
             background: #1C1C1E;
+        }
+
+        /* 韩系高定消息界面夜间模式 */
+        .dark-mode .wechat-main::after {
+            background: rgba(0, 0, 0, 0.4);
+        }
+
+        .dark-mode .wechat-header-new {
+            background: transparent;
+        }
+
+        .dark-mode .icon-btn-new {
+            background: rgba(60, 60, 70, 0.6);
+            border-color: rgba(255, 255, 255, 0.1);
+        }
+
+        .dark-mode .icon-btn-new svg {
+            stroke: #EBEBF5;
+        }
+
+        .dark-mode .hero-subtitle {
+            color: #8E8E93;
+        }
+
+        .dark-mode .hero-title {
+            color: #FFFFFF;
+        }
+
+        .dark-mode .status-badge {
+            background: #3A3A3C;
+        }
+
+        .dark-mode .search-bar-new {
+            background: rgba(60, 60, 70, 0.5);
+            border-color: rgba(255, 255, 255, 0.1);
+            box-shadow: none;
+        }
+
+        .dark-mode .search-text {
+            color: #8E8E93;
+        }
+
+        .dark-mode .contact-avatar-wrapper {
+            border-color: #3A3A3C;
+            background: linear-gradient(135deg, rgba(60,60,70,0.8), rgba(40,40,50,0));
+        }
+
+        .dark-mode .contact-avatar-inner {
+            background: #3A3A3C;
+            color: #EBEBF5;
+        }
+
+        .dark-mode .contact-name-new {
+            color: #EBEBF5;
+        }
+
+        .dark-mode .list-section-new {
+            background: #1C1C1E;
+            box-shadow: 0 -10px 40px rgba(0,0,0,0.3);
+        }
+
+        .dark-mode .section-title-new {
+            color: #8E8E93;
+        }
+
+        .dark-mode .message-item-new {
+            border-bottom-color: rgba(255, 255, 255, 0.05);
+        }
+
+        .dark-mode .list-avatar-new {
+            background: #3A3A3C;
+            color: #EBEBF5;
+        }
+
+        .dark-mode .list-name-new {
+            color: #FFFFFF;
+        }
+
+        .dark-mode .role-tag-new {
+            color: #8E8E93;
+            border-color: rgba(255, 255, 255, 0.1);
+        }
+
+        .dark-mode .list-time-new {
+            color: #8E8E93;
+        }
+
+        .dark-mode .preview-bubble {
+            background: #2C2C2E;
+            color: #8E8E93;
+        }
+
+        .dark-mode .status-icon svg {
+            stroke: #48484A;
+        }
+
+        .dark-mode .unread-dot {
+            background: #0A84FF;
+        }
+
+        .dark-mode .add-btn-new .contact-avatar-wrapper {
+            border-color: #48484A;
+        }
+
+        .dark-mode .add-btn-new .contact-avatar-inner {
+            color: #6B7280;
         }
 
         .dark-mode .contact-detail-header {
@@ -3599,6 +3796,41 @@
             background-position: center;
             background-repeat: no-repeat;
             transition: background 0.3s ease;
+            position: relative;
+        }
+
+        .wechat-main::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: inherit;
+            background-size: cover;
+            background-position: center;
+            filter: blur(5px);
+            -webkit-filter: blur(5px);
+            transform: scale(1.02);
+            z-index: 0;
+            pointer-events: none;
+        }
+
+        .wechat-main::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(255, 255, 255, 0.3);
+            z-index: 1;
+            pointer-events: none;
+        }
+
+        .wechat-main > * {
+            position: relative;
+            z-index: 2;
         }
 
         /* 顶栏核心变量 */
@@ -6624,163 +6856,310 @@
             user-select: none;
         }
 
-        /* 微信通讯录界面样式 */
+        /* 微信通讯录界面样式 - 韩系概念店风格 */
+        @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500&family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&display=swap');
+
         .wechat-contacts {
             flex: 1;
             display: flex;
             flex-direction: column;
-            background: #F2F2F7;
+            background: #FFFFFF;
             background-size: cover;
             background-position: center;
             background-repeat: no-repeat;
             transition: background 0.3s ease;
+            font-family: 'Outfit', -apple-system, sans-serif;
+            -webkit-font-smoothing: antialiased;
+            position: relative;
+        }
+
+        .wechat-contacts::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: inherit;
+            background-size: inherit;
+            background-position: inherit;
+            filter: blur(20px);
+            -webkit-filter: blur(20px);
+            transform: scale(1.1);
+            z-index: 0;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .wechat-contacts.has-bg-image::before {
+            opacity: 1;
+        }
+
+        .wechat-contacts > * {
+            position: relative;
+            z-index: 1;
+        }
+
+        .contacts-micro-header {
+            padding: 32px 28px 10px 28px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-shrink: 0;
+        }
+
+        .contacts-title-section {
+            padding: 10px 28px 24px 28px;
+            flex-shrink: 0;
+        }
+
+        .contacts-title-serif {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 42px;
+            font-weight: 400;
+            letter-spacing: -1px;
+            color: #1C1C1C;
+            line-height: 1.1;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .contacts-title-star {
+            font-size: 20px;
+            color: #999999;
+            font-weight: 300;
+            animation: spin 10s linear infinite;
+            flex-shrink: 0;
+        }
+
+        @keyframes spin { 100% { transform: rotate(360deg); } }
+
+        .contacts-title-desc {
+            font-size: 11px;
+            color: #999999;
+            margin-top: 6px;
+            max-width: 80%;
+            letter-spacing: 0.5px;
+        }
+
+        .contacts-tab-section {
+            display: flex;
+            padding: 0 28px 20px 28px;
+            gap: 24px;
+            overflow-x: auto;
+            scrollbar-width: none;
+            flex-shrink: 0;
+        }
+        .contacts-tab-section::-webkit-scrollbar { display: none; }
+
+        .contacts-tab-item {
+            font-size: 13px;
+            color: #999999;
+            cursor: pointer;
+            position: relative;
+            padding-bottom: 8px;
+            transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+            text-transform: capitalize;
+            white-space: nowrap;
+        }
+
+        .contacts-tab-item.active {
+            color: #1C1C1C;
+        }
+
+        .contacts-tab-item::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 0;
+            height: 1px;
+            background: #1C1C1C;
+            transition: width 0.3s ease;
+        }
+
+        .contacts-tab-item.active::after {
+            width: 100%;
         }
 
         .contacts-header {
-            background: rgba(255, 255, 255, 0.75);
-            -webkit-backdrop-filter: blur(12px);
-            backdrop-filter: blur(12px);
-            border-radius: 12px;
-            margin: 35px 8px 8px;
-            padding: 20px 16px;
-            display: flex;
-            align-items: center;
-            position: sticky;
-            top: 0;
-            z-index: 100;
-            box-shadow: 
-                0 4px 16px rgba(0, 0, 0, 0.08),
-                0 2px 8px rgba(0, 0, 0, 0.04);
-            border: 1px solid rgba(255, 255, 255, 0.3);
-            transition: all 0.3s ease;
-        }
-
-        .contacts-header:hover {
-            box-shadow: 
-                0 6px 20px rgba(0, 0, 0, 0.1),
-                0 3px 10px rgba(0, 0, 0, 0.05);
-        }
-
-        .contacts-title {
-            flex: 1;
-            font-size: 16px;
-            font-weight: 600;
-            color: #333;
-            text-align: center;
-        }
-
-        .contacts-add-btn {
-            width: 36px;
-            height: 36px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            border-radius: 50%;
-            background: rgba(0, 0, 0, 0.05);
-            color: #1C1C1E;
-            cursor: pointer;
-            transition: all 0.2s;
-            border: none;
-        }
-
-        .contacts-add-btn:hover {
-            background: rgba(0, 0, 0, 0.1);
-        }
-
-        .contacts-add-btn svg {
-            width: 20px;
-            height: 20px;
-            stroke: currentColor;
-            stroke-width: 2;
-            stroke-linecap: round;
-            stroke-linejoin: round;
+            display: none;
         }
 
         .contacts-group-tabs {
-            display: flex;
-            justify-content: center;
-            gap: 8px;
-            padding: 12px 16px;
-            background: transparent;
-            position: sticky;
-            top: 0;
-            z-index: 50;
+            display: none;
         }
 
         .group-tab {
-            padding: 8px 20px;
-            border-radius: 20px;
-            font-size: 14px;
-            font-weight: 500;
+            display: none;
+        }
+
+        .contacts-list {
+            flex: 1;
+            overflow-y: auto;
+            padding: 0;
+            scrollbar-width: none;
+        }
+        .contacts-list::-webkit-scrollbar { display: none; }
+
+        .contact-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .contact-item {
+            display: flex;
+            align-items: center;
+            padding: 20px 28px;
             cursor: pointer;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            background: rgba(255, 255, 255, 0.6);
-            backdrop-filter: blur(10px);
-            -webkit-backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.4);
-            color: #666;
-            box-shadow: 
-                0 4px 12px rgba(0, 0, 0, 0.06),
-                0 2px 4px rgba(0, 0, 0, 0.04);
+            transition: background 0.2s ease;
+            background: transparent;
+        }
+
+        .contact-item + .contact-item {
+            border-top: 1px dotted #EEEEEE;
+        }
+
+        .contact-item:hover {
+            background: #F9F9F9;
+        }
+
+        .contact-item.hidden {
+            display: none !important;
+        }
+
+        .avatar-wrap {
+            position: relative;
+            width: 54px;
+            height: 54px;
+            border-radius: 20px;
+            padding: 3px;
+            border: 1px solid #EEEEEE;
+            margin-right: 18px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+        .avatar-img {
+            width: 100%;
+            height: 100%;
+            border-radius: 16px;
+            object-fit: cover;
+            filter: grayscale(100%) contrast(95%) brightness(1.05);
+            transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .avatar-deco {
+            position: absolute;
+            bottom: -2px;
+            right: -2px;
+            background: #FFFFFF;
+            border-radius: 50%;
+            width: 14px;
+            height: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 10px;
+            color: #1C1C1C;
+        }
+
+        .contact-item:hover .avatar-img {
+            transform: scale(0.95);
+        }
+
+        .contact-avatar {
+            width: 54px;
+            height: 54px;
+            border-radius: 20px;
+            padding: 3px;
+            border: 1px solid #EEEEEE;
+            margin-right: 18px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            overflow: visible;
+        }
+
+        .contact-avatar img {
+            width: 100%;
+            height: 100%;
+            border-radius: 16px;
+            object-fit: cover;
+            filter: grayscale(100%) contrast(95%) brightness(1.05);
+            transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .contact-item:hover .contact-avatar img {
+            transform: scale(0.95);
+        }
+
+        .info-col {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            gap: 6px;
+            min-width: 0;
+        }
+
+        .name-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .name-text, .contact-name {
+            font-size: 16px;
+            font-weight: 500;
+            color: #1C1C1C;
+        }
+
+        .aesthetic-badge {
+            font-size: 8px;
+            padding: 2px 6px;
+            border-radius: 4px;
+            border: 1px solid #EEEEEE;
+            color: #999999;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            flex-shrink: 0;
+        }
+
+        .status-text {
+            font-family: 'Cormorant Garamond', serif;
+            font-style: italic;
+            font-size: 14px;
+            color: #999999;
             white-space: nowrap;
-            user-select: none;
-            -webkit-tap-highlight-color: transparent;
+            overflow: hidden;
+            text-overflow: ellipsis;
         }
 
-        .group-tab:hover {
-            background: rgba(255, 255, 255, 0.85);
-            transform: translateY(-2px);
-            box-shadow: 
-                0 8px 20px rgba(0, 0, 0, 0.1),
-                0 4px 8px rgba(0, 0, 0, 0.06);
+        .plus-icon {
+            font-size: 20px;
+            font-weight: 300;
+            color: #999999;
+            transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+            opacity: 0;
+            transform: rotate(-90deg);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 24px;
+            flex-shrink: 0;
+            margin-left: 12px;
         }
 
-        .group-tab:active {
-            transform: translateY(0);
-            box-shadow: 
-                0 2px 8px rgba(0, 0, 0, 0.08),
-                0 1px 2px rgba(0, 0, 0, 0.04);
-        }
-
-        .group-tab.active {
-            background: rgba(120, 120, 120, 0.85);
-            color: white;
-            border-color: transparent;
-            box-shadow: 
-                0 6px 16px rgba(0, 0, 0, 0.2),
-                0 3px 8px rgba(0, 0, 0, 0.15);
-            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
-        }
-
-        .group-tab.active:hover {
-            transform: translateY(-2px);
-            box-shadow: 
-                0 10px 24px rgba(0, 0, 0, 0.25),
-                0 5px 12px rgba(0, 0, 0, 0.2);
-        }
-
-        @media (max-width: 400px) {
-            .contacts-group-tabs {
-                gap: 6px;
-                padding: 10px 8px;
-            }
-            
-            .group-tab {
-                padding: 6px 14px;
-                font-size: 13px;
-            }
-        }
-
-        @media (max-width: 350px) {
-            .contacts-group-tabs {
-                gap: 4px;
-                padding: 8px 4px;
-            }
-            
-            .group-tab {
-                padding: 5px 10px;
-                font-size: 12px;
-            }
+        .contact-item:hover .plus-icon {
+            opacity: 1;
+            transform: rotate(0);
+            color: #1C1C1C;
         }
 
         @media (max-width: 400px) {
@@ -8438,7 +8817,7 @@
         .moments-back-btn svg {
             width: 18px;
             height: 18px;
-            stroke: #FFF;
+            stroke: #000;
             stroke-width: 2;
             stroke-linecap: round;
             stroke-linejoin: round;
@@ -15762,6 +16141,152 @@
             height: 20px;
             fill: #666;
         }
+
+        /* ================= 韩系高定消息界面样式 ================= */
+        @keyframes slideUpFade {
+            0% { opacity: 0; transform: translateY(15px); }
+            100% { opacity: 1; transform: translateY(0); }
+        }
+        .animate-item {
+            animation: slideUpFade 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+            opacity: 0;
+        }
+        .delay-1 { animation-delay: 0.1s; }
+        .delay-2 { animation-delay: 0.15s; }
+        .delay-3 { animation-delay: 0.2s; }
+        .delay-4 { animation-delay: 0.25s; }
+
+        .wechat-header-new {
+            padding: 30px 24px 0px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .icon-btn-new {
+            width: 40px;
+            height: 40px;
+            border-radius: 14px;
+            background: rgba(255, 255, 255, 0.5);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.8);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.02);
+            transition: all 0.2s;
+        }
+        .icon-btn-new:active { transform: scale(0.9); }
+        .icon-btn-new svg { width: 22px; height: 22px; stroke: #333; stroke-width: 1.5; fill: none; }
+
+        .hero-section { padding: 16px 24px 16px; }
+        .hero-subtitle { font-size: 13px; font-weight: 500; color: #888890; margin-bottom: 2px; text-transform: uppercase; letter-spacing: 1px; }
+        .hero-title { font-size: 34px; font-weight: 800; color: #1C1C1E; letter-spacing: -1px; display: flex; align-items: center; gap: 12px; line-height: 1.1; }
+        .status-badge { font-size: 12px; font-weight: 600; color: #FFF; background: #222224; padding: 4px 10px; border-radius: 20px; }
+
+        .search-wrapper { padding: 0 24px 24px; }
+        .search-bar-new {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background: rgba(255, 255, 255, 0.5);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.9);
+            border-radius: 100px;
+            padding: 12px 16px;
+            box-shadow: inset 0 2px 4px rgba(255,255,255,0.8), 0 8px 16px rgba(0,0,0,0.02);
+        }
+        .search-bar-new svg { width: 16px; height: 16px; stroke: #A0A0A8; stroke-width: 2; fill: none; }
+        .search-text { font-size: 14px; font-weight: 500; color: #A0A0A8; }
+
+        .pinned-section { padding: 0 0 16px 24px; }
+        .pinned-contacts-container { display: flex; gap: 20px; overflow-x: auto; padding-right: 24px; padding-bottom: 4px; scrollbar-width: none; }
+        .pinned-contacts-container::-webkit-scrollbar { display: none; }
+
+        .contact-item-new { display: flex; flex-direction: column; align-items: center; gap: 8px; cursor: pointer; flex-shrink: 0; transition: transform 0.2s; }
+        .contact-item-new:active { transform: scale(0.92); opacity: 0.8; }
+
+        .contact-avatar-wrapper { position: relative; width: 62px; height: 62px; border-radius: 50%; border: 1px solid #D0D0D8; padding: 4px; display: flex; justify-content: center; align-items: center; background: linear-gradient(135deg, rgba(255,255,255,0.8), rgba(255,255,255,0)); }
+        .contact-avatar-wrapper.has-update { border: 1.5px dashed #888890; }
+        .contact-avatar-inner { width: 100%; height: 100%; border-radius: 50%; background: #EAEAEF; display: flex; justify-content: center; align-items: center; font-size: 16px; font-weight: 700; color: #1C1C1E; box-shadow: inset 0 2px 6px rgba(0,0,0,0.04); overflow: hidden; }
+        .contact-avatar-inner img { width: 100%; height: 100%; object-fit: cover; }
+        .contact-badge { position: absolute; top: 0; right: 2px; width: 12px; height: 12px; border-radius: 50%; background: #222224; border: 2px solid #FDFDFE; }
+        .contact-name-new { font-size: 12px; font-weight: 600; color: #444448; }
+
+        .add-btn-new .contact-avatar-wrapper { border: 1px dashed #B0B0B8; padding: 0; background: transparent;}
+        .add-btn-new .contact-avatar-inner { background: transparent; color: #888890; box-shadow: none; }
+
+        .list-section-new {
+            flex: 1;
+            padding: 0 24px 100px;
+            background: #FFFFFF;
+            border-radius: 32px 32px 0 0;
+            box-shadow: 0 -10px 40px rgba(0,0,0,0.03);
+            padding-top: 24px;
+            overflow-y: auto;
+            scrollbar-width: none;
+        }
+        .list-section-new::-webkit-scrollbar { display: none; }
+        .section-header-new { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+        .section-title-new { font-size: 11px; font-weight: 700; color: #A0A0A8; text-transform: uppercase; letter-spacing: 1px; }
+
+        .message-item-new { display: flex; gap: 16px; padding: 16px 0; border-bottom: 1px solid rgba(0,0,0,0.03); cursor: pointer; transition: opacity 0.2s; -webkit-tap-highlight-color: transparent; }
+        .message-item-new:active { opacity: 0.5; }
+        .message-item-new:last-child { border-bottom: none; }
+
+        .list-avatar-new { width: 50px; height: 50px; border-radius: 18px; background: #EFEFF4; color: #555; display: flex; justify-content: center; align-items: center; font-weight: 700; font-size: 16px; flex-shrink: 0; overflow: hidden; }
+        .list-avatar-new img { width: 100%; height: 100%; object-fit: cover; }
+        .list-avatar-new.dark { background: #2A2A2C; color: #FFF; }
+
+        .list-info-new { flex: 1; display: flex; flex-direction: column; justify-content: center; }
+        .list-header-row-new { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; }
+        .name-wrapper-new { display: flex; align-items: center; gap: 8px; }
+        .list-name-new { font-size: 16px; font-weight: 600; color: #1C1C1E; letter-spacing: -0.2px; }
+        .role-tag-new { font-size: 9px; font-weight: 700; color: #888890; padding: 2px 6px; border: 1px solid #E5E5EB; border-radius: 6px; letter-spacing: 0.5px; text-transform: uppercase; }
+        .list-time-new { font-size: 12px; font-weight: 500; color: #A0A0A8; }
+
+        .preview-group { display: flex; align-items: center; gap: 6px; }
+        .preview-bubble { display: inline-block; background: #F5F5F8; padding: 8px 12px; border-radius: 12px 12px 12px 4px; font-size: 13.5px; font-weight: 500; color: #66666E; max-width: 200px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+        .status-icon svg { width: 14px; height: 14px; stroke: #C0C0C8; stroke-width: 2; fill: none; stroke-linecap: round; stroke-linejoin: round; }
+
+        .unread-dot { width: 6px; height: 6px; background: #2A2A2C; border-radius: 50%; flex-shrink: 0; }
+
+        /* 下雪特效样式 */
+        .snow-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 9999;
+            overflow: hidden;
+        }
+
+        .snowflake {
+            position: absolute;
+            top: -20px;
+            color: #fff;
+            font-size: 1em;
+            text-shadow: 0 0 5px rgba(255, 255, 255, 0.8);
+            user-select: none;
+            will-change: transform;
+            backface-visibility: hidden;
+        }
+
+        @keyframes snowfall {
+            0% {
+                transform: translateY(0) translateX(0) rotate(0deg);
+                opacity: 1;
+            }
+            100% {
+                transform: translateY(calc(100vh + 20px)) translateX(var(--sway-x, 0px)) rotate(360deg);
+                opacity: 0.2;
+            }
+        }
     </style>
 </head>
 <body>
@@ -17341,7 +17866,33 @@
                 <div style="width: 36px;"></div>
             </div>
             
-            <div class="message-list touch-scroll-container" id="message-list" style="overflow: hidden auto; touch-action: manipulation;"></div>
+            <!-- 韩系高定设计新增区域 -->
+            <div class="hero-section animate-item delay-1">
+                <div class="hero-subtitle" id="hero-date"></div>
+                <div class="hero-title">
+                    Inbox
+                    <span class="status-badge" id="inbox-count">0</span>
+                </div>
+            </div>
+
+            <div class="search-wrapper animate-item delay-2">
+                <div class="search-bar-new" onclick="openMessageSearch()">
+                    <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                    <div class="search-text">Search messages, tags...</div>
+                </div>
+            </div>
+
+            <div class="pinned-section animate-item delay-3">
+                <div class="pinned-contacts-container" id="pinned-contacts-container">
+                </div>
+            </div>
+
+            <div class="list-section-new touch-scroll-container animate-item delay-4" id="message-list" style="overflow: hidden auto; touch-action: manipulation;">
+                <div class="section-header-new">
+                    <span class="section-title-new">Recent Chats</span>
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#A0A0A8" stroke-width="2" stroke-linecap="round"><line x1="4" y1="6" x2="20" y2="6"></line><line x1="4" y1="12" x2="20" y2="12"></line><line x1="4" y1="18" x2="12" y2="18"></line></svg>
+                </div>
+            </div>
         </div>
         
         <!-- 微信聊天界面 -->
@@ -18115,12 +18666,40 @@
                     </svg>
                 </div>
             </div>
-            <div class="contacts-group-tabs">
+            <div class="snow-container" id="contacts-snow-container"></div>
+            <div class="contacts-group-tabs" style="display: none;">
                 <div class="group-tab active" data-group="all" onclick="filterContactsByGroup(&#39;all&#39;, this)">全部</div>
                 <div class="group-tab" data-group="friends" onclick="filterContactsByGroup(&#39;friends&#39;, this)">朋友</div>
                 <div class="group-tab" data-group="lover" onclick="filterContactsByGroup(&#39;lover&#39;, this)">恋人</div>
                 <div class="group-tab" data-group="family" onclick="filterContactsByGroup(&#39;family&#39;, this)">家人</div>
                 <div class="group-tab" data-group="other" onclick="filterContactsByGroup(&#39;other&#39;, this)">其他</div>
+            </div>
+            <!-- 韩系概念店风格顶栏 -->
+            <div class="contacts-micro-header">
+                <div class="moments-back-btn" onclick="backToWechatMain()" title="返回">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <polyline points="15 18 9 12 15 6"></polyline>
+                    </svg>
+                </div>
+                <div class="moments-back-btn" onclick="openCharacterSettings()" title="添加联系人">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="12" y1="5" x2="12" y2="19"></line>
+                        <line x1="5" y1="12" x2="19" y2="12"></line>
+                    </svg>
+                </div>
+            </div>
+            <!-- 标题区 -->
+            <div class="contacts-title-section">
+                <div class="contacts-title-serif">Contacts <span class="contacts-title-star">✦</span></div>
+                <div class="contacts-title-desc">A curated directory of connections and memorable individuals.</div>
+            </div>
+            <!-- 标签区 -->
+            <div class="contacts-tab-section" id="contacts-tabs">
+                <div class="contacts-tab-item active" data-filter="all" onclick="filterContactsByGroup(&#39;all&#39;, this)">all</div>
+                <div class="contacts-tab-item" data-filter="friends" onclick="filterContactsByGroup(&#39;friends&#39;, this)">friends</div>
+                <div class="contacts-tab-item" data-filter="lover" onclick="filterContactsByGroup(&#39;lover&#39;, this)">lover</div>
+                <div class="contacts-tab-item" data-filter="family" onclick="filterContactsByGroup(&#39;family&#39;, this)">family</div>
+                <div class="contacts-tab-item" data-filter="other" onclick="filterContactsByGroup(&#39;other&#39;, this)">other</div>
             </div>
             <div class="contacts-list touch-scroll-container" id="contacts-list" style="overflow: hidden auto; touch-action: manipulation;">
                 <div class="contact-group"></div>
@@ -28510,6 +29089,27 @@ ${commenterInfo}
             document.getElementById('ios-glass-tabbar').classList.remove('visible');
         }
 
+        // 打开消息搜索
+        function openMessageSearch() {
+            showSwipeToast('搜索功能开发中...');
+        }
+
+        // 打开微信通讯录
+        function openWechatContacts() {
+            document.getElementById('wechat-main').style.display = 'none';
+            document.getElementById('wechat-contacts').style.display = 'flex';
+            document.getElementById('ios-glass-tabbar').classList.add('visible');
+            loadContacts();
+            SnowEffect.init();
+            SnowEffect.start();
+        }
+
+        // 微信菜单切换
+        function toggleWechatMenu(event) {
+            event.stopPropagation();
+            showSwipeToast('菜单功能开发中...');
+        }
+
         // 微信标签页切换
         function switchWechatTab(tab) {
             document.getElementById('wechat-main').style.display = 'none';
@@ -28538,6 +29138,8 @@ ${commenterInfo}
                     break;
                 case 'contacts':
                     document.getElementById('wechat-contacts').style.display = 'flex';
+                    SnowEffect.init();
+                    SnowEffect.start();
                     break;
                 case 'discover':
                     document.getElementById('wechat-moments').style.display = 'flex';
@@ -28553,6 +29155,8 @@ ${commenterInfo}
         
         function resetAllViews() {
             isSendingMessages = false;
+            
+            SnowEffect.stop();
             
             document.getElementById('wechat-main').style.display = 'none';
             document.getElementById('wechat-profile').style.display = 'none';
@@ -28590,17 +29194,46 @@ ${commenterInfo}
             }, 600);
         }
 
-        // 加载消息列表
+        // 更新Hero日期显示 - 实时更新
+        function updateHeroDate() {
+            const heroDate = document.getElementById('hero-date');
+            if (heroDate) {
+                const now = new Date();
+                const options = { month: 'long', day: 'numeric', weekday: 'short' };
+                heroDate.textContent = now.toLocaleDateString('en-US', options);
+            }
+        }
+
+        // 每分钟更新一次日期
+        setInterval(updateHeroDate, 60000);
+
+        // 加载消息列表 - 韩系高定设计
         function loadMessages() {
             const messageList = document.getElementById('message-list');
+            const pinnedContainer = document.getElementById('pinned-contacts-container');
+            const inboxCount = document.getElementById('inbox-count');
+
+            updateHeroDate();
+
+            let totalUnread = 0;
+
+            if (pinnedContainer) {
+                pinnedContainer.innerHTML = '';
+            }
+
+            const sectionHeader = messageList.querySelector('.section-header-new');
             messageList.innerHTML = '';
+            if (sectionHeader) {
+                messageList.appendChild(sectionHeader);
+            }
 
             if (roles.length === 0) {
                 const emptyMessage = document.createElement('div');
-                emptyMessage.style.padding = '20px';
+                emptyMessage.style.padding = '40px 20px';
                 emptyMessage.style.textAlign = 'center';
-                emptyMessage.style.color = '#999';
-                emptyMessage.textContent = '暂无消息，去通讯录添加角色吧';
+                emptyMessage.style.color = '#A0A0A8';
+                emptyMessage.style.fontSize = '14px';
+                emptyMessage.innerHTML = '暂无消息<br><span style="font-size: 12px; color: #C0C0C8;">去通讯录添加角色吧</span>';
                 messageList.appendChild(emptyMessage);
                 return;
             }
@@ -28615,22 +29248,82 @@ ${commenterInfo}
                 return 0;
             });
 
+            if (pinnedContainer) {
+                pinnedRoles.forEach(roleId => {
+                    const role = roles.find(r => r.id === roleId);
+                    if (!role) return;
+
+                    const contactItem = document.createElement('div');
+                    contactItem.className = 'contact-item-new';
+                    contactItem.onclick = () => openChat(role);
+
+                    const avatarWrapper = document.createElement('div');
+                    avatarWrapper.className = 'contact-avatar-wrapper';
+
+                    const avatarInner = document.createElement('div');
+                    avatarInner.className = 'contact-avatar-inner';
+                    if (role.avatar) {
+                        avatarInner.innerHTML = `<img src="${role.avatar}" alt="${role.name}">`;
+                    } else {
+                        avatarInner.textContent = role.name.charAt(0);
+                    }
+
+                    avatarWrapper.appendChild(avatarInner);
+
+                    const roleMessages = (messages[role.id] || []).filter(msg => msg.context !== 'call');
+                    if (roleMessages.length > 0) {
+                        const lastMsg = roleMessages[roleMessages.length - 1];
+                        if (lastMsg.role === 'assistant' && !lastMsg.read) {
+                            const badge = document.createElement('div');
+                            badge.className = 'contact-badge';
+                            avatarWrapper.appendChild(badge);
+                            avatarWrapper.classList.add('has-update');
+                        }
+                        roleMessages.forEach(msg => {
+                            if (msg.role === 'assistant' && !msg.read) {
+                                totalUnread++;
+                            }
+                        });
+                    }
+
+                    const name = document.createElement('span');
+                    name.className = 'contact-name-new';
+                    name.textContent = role.remark || role.name;
+
+                    contactItem.appendChild(avatarWrapper);
+                    contactItem.appendChild(name);
+                    pinnedContainer.appendChild(contactItem);
+                });
+
+                const addItem = document.createElement('div');
+                addItem.className = 'contact-item-new add-btn-new';
+                addItem.onclick = () => openWechatContacts();
+                addItem.innerHTML = `
+                    <div class="contact-avatar-wrapper">
+                        <div class="contact-avatar-inner">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                        </div>
+                    </div>
+                    <span class="contact-name-new" style="color: #A0A0A8;">Add</span>
+                `;
+                pinnedContainer.appendChild(addItem);
+            }
+
             sortedRoles.forEach(role => {
                 const wrapper = document.createElement('div');
                 wrapper.className = 'message-item-wrapper';
 
                 const messageItem = document.createElement('div');
-                messageItem.className = 'message-item';
+                messageItem.className = 'message-item-new';
                 messageItem.dataset.roleId = role.id;
 
                 const isPinned = pinnedRoles.includes(role.id);
                 if (isPinned) {
-                    messageItem.classList.add('pinned');
                     wrapper.classList.add('pinned-wrapper');
                 }
 
                 const avatar = document.createElement('div');
-                avatar.className = 'message-avatar';
+                avatar.className = 'list-avatar-new';
                 if (role.avatar) {
                     avatar.innerHTML = `<img src="${role.avatar}" alt="${role.name}">`;
                 } else {
@@ -28638,88 +29331,106 @@ ${commenterInfo}
                 }
 
                 const info = document.createElement('div');
-                info.className = 'message-info';
+                info.className = 'list-info-new';
 
-                const header = document.createElement('div');
-                header.className = 'message-header';
+                const headerRow = document.createElement('div');
+                headerRow.className = 'list-header-row-new';
 
-                const name = document.createElement('div');
-                name.className = 'message-name';
+                const nameWrapper = document.createElement('div');
+                nameWrapper.className = 'name-wrapper-new';
+
+                const name = document.createElement('span');
+                name.className = 'list-name-new';
                 name.textContent = role.remark || role.name;
+                nameWrapper.appendChild(name);
 
-                let timeText = '刚刚';
+                if (role.group) {
+                    const tag = document.createElement('span');
+                    tag.className = 'role-tag-new';
+                    const groupNames = { friends: 'Friend', lover: 'Lover', family: 'Family', other: 'Other' };
+                    tag.textContent = groupNames[role.group] || role.group;
+                    nameWrapper.appendChild(tag);
+                }
+
+                let timeText = 'New';
                 const roleMessages = (messages[role.id] || []).filter(msg => msg.context !== 'call');
+                let hasUnread = false;
                 if (roleMessages.length > 0) {
                     const lastMessage = roleMessages[roleMessages.length - 1];
                     if (lastMessage.timestamp) {
                         const date = new Date(lastMessage.timestamp);
-                        const month = date.getMonth() + 1;
-                        const day = date.getDate();
-                        const hour = String(date.getHours()).padStart(2, '0');
-                        const minute = String(date.getMinutes()).padStart(2, '0');
-                        timeText = `${month}月${day}日 ${hour}:${minute}`;
+                        const today = new Date();
+                        if (date.toDateString() === today.toDateString()) {
+                            const hour = String(date.getHours()).padStart(2, '0');
+                            const minute = String(date.getMinutes()).padStart(2, '0');
+                            timeText = `${hour}:${minute}`;
+                        } else {
+                            const diffDays = Math.floor((today - date) / (1000 * 60 * 60 * 24));
+                            if (diffDays === 1) {
+                                timeText = 'Yesterday';
+                            } else {
+                                timeText = `${date.getMonth() + 1}/${date.getDate()}`;
+                            }
+                        }
                     }
+                    if (lastMessage.role === 'assistant' && !lastMessage.read) {
+                        hasUnread = true;
+                    }
+                    roleMessages.forEach(msg => {
+                        if (msg.role === 'assistant' && !msg.read) {
+                            totalUnread++;
+                        }
+                    });
                 }
+
+                const time = document.createElement('span');
+                time.className = 'list-time-new';
+                time.textContent = timeText;
+
+                headerRow.appendChild(nameWrapper);
+                headerRow.appendChild(time);
+
+                const previewGroup = document.createElement('div');
+                previewGroup.className = 'preview-group';
 
                 const preview = document.createElement('div');
-                preview.className = 'message-preview';
-                preview.id = `preview-${role.id}`;
+                preview.className = 'preview-bubble';
                 if (roleMessages.length > 0) {
                     const lastMessage = roleMessages[roleMessages.length - 1];
-                    let previewText = '';
                     if (lastMessage.content && typeof lastMessage.content === 'object') {
                         if (lastMessage.content.type === 'photo') {
-                            previewText = '[照片] ' + lastMessage.content.description;
+                            preview.textContent = '[Photo] ' + (lastMessage.content.description || '');
                         } else if (lastMessage.content.type === 'voice') {
-                            previewText = '[语音] ' + lastMessage.content.text;
+                            preview.textContent = '[Voice] ' + lastMessage.content.text;
                         } else {
-                            previewText = '[消息]';
+                            preview.textContent = '[Message]';
                         }
                     } else {
-                        previewText = lastMessage.content || '';
+                        preview.textContent = lastMessage.content || '...';
                     }
-                    preview.textContent = previewText.length > 30 
-                        ? previewText.substring(0, 30) + '...' 
-                        : previewText;
+                    if (hasUnread) {
+                        preview.style.color = '#1C1C1E';
+                        preview.style.fontWeight = '600';
+                    }
                 } else {
-                    preview.textContent = '点击开始聊天';
+                    preview.textContent = 'Tap to start chat';
+                    preview.style.background = 'transparent';
+                    preview.style.padding = '0';
                 }
 
-                if (isPinned) {
-                    header.appendChild(name);
-                    info.appendChild(header);
-                    info.appendChild(preview);
-                    
-                    const pinnedTime = document.createElement('div');
-                    pinnedTime.className = 'message-time-pinned';
-                    pinnedTime.textContent = timeText;
-                    info.appendChild(pinnedTime);
-                } else {
-                    const time = document.createElement('div');
-                    time.className = 'message-time';
-                    time.textContent = timeText;
-                    header.appendChild(name);
-                    header.appendChild(time);
-                    info.appendChild(header);
-                    info.appendChild(preview);
+                previewGroup.appendChild(preview);
+
+                if (hasUnread) {
+                    const unreadDot = document.createElement('div');
+                    unreadDot.className = 'unread-dot';
+                    previewGroup.appendChild(unreadDot);
                 }
+
+                info.appendChild(headerRow);
+                info.appendChild(previewGroup);
 
                 messageItem.appendChild(avatar);
                 messageItem.appendChild(info);
-
-                if (isPinned) {
-                    const binderClip = document.createElement('div');
-                    binderClip.className = 'pinned-binder-clip';
-                    const clipMiddle = document.createElement('div');
-                    clipMiddle.className = 'pinned-clip-middle';
-                    binderClip.appendChild(clipMiddle);
-                    messageItem.appendChild(binderClip);
-                    
-                    const pinnedLabel = document.createElement('div');
-                    pinnedLabel.className = 'pinned-label';
-                    pinnedLabel.textContent = '置顶';
-                    messageItem.appendChild(pinnedLabel);
-                }
 
                 const actions = document.createElement('div');
                 actions.className = 'message-item-actions';
@@ -28746,7 +29457,6 @@ ${commenterInfo}
 
                 messageItem.addEventListener('click', (e) => {
                     if (!messageItem.classList.contains('swiped')) {
-                        createClickStar(e, messageItem);
                         setTimeout(() => openChat(role), 150);
                     }
                 });
@@ -28765,6 +29475,10 @@ ${commenterInfo}
 
                 messageList.appendChild(wrapper);
             });
+
+            if (inboxCount) {
+                inboxCount.textContent = totalUnread;
+            }
         }
 
         function togglePin(roleId, messageItem, pinBtn) {
@@ -29173,7 +29887,7 @@ ${commenterInfo}
         function filterContactsByGroup(group, element) {
             currentContactFilter = group;
             
-            document.querySelectorAll('.group-tab').forEach(tab => {
+            document.querySelectorAll('.group-tab, .contacts-tab-item').forEach(tab => {
                 tab.classList.remove('active');
             });
             element.classList.add('active');
@@ -29198,22 +29912,54 @@ ${commenterInfo}
                 const contactItem = document.createElement('div');
                 contactItem.className = 'contact-item';
                 contactItem.dataset.group = role.group || '';
+                contactItem.dataset.category = role.group || '';
                 contactItem.onclick = () => openContactDetail(role);
 
-                const avatar = document.createElement('div');
-                avatar.className = 'contact-avatar';
+                const avatarWrap = document.createElement('div');
+                avatarWrap.className = 'avatar-wrap';
                 if (role.avatar) {
-                    avatar.innerHTML = `<img src="${role.avatar}" alt="${role.name}">`;
+                    avatarWrap.innerHTML = `<img src="${role.avatar}" alt="${role.name}" class="avatar-img"><div class="avatar-deco">✦</div>`;
                 } else {
-                    avatar.textContent = role.name.charAt(0);
+                    avatarWrap.innerHTML = `<img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' fill='%23E5E5EA'/%3E%3Ctext x='50' y='55' text-anchor='middle' font-size='40' fill='%23999'%3E${role.name.charAt(0)}%3C/text%3E%3C/svg%3E" alt="${role.name}" class="avatar-img">`;
                 }
 
-                const name = document.createElement('div');
-                name.className = 'contact-name';
-                name.textContent = role.remark || role.name;
+                const infoCol = document.createElement('div');
+                infoCol.className = 'info-col';
 
-                contactItem.appendChild(avatar);
-                contactItem.appendChild(name);
+                const nameRow = document.createElement('div');
+                nameRow.className = 'name-row';
+
+                const nameText = document.createElement('span');
+                nameText.className = 'name-text';
+                nameText.textContent = role.remark || role.name;
+
+                const badge = document.createElement('span');
+                badge.className = 'aesthetic-badge';
+                const groupLabels = {
+                    'friends': 'FRIEND',
+                    'lover': 'LOVER',
+                    'family': 'FAMILY',
+                    'other': 'OTHER'
+                };
+                badge.textContent = groupLabels[role.group] || 'CONTACT';
+
+                nameRow.appendChild(nameText);
+                nameRow.appendChild(badge);
+
+                const statusText = document.createElement('span');
+                statusText.className = 'status-text';
+                statusText.textContent = role.description ? role.description.substring(0, 30) + '...' : '...';
+
+                infoCol.appendChild(nameRow);
+                infoCol.appendChild(statusText);
+
+                const plusIcon = document.createElement('div');
+                plusIcon.className = 'plus-icon';
+                plusIcon.textContent = '+';
+
+                contactItem.appendChild(avatarWrap);
+                contactItem.appendChild(infoCol);
+                contactItem.appendChild(plusIcon);
 
                 contactGroup.appendChild(contactItem);
             });
@@ -32135,6 +32881,7 @@ ${recentHistory.map(msg => {
             isSendingMessages = false;
             
             closeChatMenu();
+            SnowEffect.stop();
             document.getElementById('wechat-chat').style.display = 'none';
             document.getElementById('wechat-contacts').style.display = 'none';
             document.getElementById('wechat-profile').style.display = 'none';
@@ -35514,7 +36261,7 @@ ${recentHistory.map(msg => {
             const wechatProfile = document.getElementById('wechat-profile');
             
             const defaultBg = isDarkMode ? '#1C1C1E' : '#f8f8fc';
-            const defaultContactsBg = isDarkMode ? '#1C1C1E' : '#F2F2F7';
+            const defaultContactsBg = isDarkMode ? '#1C1C1E' : '#FFFFFF';
             
             if (backgrounds.message && backgrounds.message.image) {
                 const bg = backgrounds.message;
@@ -35531,9 +36278,11 @@ ${recentHistory.map(msg => {
                 wechatContacts.style.backgroundImage = `url('${bg.image}')`;
                 wechatContacts.style.backgroundSize = 'cover';
                 wechatContacts.style.backgroundPosition = `center ${bg.positionY}%`;
+                wechatContacts.classList.add('has-bg-image');
             } else {
                 wechatContacts.style.backgroundImage = '';
                 wechatContacts.style.background = defaultContactsBg;
+                wechatContacts.classList.remove('has-bg-image');
             }
             
             if (backgrounds.profile && backgrounds.profile.image) {
@@ -38859,13 +39608,21 @@ ${conversationContext.slice(-10).map(m => {
                 try {
                     const saved = localStorage.getItem(STORAGE_KEY);
                     fonts = saved ? JSON.parse(saved) : [];
-                    fonts.forEach(font => {
+                    const invalidFonts = [];
+                    fonts.forEach((font, index) => {
                         if (font.type === 'local' && font.data) {
-                            loadFontFace(font);
+                            if (!loadFontFace(font)) {
+                                invalidFonts.push(index);
+                            }
                         } else if (font.type === 'url' && font.url) {
                             loadFontFaceFromUrl(font);
                         }
                     });
+                    if (invalidFonts.length > 0) {
+                        fonts = fonts.filter((_, index) => !invalidFonts.includes(index));
+                        saveFonts();
+                        console.log('已自动清除无效的旧字体数据');
+                    }
                 } catch (e) {
                     console.error('Load fonts error:', e);
                     fonts = [];
@@ -38882,13 +39639,38 @@ ${conversationContext.slice(-10).map(m => {
             }
 
             function loadFontFace(font) {
-                const fontFace = new FontFace(font.family, font.data);
+                if (typeof font.data !== 'string') {
+                    console.warn('检测到无效的旧字体数据，将被清除:', font.family);
+                    return false;
+                }
+                let fontData = font.data;
+                fontData = base64ToArrayBuffer(fontData);
+                const fontFace = new FontFace(font.family, fontData);
                 fontFace.load().then(loadedFace => {
                     document.fonts.add(loadedFace);
                     console.log('Font loaded:', font.family);
                 }).catch(err => {
                     console.error('Font load error:', err);
                 });
+                return true;
+            }
+
+            function arrayBufferToBase64(buffer) {
+                let binary = '';
+                const bytes = new Uint8Array(buffer);
+                for (let i = 0; i < bytes.byteLength; i++) {
+                    binary += String.fromCharCode(bytes[i]);
+                }
+                return window.btoa(binary);
+            }
+
+            function base64ToArrayBuffer(base64) {
+                const binaryString = window.atob(base64);
+                const bytes = new Uint8Array(binaryString.length);
+                for (let i = 0; i < binaryString.length; i++) {
+                    bytes[i] = binaryString.charCodeAt(i);
+                }
+                return bytes.buffer;
             }
 
             function loadFontFaceFromUrl(font) {
@@ -38966,7 +39748,7 @@ ${conversationContext.slice(-10).map(m => {
                                 type: 'local',
                                 format: ext.replace('.', ''),
                                 size: file.size,
-                                data: fontData,
+                                data: arrayBufferToBase64(fontData),
                                 addedAt: new Date().toISOString()
                             };
 
@@ -40321,6 +41103,87 @@ ${conversationContext.slice(-10).map(m => {
             NeteasePlayer.isPlaying = false;
             NeteasePlayer.updatePlayButton();
         }
+
+        // 下雪特效管理器
+        const SnowEffect = {
+            container: null,
+            snowflakes: [],
+            isRunning: false,
+            maxSnowflakes: 30,
+            spawnInterval: null,
+
+            init: function() {
+                this.container = document.getElementById('contacts-snow-container');
+            },
+
+            start: function() {
+                if (this.isRunning) return;
+                this.isRunning = true;
+                this.init();
+                if (!this.container) return;
+                
+                for (let i = 0; i < 10; i++) {
+                    this.createFlake(Math.random() * 100);
+                }
+                
+                this.spawnInterval = setInterval(() => {
+                    if (this.snowflakes.length < this.maxSnowflakes) {
+                        this.createFlake();
+                    }
+                }, 400);
+            },
+
+            stop: function() {
+                this.isRunning = false;
+                if (this.spawnInterval) {
+                    clearInterval(this.spawnInterval);
+                    this.spawnInterval = null;
+                }
+                this.clearSnowflakes();
+            },
+
+            clearSnowflakes: function() {
+                if (this.container) {
+                    this.container.innerHTML = '';
+                }
+                this.snowflakes = [];
+            },
+
+            createFlake: function(startX = null) {
+                if (!this.container || !this.isRunning) return;
+                if (this.snowflakes.length >= this.maxSnowflakes) return;
+
+                const snowflake = document.createElement('div');
+                snowflake.className = 'snowflake';
+                
+                const size = Math.random() * 0.6 + 0.4;
+                const x = startX !== null ? startX : Math.random() * 100;
+                const duration = Math.random() * 4 + 6;
+                const swayX = (Math.random() - 0.5) * 60;
+                
+                snowflake.style.cssText = `
+                    left: ${x}%;
+                    font-size: ${size}em;
+                    --sway-x: ${swayX}px;
+                    animation: snowfall ${duration}s linear forwards;
+                    opacity: ${Math.random() * 0.3 + 0.7};
+                `;
+
+                const flakeChars = ['❄', '❅', '❆', '✻', '✼', '❉', '❋'];
+                snowflake.textContent = flakeChars[Math.floor(Math.random() * flakeChars.length)];
+                
+                this.container.appendChild(snowflake);
+                this.snowflakes.push(snowflake);
+
+                snowflake.addEventListener('animationend', () => {
+                    snowflake.remove();
+                    const index = this.snowflakes.indexOf(snowflake);
+                    if (index > -1) {
+                        this.snowflakes.splice(index, 1);
+                    }
+                });
+            }
+        };
 
         initErrorLogging();
 
