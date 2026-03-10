@@ -942,6 +942,14 @@
             stroke: #fff;
         }
 
+        .dark-mode .contact-detail-header .icon-btn {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .dark-mode .contact-detail-header .icon-btn:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
         .dark-mode .contact-detail-title {
             color: #FFFFFF;
         }
@@ -7724,6 +7732,19 @@
 
         .contact-detail-header .back-btn svg {
             stroke: #fff;
+        }
+
+        .contact-detail-header .icon-btn {
+            background: rgba(255, 255, 255, 0.15);
+            border: none;
+        }
+
+        .contact-detail-header .icon-btn:hover {
+            background: rgba(255, 255, 255, 0.25);
+        }
+
+        .contact-detail-header .icon-btn:active {
+            background: rgba(255, 255, 255, 0.3);
         }
 
         .icon-btn {
@@ -16328,6 +16349,12 @@
             scrollbar-width: none;
         }
         .list-section-new::-webkit-scrollbar { display: none; }
+        .list-section-new.touch-scroll-container {
+            overflow-y: auto !important;
+            overflow-x: hidden !important;
+            -webkit-overflow-scrolling: touch;
+        }
+        .list-section-new.touch-scroll-container::-webkit-scrollbar { display: none; width: 0; height: 0; }
         .section-header-new { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
         .section-title-new { font-size: 11px; font-weight: 700; color: #A0A0A8; text-transform: uppercase; letter-spacing: 1px; }
 
@@ -16400,12 +16427,7 @@
                 <div class="announcement-content">
                     <ul>
                         <li style="color: red; font-weight: bold;">⚠️ 导入存档失败请大退，重新开浏览器或桌面版</li>
-                        <li>✨ 修改了消息页和联系人页</li>
-                        <li>🔧 提示词什么的还是修修修</li>
-                        <li>✨ 朋友圈文风改了一下</li>
-                        <li>🔧 多选模式优化了一下</li>
-                        <li>🛡️ 储存导入增加了报错和储存机制改了</li>
-                        <li>🔧 修复了照片调格式问题以及别的一些掉格式问题，AI听话的话就不会有什么问题了</li>
+                        <li>✨ 增加了角色导出导入在详细资料内</li>
                     </ul>
                 </div>
             </div>
