@@ -36179,7 +36179,7 @@ ${recentHistory.map(msg => {
                         }
                     }
                     
-                    function handleBubbleClick(e) {
+                    function handleEmojiBubbleClick(e) {
                         if (longPressTriggered) {
                             e.preventDefault();
                             e.stopPropagation();
@@ -36200,7 +36200,7 @@ ${recentHistory.map(msg => {
                     bubble.addEventListener('mousedown', handleLongPressStart);
                     bubble.addEventListener('mouseup', handleLongPressEnd);
                     bubble.addEventListener('mouseleave', handleLongPressEnd);
-                    bubble.addEventListener('click', handleBubbleClick, true);
+                    bubble.addEventListener('click', handleEmojiBubbleClick, true);
                 } else {
                     bubble.addEventListener('click', handleBubbleClick);
                 }
