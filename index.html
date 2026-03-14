@@ -18367,6 +18367,7 @@
                         <li>✨ 新加了表情功能，角色会发表情包了</li>
                         <li>💰 增加了转账功能</li>
                         <li>🎮 模拟人生页面重做</li>
+                        <li>🔧 修复了回溯问题</li>
                         <li style="color: orange;">⏳ 待修复：语音接入待实装、日记待实装</li>
                     </ul>
                 </div>
@@ -22192,18 +22193,16 @@
                                     const amount = msg.content.amount;
                                     const remark = msg.content.remark || '转账';
                                     if (msg.type === 'sent') {
-                                        if (msg.content.paid === false) {
-                                            msgContent = `[转账请求] 用户向你发起转账 ¥${amount.toFixed(2)}，转账说明: "${remark}"，请回复确认是否接收这笔转账（回复后会自动收款）`;
-                                        } else if (msg.content.claimed) {
-                                            msgContent = `[转账消息] 你已领取了用户给你转账的 ¥${amount.toFixed(2)}，转账说明: "${remark}"`;
+                                        if (msg.content.claimed) {
+                                            msgContent = `[转账消息] 你已收款 ¥${amount.toFixed(2)}，转账说明: "${remark}"`;
                                         } else {
-                                            msgContent = `[转账消息] 用户给你转账 ¥${amount.toFixed(2)}，转账说明: "${remark}"，请回复确认领取这笔转账`;
+                                            msgContent = `[转账消息] TA给你转账 ¥${amount.toFixed(2)}，转账说明: "${remark}"`;
                                         }
                                     } else {
                                         if (msg.content.claimed) {
-                                            msgContent = `[转账消息] 用户已领取了你转账的 ¥${amount.toFixed(2)}，转账说明: "${remark}"`;
+                                            msgContent = `[转账消息] TA已领取了你转账的 ¥${amount.toFixed(2)}，转账说明: "${remark}"`;
                                         } else {
-                                            msgContent = `[转账消息] 你给用户转账 ¥${amount.toFixed(2)}，转账说明: "${remark}"，等待用户领取`;
+                                            msgContent = `[转账消息] 你给TA转账 ¥${amount.toFixed(2)}，转账说明: "${remark}"，等待TA领取`;
                                         }
                                     }
                                 } else if (msg.content.type === 'payRequest') {
@@ -34133,12 +34132,17 @@ ${commenterInfo}
                 return;
             }
             
+            userBalance -= amount;
+            await saveUserBalance();
+            updateBalanceDisplay();
+            
             const transferData = {
                 type: 'transfer',
                 amount: amount,
                 remark: remark || '转账',
                 timestamp: Date.now(),
-                paid: false
+                paid: true,
+                paidAt: Date.now()
             };
             
             addMessage(currentChatRole.id, 'sent', transferData);
@@ -34163,7 +34167,7 @@ ${commenterInfo}
             
             saveMessages();
             
-            renderMessages();
+            forceReloadChatMessages(currentChatRole.id);
             
             const amountStr = amount.toFixed(2);
             const remark = msg.content.remark || '转账';
@@ -34194,7 +34198,7 @@ ${commenterInfo}
                 localStorage.setItem('orders', JSON.stringify(orders));
             }
             
-            renderMessages();
+            forceReloadChatMessages(currentChatRole.id);
             
             const amountStr = amount.toFixed(2);
             showSwipeToast(`✓ 代付成功！角色已帮你支付 ¥${amountStr}`);
@@ -37478,10 +37482,10 @@ ${recentHistory.map(msg => {
                 const amount = transferMsg.amount.toFixed(2);
                 const remark = transferMsg.remark || '转账';
                 const isClaimed = transferMsg.claimed || false;
-                const isPaid = transferMsg.paid !== false;
                 let tfAvatarUrl = '';
                 let tfFallbackText = '';
                 const canClaim = msg.type === 'received' && !isClaimed;
+                const isUserToRole = msg.type === 'sent';
                 if (msg.type === 'sent') {
                     tfAvatarUrl = roleAvatar || '';
                     tfFallbackText = roleName ? roleName.charAt(0) : 'TA';
@@ -37494,8 +37498,11 @@ ${recentHistory.map(msg => {
                     : `<span>${tfFallbackText}</span>`;
                 const claimedClass = isClaimed ? 'claimed' : '';
                 const clickHandler = canClaim ? `onclick="claimTransfer(${messageIndex})"` : '';
-                const claimedBadge = isClaimed ? '<div class="tf-claimed-badge">已领取</div>' : '';
-                const pendingBadge = (msg.type === 'sent' && !isPaid) ? '<div class="tf-pending-badge">待接收</div>' : '';
+                const claimedBadge = isClaimed 
+                    ? (isUserToRole 
+                        ? '<div class="tf-claimed-badge">已收款</div>' 
+                        : '<div class="tf-claimed-badge">已领取</div>') 
+                    : '';
                 contentHTML = `
                     <div class="transfer-message ${claimedClass}" ${clickHandler}>
                         <div class="tf-icon-circle">${tfAvatarHTML}</div>
@@ -37503,7 +37510,6 @@ ${recentHistory.map(msg => {
                             <div class="tf-text">
                                 <div class="tf-amount"><span>¥</span>${amount}</div>
                                 <div class="tf-note">${remark}</div>
-                                ${pendingBadge}
                                 ${claimedBadge}
                             </div>
                         </div>
@@ -37963,18 +37969,16 @@ ${recentHistory.map(msg => {
                             const amount = msg.content.amount;
                             const remark = msg.content.remark || '转账';
                             if (msg.type === 'sent') {
-                                if (msg.content.paid === false) {
-                                    return `[转账请求] 用户向你发起转账 ¥${amount.toFixed(2)}，转账说明: "${remark}"，请回复确认是否接收这笔转账（回复后会自动收款）`;
-                                } else if (msg.content.claimed) {
-                                    return `[转账消息] 你已领取了用户给你转账的 ¥${amount.toFixed(2)}，转账说明: "${remark}"`;
+                                if (msg.content.claimed) {
+                                    return `[转账消息] 你已收款 ¥${amount.toFixed(2)}，转账说明: "${remark}"`;
                                 } else {
-                                    return `[转账消息] 用户给你转账 ¥${amount.toFixed(2)}，转账说明: "${remark}"，请回复确认领取这笔转账`;
+                                    return `[转账消息] TA给你转账 ¥${amount.toFixed(2)}，转账说明: "${remark}"`;
                                 }
                             } else {
                                 if (msg.content.claimed) {
-                                    return `[转账消息] 用户已领取了你转账的 ¥${amount.toFixed(2)}，转账说明: "${remark}"`;
+                                    return `[转账消息] TA已领取了你转账的 ¥${amount.toFixed(2)}，转账说明: "${remark}"`;
                                 } else {
-                                    return `[转账消息] 你给用户转账 ¥${amount.toFixed(2)}，转账说明: "${remark}"，等待用户领取`;
+                                    return `[转账消息] 你给TA转账 ¥${amount.toFixed(2)}，转账说明: "${remark}"，等待TA领取`;
                                 }
                             }
                         }
@@ -38281,24 +38285,7 @@ ${recentHistory.map(msg => {
                 messages[roleId] = [];
             }
 
-            if (type === 'received') {
-                const unclaimedTransfers = messages[roleId].filter(msg => 
-                    msg.type === 'sent' && 
-                    msg.content && 
-                    typeof msg.content === 'object' && 
-                    msg.content.type === 'transfer' && 
-                    !msg.content.claimed
-                );
-                
-                unclaimedTransfers.forEach(msg => {
-                    msg.content.claimed = true;
-                    msg.content.claimedAt = Date.now();
-                });
-                
-                if (unclaimedTransfers.length > 0) {
-                    saveMessages();
-                }
-            }
+
 
             const newMessage = {
                 type: type,
@@ -38331,24 +38318,18 @@ ${recentHistory.map(msg => {
                 const userAvatar = await getImageData('userAvatar') || '';
                 
                 if (type === 'received') {
-                    const unpaidTransfer = messages[roleId].find(msg => 
+                    const unclaimedUserTransfer = messages[roleId].find(msg => 
                         msg.type === 'sent' && 
                         msg.content && 
                         typeof msg.content === 'object' && 
                         msg.content.type === 'transfer' && 
-                        msg.content.paid === false
+                        !msg.content.claimed
                     );
                     
-                    if (unpaidTransfer) {
-                        const amount = unpaidTransfer.content.amount;
-                        if (userBalance >= amount) {
-                            userBalance -= amount;
-                            await saveUserBalance();
-                            updateBalanceDisplay();
-                            unpaidTransfer.content.paid = true;
-                            unpaidTransfer.content.paidAt = Date.now();
-                            saveMessages();
-                        }
+                    if (unclaimedUserTransfer) {
+                        unclaimedUserTransfer.content.claimed = true;
+                        unclaimedUserTransfer.content.claimedAt = Date.now();
+                        saveMessages();
                     }
                     
                     const pendingPayRequest = messages[roleId].find(msg => 
@@ -38374,7 +38355,7 @@ ${recentHistory.map(msg => {
                         }
                     }
                     
-                    const hadUnclaimedTransfer = messages[roleId].some(msg => 
+                    const hadUserTransferClaimed = messages[roleId].some(msg => 
                         msg.type === 'sent' && 
                         msg.content && 
                         typeof msg.content === 'object' && 
@@ -38384,7 +38365,17 @@ ${recentHistory.map(msg => {
                         Date.now() - msg.content.claimedAt < 5000
                     );
                     
-                    if (hadUnclaimedTransfer || unpaidTransfer || pendingPayRequest) {
+                    const hadRoleTransferClaimed = messages[roleId].some(msg => 
+                        msg.type === 'received' && 
+                        msg.content && 
+                        typeof msg.content === 'object' && 
+                        msg.content.type === 'transfer' && 
+                        msg.content.claimed && 
+                        msg.content.claimedAt && 
+                        Date.now() - msg.content.claimedAt < 5000
+                    );
+                    
+                    if (hadUserTransferClaimed || hadRoleTransferClaimed || pendingPayRequest) {
                         loadChatMessages(roleId);
                     }
                 }
@@ -39235,7 +39226,7 @@ ${recentHistory.map(msg => {
                             }
                             
                             saveMessages();
-                            renderMessages();
+                            loadChatMessages(currentChatRole.id);
                         } else {
                             reply = messageList[0] || reply;
                             roleMessages[messageIndex].content = reply;
@@ -39388,13 +39379,7 @@ ${recentHistory.map(msg => {
                 return;
             }
             
-            const targetMsg = roleMessages[messageIndex];
-            const targetTimestamp = new Date(targetMsg.timestamp);
-            const messagesToDelete = roleMessages.filter((msg, idx) => {
-                if (idx <= messageIndex) return false;
-                const msgTime = new Date(msg.timestamp);
-                return msgTime > targetTimestamp;
-            });
+            const messagesToDelete = roleMessages.slice(messageIndex + 1);
             
             if (messagesToDelete.length === 0) {
                 showSwipeToast('该消息之后没有可回溯的内容');
@@ -39463,8 +39448,12 @@ ${recentHistory.map(msg => {
                 return false;
             }
             
-            const targetMsg = roleMessages[messageIndex];
-            const targetTimestamp = new Date(targetMsg.timestamp);
+            const messagesToDelete = roleMessages.slice(messageIndex + 1);
+            
+            if (messagesToDelete.length === 0) {
+                showSwipeToast('没有可回溯的消息');
+                return false;
+            }
             
             const chatMessages = document.getElementById('chat-messages');
             const messageElements = chatMessages.querySelectorAll('.message:not(#typing-indicator):not(.load-more-btn)');
@@ -39475,21 +39464,10 @@ ${recentHistory.map(msg => {
                 if (bubble) {
                     const idx = parseInt(bubble.dataset.messageIndex);
                     if (idx > messageIndex) {
-                        const msg = roleMessages[idx];
-                        if (msg) {
-                            const msgTime = new Date(msg.timestamp);
-                            if (msgTime > targetTimestamp) {
-                                messagesToAnimate.push(el);
-                            }
-                        }
+                        messagesToAnimate.push(el);
                     }
                 }
             });
-            
-            if (messagesToAnimate.length === 0) {
-                showSwipeToast('没有可回溯的消息');
-                return false;
-            }
             
             messagesToAnimate.forEach((el, i) => {
                 setTimeout(() => {
@@ -39499,21 +39477,19 @@ ${recentHistory.map(msg => {
             
             setTimeout(() => {
                 try {
-                    const newMessages = roleMessages.filter((msg, idx) => {
-                        if (idx <= messageIndex) return true;
-                        const msgTime = new Date(msg.timestamp);
-                        return msgTime <= targetTimestamp;
-                    });
+                    const newMessages = roleMessages.slice(0, messageIndex + 1);
                     
                     messages[roleId] = newMessages;
                     saveMessages();
                     
+                    const remainingCount = newMessages.length;
+                    visibleMessageCount = Math.min(Math.max(visibleMessageCount, MESSAGES_PER_PAGE), remainingCount);
+                    
                     chatMessages.innerHTML = '';
-                    visibleMessageCount = MESSAGES_PER_PAGE;
                     loadChatMessages(roleId);
                     loadMessages();
                     
-                    showSwipeToast(`已回溯，删除了 ${messagesToAnimate.length} 条消息`);
+                    showSwipeToast(`已回溯，删除了 ${messagesToDelete.length} 条消息`);
                     return true;
                 } catch (error) {
                     console.error('[RewindMessages] 回溯失败:', error);
@@ -41003,7 +40979,7 @@ ${recentHistory.map(msg => {
             }
             
             if (currentChatRole && currentChatRole.id === roleId) {
-                renderMessages();
+                loadChatMessages(roleId);
             }
             
             loadMessages();
