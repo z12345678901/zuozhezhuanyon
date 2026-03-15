@@ -18368,6 +18368,8 @@
                         <li>💰 增加了转账功能</li>
                         <li>🎮 模拟人生页面重做</li>
                         <li>🔧 修复了回溯问题</li>
+                        <li>🖼️ 修复了壁纸图标无法导入导出的问题，增加了链接导入</li>
+                        <li>😊 增加了角色表情包发送概率设置</li>
                         <li style="color: orange;">⏳ 待修复：语音接入待实装、日记待实装</li>
                     </ul>
                 </div>
@@ -19154,7 +19156,8 @@
                                 <div class="icon-preview-grid" id="icon-grid">
                                 </div>
                                 <input type="file" id="icon-upload" accept="image/*" style="display: none;">
-                                <button class="btn-secondary" id="upload-icon-btn" onclick="document.getElementById(&#39;icon-upload&#39;).click()" style="display: none; color: rgb(51, 51, 51);">上传图标</button>
+                                <button class="btn-secondary" id="upload-icon-btn" onclick="document.getElementById('icon-upload').click()" style="display: none; color: rgb(51, 51, 51);">上传图标</button>
+                                <button class="btn-secondary" id="url-icon-btn" onclick="openIconUrlModal()" style="display: none; color: rgb(51, 51, 51);">URL上传</button>
                                 <button class="btn-secondary" id="reset-icon-btn" onclick="resetSelectedIcon()" style="display: none; color: rgb(51, 51, 51);">恢复图标</button>
                                 <button class="btn-secondary" id="rename-icon-btn" onclick="openRenameModal()" style="display: none; color: rgb(51, 51, 51);">修改名称</button>
                                 <button class="btn-secondary" onclick="resetAllIcons()" style="color: rgb(51, 51, 51);">全部恢复默认</button>
@@ -19555,6 +19558,24 @@
                 </div>
                 <button class="btn-primary" onclick="saveAppName()" style="color: rgb(51, 51, 51);">保存</button>
                 <button class="btn-secondary" onclick="closeRenameModal()" style="color: rgb(51, 51, 51);">取消</button>
+            </div>
+        <div class="scroll-indicator"></div></div>
+    </div>
+
+    <!-- 图标URL上传模态窗口 -->
+    <div id="icon-url-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 style="color: rgb(51, 51, 51);">URL上传图标</h2>
+                <button class="close-btn" onclick="closeIconUrlModal()">×</button>
+            </div>
+            <div class="modal-body touch-scroll-container" style="overflow: hidden auto; touch-action: manipulation;">
+                <div class="form-group">
+                    <label for="icon-url-input" style="color: rgb(51, 51, 51);">输入图片URL:</label>
+                    <input type="text" id="icon-url-input" placeholder="输入图片链接地址">
+                </div>
+                <button class="btn-primary" onclick="setIconFromUrl()" style="color: rgb(51, 51, 51);">确认上传</button>
+                <button class="btn-secondary" onclick="closeIconUrlModal()" style="color: rgb(51, 51, 51);">取消</button>
             </div>
         <div class="scroll-indicator"></div></div>
     </div>
@@ -20743,6 +20764,13 @@
                             </svg>
                             <span>取消链接</span>
                         </div>
+                        <div class="chat-menu-item" onclick="openWallpaperUrlModal()">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path>
+                                <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path>
+                            </svg>
+                            <span>URL导入</span>
+                        </div>
                     </div>
                 </div>
                 <div class="chat-menu-category">
@@ -21077,6 +21105,45 @@
                         </div>
                     </div>
                 </div>
+                <div class="chat-menu-category">
+                    <div class="chat-menu-category-header" onclick="toggleCategory('emoji-probability')">
+                        <div class="category-title-icon">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <circle cx="12" cy="12" r="10"></circle>
+                                <path d="M8 14s1.5 2 4 2 4-2 4-2"></path>
+                                <line x1="9" y1="9" x2="9.01" y2="9"></line>
+                                <line x1="15" y1="9" x2="15.01" y2="9"></line>
+                            </svg>
+                        </div>
+                        <span>表情包概率</span>
+                        <svg class="category-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polyline points="6 9 12 15 18 9"></polyline>
+                        </svg>
+                    </div>
+                    <div class="chat-menu-category-content" id="emoji-probability-category">
+                        <div style="padding: 12px 16px;">
+                            <div class="form-group" style="margin-bottom: 12px;">
+                                <label style="font-size: 13px; color: #333; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center;">
+                                    <span>角色发表情包概率</span>
+                                    <span id="emoji-probability-value" style="font-size: 12px; color: #666;">50%</span>
+                                </label>
+                                <input type="range" id="emoji-probability-slider" min="0" max="100" value="50" style="width: 100%; height: 6px; border-radius: 3px; background: rgba(0, 0, 0, 0.1); outline: none; -webkit-appearance: none;" oninput="updateEmojiProbabilityDisplay(this.value)">
+                                <p style="font-size: 11px; color: #666; margin-top: 6px;">设置角色发送表情包的概率（0%为不发送，100%为总是发送）</p>
+                            </div>
+                            <div class="form-group" style="margin-bottom: 12px;">
+                                <div class="toggle-switch-container">
+                                    <span class="toggle-switch-label">启用表情包功能</span>
+                                    <div id="emoji-feature-toggle" class="toggle-switch" onclick="toggleEmojiFeature()">
+                                        <div class="toggle-switch-handle"></div>
+                                    </div>
+                                </div>
+                                <div id="emoji-feature-status" class="toggle-status-text on">当前状态: 已开启</div>
+                            </div>
+                            <button class="btn-primary" onclick="saveEmojiProbability()" style="width: 100%; padding: 12px 16px; font-size: 14px; color: rgb(51, 51, 51);">保存设置</button>
+                            <button class="btn-secondary" onclick="resetEmojiProbability()" style="width: 100%; padding: 12px 16px; font-size: 14px; margin-top: 8px; color: rgb(51, 51, 51);">恢复默认</button>
+                        </div>
+                    </div>
+                </div>
             </div>
             <div class="chat-menu-footer" id="chat-menu-footer" onclick="openTokenDetailModal()">
                 <div class="chat-menu-footer-line"></div>
@@ -21084,6 +21151,24 @@
                 <div class="chat-menu-footer-line"></div>
             </div>
             <input type="file" id="chat-wallpaper-input" class="chat-wallpaper-input" accept="image/*" onchange="handleChatWallpaperUpload(event)">
+        </div>
+        
+        <!-- 壁纸URL导入模态窗口 -->
+        <div id="wallpaper-url-modal" class="modal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2 style="color: rgb(51, 51, 51);">URL导入壁纸</h2>
+                    <button class="close-btn" onclick="closeWallpaperUrlModal()">×</button>
+                </div>
+                <div class="modal-body touch-scroll-container" style="overflow: hidden auto; touch-action: manipulation;">
+                    <div class="form-group">
+                        <label for="wallpaper-url-input" style="color: rgb(51, 51, 51);">输入图片URL:</label>
+                        <input type="text" id="wallpaper-url-input" placeholder="输入图片链接地址">
+                    </div>
+                    <button class="btn-primary" onclick="setWallpaperFromUrl()" style="color: rgb(51, 51, 51);">确认导入</button>
+                    <button class="btn-secondary" onclick="closeWallpaperUrlModal()" style="color: rgb(51, 51, 51);">取消</button>
+                </div>
+            <div class="scroll-indicator"></div></div>
         </div>
         
         <!-- Token详情模态窗口 -->
@@ -22181,12 +22266,20 @@
                     
                     finalHistory.forEach(msg => {
                         let msgContent = '';
+                        let hasImageData = false;
+                        let imageDataUrl = '';
                         if (msg.content) {
                             if (typeof msg.content === 'object') {
                                 if (msg.content.type === 'voice') {
                                     msgContent = `[语音消息] ${msg.content.text}`;
                                 } else if (msg.content.type === 'photo') {
-                                    msgContent = `[图片消息] ${msg.content.description}`;
+                                    if (msg.content.imageData) {
+                                        hasImageData = true;
+                                        imageDataUrl = msg.content.imageData;
+                                        msgContent = `[发送了一张图片]`;
+                                    } else {
+                                        msgContent = `[图片消息] ${msg.content.description || '图片'}`;
+                                    }
                                 } else if (msg.content.type === 'emoji') {
                                     msgContent = `[发送了表情包: "${msg.content.desc || '自定义表情'}"]`;
                                 } else if (msg.content.type === 'transfer') {
@@ -22241,10 +22334,20 @@
                                 timePrefix = `[${dateStr} ${timeStr}] `;
                             }
                         }
-                        const fullContent = timePrefix + msgContent;
+                        
                         if (msg.type === 'sent') {
-                            apiMessages.push({ role: 'user', content: fullContent });
+                            if (hasImageData) {
+                                const multimodalContent = [
+                                    { type: 'text', text: timePrefix + msgContent },
+                                    { type: 'image_url', image_url: { url: imageDataUrl } }
+                                ];
+                                apiMessages.push({ role: 'user', content: multimodalContent });
+                            } else {
+                                const fullContent = timePrefix + msgContent;
+                                apiMessages.push({ role: 'user', content: fullContent });
+                            }
                         } else if (msg.type === 'received') {
+                            const fullContent = timePrefix + msgContent;
                             apiMessages.push({ role: 'assistant', content: fullContent });
                         }
                     });
@@ -24296,22 +24399,42 @@ ${role.tags && role.tags.length > 0 ? `- 性格特点：${role.tags.join('、')}
         
         const bigDataKeys = ['wechatMessages', 'wechatRoles', 'simsRolesData', 'worldbookEntries', 'wechatMoments', 'customEmojiData'];
         
+        function showStorageQuotaError() {
+            const errorMsg = '⚠️ 浏览器存储空间不足！\n\n' +
+                '存储配额已超出限制，请尝试以下解决方案：\n\n' +
+                '1. 导出数据备份后清理部分数据\n' +
+                '2. 删除不需要的角色或聊天记录\n' +
+                '3. 清理朋友圈历史动态\n' +
+                '4. 清除浏览器缓存后刷新页面\n\n' +
+                '建议：定期导出数据备份，避免数据丢失。';
+            
+            alert(errorMsg);
+            
+            if (typeof addErrorLog === 'function') {
+                addErrorLog('存储配额超限', '浏览器存储空间不足，请清理数据或导出备份', 'storage');
+            }
+        }
+        
         async function saveBigData(key, data) {
             const jsonData = typeof data === 'string' ? data : JSON.stringify(data);
             
             try {
                 await DataStorage.save(key, jsonData);
-                localStorage.removeItem(key);
+                if (localStorage.getItem(key)) {
+                    localStorage.removeItem(key);
+                    console.log('已清理 localStorage 中的旧数据:', key);
+                }
                 return true;
             } catch (e) {
-                console.error('IndexedDB 存储失败，尝试 localStorage:', key, e);
-                try {
-                    localStorage.setItem(key, jsonData);
-                    return true;
-                } catch (e2) {
-                    console.error('localStorage 也存储失败:', key, e2);
-                    return false;
+                console.error('IndexedDB 存储失败:', key, e);
+                
+                if (e.name === 'QuotaExceededError' || e.code === 22 || 
+                    (e.message && e.message.toLowerCase().includes('quota'))) {
+                    showStorageQuotaError();
+                } else {
+                    alert('数据保存失败: ' + (e.message || '未知错误'));
                 }
+                return false;
             }
         }
         
@@ -24370,14 +24493,9 @@ ${role.tags && role.tags.length > 0 ? `- 性格特点：${role.tags.join('、')}
         }
         
         async function getImageData(key) {
-            let data = localStorage.getItem(key);
-            if (data) {
-                return data;
-            }
-            
             try {
                 await ImageStorage.init();
-                data = await ImageStorage.load(key);
+                const data = await ImageStorage.load(key);
                 if (data) {
                     return data;
                 }
@@ -24385,35 +24503,39 @@ ${role.tags && role.tags.length > 0 ? `- 性格特点：${role.tags.join('、')}
                 console.warn('从 IndexedDB 读取图片失败:', key, e);
             }
             
+            const localData = localStorage.getItem(key);
+            if (localData) {
+                try {
+                    await ImageStorage.init();
+                    await ImageStorage.save(key, localData);
+                    localStorage.removeItem(key);
+                    console.log('图片已从 localStorage 迁移到 IndexedDB:', key);
+                } catch (e) {
+                    console.warn('迁移图片到 IndexedDB 失败:', key, e);
+                }
+                return localData;
+            }
+            
             return null;
         }
         
         async function setImageData(key, data) {
-            if (data && data.length > 50000) {
-                try {
-                    await ImageStorage.init();
-                    await ImageStorage.save(key, data);
-                    localStorage.removeItem(key);
-                    console.log('大图片已存储到 IndexedDB:', key);
-                    return true;
-                } catch (e) {
-                    console.warn('IndexedDB 存储失败，回退到 localStorage:', e);
-                }
-            }
-            
             try {
-                localStorage.setItem(key, data);
+                await ImageStorage.init();
+                await ImageStorage.save(key, data);
+                if (localStorage.getItem(key)) {
+                    localStorage.removeItem(key);
+                    console.log('已清理 localStorage 中的旧图片数据:', key);
+                }
                 return true;
             } catch (e) {
-                console.error('localStorage 存储失败:', e);
-                try {
-                    await ImageStorage.init();
-                    await ImageStorage.save(key, data);
-                    return true;
-                } catch (e2) {
-                    console.error('IndexedDB 存储也失败:', e2);
-                    return false;
+                console.error('IndexedDB 图片存储失败:', key, e);
+                
+                if (e.name === 'QuotaExceededError' || e.code === 22 || 
+                    (e.message && e.message.toLowerCase().includes('quota'))) {
+                    showStorageQuotaError();
                 }
+                return false;
             }
         }
         
@@ -24483,11 +24605,11 @@ ${role.tags && role.tags.length > 0 ? `- 性格特点：${role.tags.join('、')}
                     }
                     
                     const reader = new FileReader();
-                    reader.onload = function(event) {
+                    reader.onload = async function(event) {
                         const imageUrl = event.target.result;
                         const widget = document.getElementById('circle-widget');
                         widget.innerHTML = `<img src="${imageUrl}" alt="小组件图片" style="border-radius: 50%; box-shadow: 0 0 4px 1px rgba(255,255,255,0.4), 0 4px 12px rgba(0,0,0,0.3); border: 2px solid white;">`;
-                        localStorage.setItem('circleWidgetImage', imageUrl);
+                        await setImageData('circleWidgetImage', imageUrl);
                     };
                     reader.readAsDataURL(file);
                 }
@@ -24708,11 +24830,11 @@ ${role.tags && role.tags.length > 0 ? `- 性格特点：${role.tags.join('、')}
 
         // ==================== 模拟人生4功能 ====================
         
-        function openSimsPanel() {
+        async function openSimsPanel() {
             const panel = document.getElementById('sims-panel');
             panel.classList.add('visible');
             
-            const savedBackground = localStorage.getItem('simsBackground');
+            const savedBackground = await getImageData('simsBackground');
             if (savedBackground) {
                 const glassPanel = panel.querySelector('.glass-panel');
                 if (glassPanel) {
@@ -24888,14 +25010,14 @@ ${role.tags && role.tags.length > 0 ? `- 性格特点：${role.tags.join('、')}
                     }
                     
                     const reader = new FileReader();
-                    reader.onload = function(event) {
+                    reader.onload = async function(event) {
                         const simsPanel = document.getElementById('sims-panel');
                         const glassPanel = simsPanel.querySelector('.glass-panel');
                         const backgroundStyle = `url('${event.target.result}') center/cover no-repeat`;
                         if (glassPanel) {
                             glassPanel.style.background = backgroundStyle;
                         }
-                        localStorage.setItem('simsBackground', backgroundStyle);
+                        await setImageData('simsBackground', backgroundStyle);
                     };
                     reader.readAsDataURL(file);
                 }
@@ -24974,7 +25096,7 @@ ${role.tags && role.tags.length > 0 ? `- 性格特点：${role.tags.join('、')}
             
             const allContent = recentMessages.map(msg => {
                 if (msg.content && typeof msg.content === 'object') {
-                    if (msg.content.type === 'photo') return msg.content.description || '';
+                    if (msg.content.type === 'photo') return msg.content.description || '[图片]';
                     if (msg.content.type === 'voice') return msg.content.text || '';
                     if (msg.content.type === 'emoji') return `[发送了表情包: "${msg.content.desc || '自定义表情'}"]`;
                     return '';
@@ -24983,7 +25105,7 @@ ${role.tags && role.tags.length > 0 ? `- 性格特点：${role.tags.join('、')}
             }).join(' ');
             const lowerContent = allContent.toLowerCase();
             const currentMessageLower = (typeof content === 'object' ? 
-                (content.type === 'photo' ? content.description : content.type === 'voice' ? content.text : content.type === 'emoji' ? `[发送了表情包: "${content.desc}"]` : '') : 
+                (content.type === 'photo' ? (content.description || '[图片]') : content.type === 'voice' ? content.text : content.type === 'emoji' ? `[发送了表情包: "${content.desc}"]` : '') : 
                 (content || '')).toLowerCase();
             
             let needsChanged = false;
@@ -25111,7 +25233,7 @@ ${conversationHistory.slice(-10).map(msg => {
             if (msg.content.type === 'voice') {
                 content = `[语音消息] ${msg.content.text}`;
             } else if (msg.content.type === 'photo') {
-                content = `[图片消息] ${msg.content.description}`;
+                content = `[图片消息] ${msg.content.description || '图片'}`;
             } else if (msg.content.type === 'emoji') {
                 content = `[发送了表情包: "${msg.content.desc || '自定义表情'}"]`;
             }
@@ -25550,11 +25672,11 @@ ${conversationHistory.slice(-10).map(msg => {
         });
 
         // 设置应用功能
-        function openSettings() {
+        async function openSettings() {
             const modal = document.getElementById('settings-modal');
             modal.style.display = 'flex';
-            loadSettings();
-            renderIconGrid();
+            await loadSettings();
+            await renderIconGrid();
             refreshErrorLog();
         }
 
@@ -25947,7 +26069,7 @@ ${conversationHistory.slice(-10).map(msg => {
             return errorEntry;
         }
 
-        function loadSettings() {
+        async function loadSettings() {
             const savedApiUrl = localStorage.getItem('apiUrl') || '';
             const savedApiKey = localStorage.getItem('apiKey') || '';
             const savedModel = localStorage.getItem('selectedModel') || '';
@@ -25998,9 +26120,9 @@ ${conversationHistory.slice(-10).map(msg => {
             document.getElementById('menu-color-code').value = menuColor;
             document.getElementById('ui-color-code').value = uiColor;
             
-            updateSettingsWallpaperPreview();
-            loadAllIcons();
-            loadWidgets();
+            await updateSettingsWallpaperPreview();
+            await loadAllIcons();
+            await loadWidgets();
             applyFontColors();
             initColorPalette();
             renderPresetList();
@@ -26331,10 +26453,7 @@ ${conversationHistory.slice(-10).map(msg => {
         async function loadWidgets() {
             await ImageStorage.init();
             
-            let savedImage = localStorage.getItem('circleWidgetImage');
-            if (!savedImage) {
-                savedImage = await ImageStorage.load('circleWidgetImage');
-            }
+            const savedImage = await getImageData('circleWidgetImage');
             
             if (savedImage) {
                 const widget = document.getElementById('circle-widget');
@@ -26379,17 +26498,17 @@ ${conversationHistory.slice(-10).map(msg => {
             loadNoteWidget();
         }
 
-        function renderIconGrid() {
+        async function renderIconGrid() {
             const grid = document.getElementById('icon-grid');
             grid.innerHTML = '';
             
-            apps.forEach(app => {
+            for (const app of apps) {
                 const item = document.createElement('div');
                 item.className = 'icon-preview-item';
                 item.dataset.app = app.id;
                 item.onclick = () => selectApp(app.id);
                 
-                const savedIcon = localStorage.getItem('icon_' + app.id);
+                const savedIcon = await getImageData('icon_' + app.id);
                 const savedName = localStorage.getItem('appName_' + app.id) || app.name;
                 
                 const previewIcon = document.createElement('div');
@@ -26407,7 +26526,7 @@ ${conversationHistory.slice(-10).map(msg => {
                 item.appendChild(previewIcon);
                 item.appendChild(nameSpan);
                 grid.appendChild(item);
-            });
+            }
         }
 
         function selectApp(appId) {
@@ -26421,6 +26540,7 @@ ${conversationHistory.slice(-10).map(msg => {
             });
             
             document.getElementById('upload-icon-btn').style.display = 'inline-block';
+            document.getElementById('url-icon-btn').style.display = 'inline-block';
             document.getElementById('reset-icon-btn').style.display = 'inline-block';
             document.getElementById('rename-icon-btn').style.display = 'inline-block';
         }
@@ -26430,11 +26550,7 @@ ${conversationHistory.slice(-10).map(msg => {
             
             document.querySelectorAll('[data-app]').forEach(async element => {
                 const appId = element.dataset.app;
-                let savedIcon = localStorage.getItem('icon_' + appId);
-                
-                if (!savedIcon) {
-                    savedIcon = await ImageStorage.load('icon_' + appId);
-                }
+                const savedIcon = await getImageData('icon_' + appId);
                 
                 const iconContainer = element.querySelector('.icon-container, .dock-icon');
                 const appNameElement = element.querySelector('.app-name, .dock-name');
@@ -26463,13 +26579,14 @@ ${conversationHistory.slice(-10).map(msg => {
             });
         }
 
-        function resetSelectedIcon() {
+        async function resetSelectedIcon() {
             if (!selectedApp) {
                 alert('请先选择要恢复的应用');
                 return;
             }
             
-            localStorage.removeItem('icon_' + selectedApp);
+            await ImageStorage.init();
+            await ImageStorage.remove('icon_' + selectedApp);
             localStorage.removeItem('appName_' + selectedApp);
             
             const app = apps.find(a => a.id === selectedApp);
@@ -26493,20 +26610,22 @@ ${conversationHistory.slice(-10).map(msg => {
                 });
             }
             
-            renderIconGrid();
+            await renderIconGrid();
             alert('图标和名称已恢复');
         }
 
-        function resetAllIcons() {
-            apps.forEach(app => {
-                localStorage.removeItem('icon_' + app.id);
+        async function resetAllIcons() {
+            await ImageStorage.init();
+            for (const app of apps) {
+                await ImageStorage.remove('icon_' + app.id);
                 localStorage.removeItem('appName_' + app.id);
-            });
+            }
             
-            loadAllIcons();
-            renderIconGrid();
+            await loadAllIcons();
+            await renderIconGrid();
             
             document.getElementById('upload-icon-btn').style.display = 'none';
+            document.getElementById('url-icon-btn').style.display = 'none';
             document.getElementById('reset-icon-btn').style.display = 'none';
             document.getElementById('rename-icon-btn').style.display = 'none';
             selectedApp = null;
@@ -27631,6 +27750,37 @@ ${conversationHistory.slice(-10).map(msg => {
             console.log('总键数:', Object.keys(localStorage).length);
             console.log('所有键:', Object.keys(localStorage));
             
+            var totalSize = 0;
+            var keySizes = [];
+            
+            for (var i = 0; i < localStorage.length; i++) {
+                var key = localStorage.key(i);
+                var value = localStorage.getItem(key);
+                var size = (value && value.length) || 0;
+                totalSize += size;
+                keySizes.push({ key: key, size: size });
+            }
+            
+            keySizes.sort(function(a, b) { return b.size - a.size; });
+            
+            var totalSizeMB = (totalSize * 2 / 1024 / 1024).toFixed(2);
+            console.log('总存储大小: ' + totalSizeMB + ' MB (约 ' + totalSize + ' 字符)');
+            
+            console.log('\n各键存储大小 (按大小排序):');
+            keySizes.slice(0, 15).forEach(function(item) {
+                var sizeKB = (item.size * 2 / 1024).toFixed(2);
+                console.log('  ' + item.key + ': ' + sizeKB + ' KB');
+            });
+            
+            if (keySizes.length > 15) {
+                console.log('  ... 还有 ' + (keySizes.length - 15) + ' 个其他键');
+            }
+            
+            var warningThreshold = 4 * 1024 * 1024;
+            if (totalSize > warningThreshold) {
+                console.warn('⚠️ 存储空间使用较高，建议清理部分数据');
+            }
+            
             var keys = ['wechatRoles', 'wechatMessages', 'wechatMoments', 'simsRolesData', 'worldbookEntries', 'apiUrl', 'apiKey', 'selectedModel'];
             keys.forEach(function(key) {
                 var value = localStorage.getItem(key);
@@ -27648,6 +27798,15 @@ ${conversationHistory.slice(-10).map(msg => {
                     console.log(key + ': 不存在');
                 }
             });
+            
+            alert('存储空间使用情况:\n\n' +
+                  '总大小: ' + totalSizeMB + ' MB\n' +
+                  '总键数: ' + localStorage.length + '\n\n' +
+                  '最大的存储项:\n' +
+                  keySizes.slice(0, 5).map(function(item) {
+                      return item.key + ': ' + (item.size * 2 / 1024).toFixed(2) + ' KB';
+                  }).join('\n') +
+                  '\n\n' + (totalSize > warningThreshold ? '⚠️ 存储空间使用较高，建议清理数据！' : '✅ 存储空间使用正常'));
         }
 
         function confirmClearAllData() {
@@ -28173,6 +28332,86 @@ ${conversationHistory.slice(-10).map(msg => {
         // 关闭修改图标名称模态窗口
         function closeRenameModal() {
             document.getElementById('rename-modal').style.display = 'none';
+        }
+
+        // 打开图标URL上传模态窗口
+        function openIconUrlModal() {
+            if (!selectedApp) {
+                alert('请先选择要修改的应用');
+                return;
+            }
+            document.getElementById('icon-url-input').value = '';
+            document.getElementById('icon-url-modal').style.display = 'flex';
+        }
+
+        // 关闭图标URL上传模态窗口
+        function closeIconUrlModal() {
+            document.getElementById('icon-url-modal').style.display = 'none';
+        }
+
+        // 从URL设置图标
+        async function setIconFromUrl() {
+            if (!selectedApp) {
+                alert('请先选择要修改的应用');
+                return;
+            }
+            
+            const url = document.getElementById('icon-url-input').value.trim();
+            if (!url) {
+                alert('请输入图片URL');
+                return;
+            }
+            
+            // 验证URL格式
+            try {
+                new URL(url);
+            } catch (e) {
+                alert('请输入有效的URL地址');
+                return;
+            }
+            
+            // 检查是否为图片URL（简单验证）
+            const imageExtensions = ['.jpg', '.jpeg', '.png', '.gif', '.webp', '.svg', '.bmp', '.ico'];
+            const isImageUrl = imageExtensions.some(ext => url.toLowerCase().includes(ext)) || 
+                               url.includes('image') || 
+                               url.includes('img') ||
+                               url.includes('photo') ||
+                               url.includes('pic');
+            
+            const timestamp = Date.now();
+            const iconUrl = url + (url.includes('?') ? '&' : '?') + '_t=' + timestamp;
+            
+            // 尝试加载图片验证
+            const img = new Image();
+            img.crossOrigin = 'anonymous';
+            
+            img.onload = async function() {
+                await setImageData('icon_' + selectedApp, iconUrl);
+                
+                document.querySelectorAll('[data-app="' + selectedApp + '"]').forEach(element => {
+                    const iconContainer = element.querySelector('.icon-container, .dock-icon');
+                    if (iconContainer) {
+                        while (iconContainer.firstChild) {
+                            iconContainer.removeChild(iconContainer.firstChild);
+                        }
+                        const newImg = document.createElement('img');
+                        newImg.src = iconUrl;
+                        newImg.alt = '自定义图标';
+                        newImg.style.cssText = 'width: 100%; height: 100%; object-fit: cover; border-radius: inherit;';
+                        iconContainer.appendChild(newImg);
+                    }
+                });
+                
+                renderIconGrid();
+                closeIconUrlModal();
+                alert('图标设置成功');
+            };
+            
+            img.onerror = function() {
+                alert('图片加载失败，请检查URL是否正确或图片是否支持跨域访问');
+            };
+            
+            img.src = url;
         }
 
         // 保存新的应用名称
@@ -28922,9 +29161,9 @@ ${conversationHistory.slice(-10).map(msg => {
             `).join('');
         }
 
-        function updateSettingsWallpaperPreview() {
+        async function updateSettingsWallpaperPreview() {
             const preview = document.getElementById('current-wallpaper');
-            let customWallpaper = localStorage.getItem('customWallpaper');
+            let customWallpaper = await getImageData('customWallpaper');
             
             if (!customWallpaper) {
                 customWallpaper = localStorage.getItem('wallpaper');
@@ -28960,21 +29199,16 @@ ${conversationHistory.slice(-10).map(msg => {
 
         async function applyWallpaper() {
             const body = document.body;
-            let customWallpaper = localStorage.getItem('customWallpaper');
+            let customWallpaper = await getImageData('customWallpaper');
             
             if (!customWallpaper) {
                 const oldWallpaper = localStorage.getItem('wallpaper');
                 if (oldWallpaper) {
                     console.log('检测到旧版本壁纸数据，正在迁移...');
-                    localStorage.setItem('customWallpaper', oldWallpaper);
+                    await setImageData('customWallpaper', oldWallpaper);
                     localStorage.removeItem('wallpaper');
                     customWallpaper = oldWallpaper;
                 }
-            }
-            
-            if (!customWallpaper) {
-                await ImageStorage.init();
-                customWallpaper = await ImageStorage.load('customWallpaper');
             }
             
             if (customWallpaper) {
@@ -29009,11 +29243,12 @@ ${conversationHistory.slice(-10).map(msg => {
             }
         }
 
-        function resetWallpaper() {
-            localStorage.removeItem('customWallpaper');
+        async function resetWallpaper() {
+            await ImageStorage.init();
+            await ImageStorage.remove('customWallpaper');
             localStorage.removeItem('wallpaper');
-            applyWallpaper();
-            updateSettingsWallpaperPreview();
+            await applyWallpaper();
+            await updateSettingsWallpaperPreview();
             alert('壁纸已恢复默认');
         }
 
@@ -29078,11 +29313,11 @@ ${conversationHistory.slice(-10).map(msg => {
                 }
                 
                 const reader = new FileReader();
-                reader.onload = function(event) {
+                reader.onload = async function(event) {
                     const imageUrl = event.target.result;
-                    localStorage.setItem('customWallpaper', imageUrl);
-                    applyWallpaper();
-                    updateSettingsWallpaperPreview();
+                    await setImageData('customWallpaper', imageUrl);
+                    await applyWallpaper();
+                    await updateSettingsWallpaperPreview();
                     alert('自定义壁纸已应用');
                 };
                 reader.readAsDataURL(file);
@@ -29123,12 +29358,12 @@ ${conversationHistory.slice(-10).map(msg => {
             }
 
             const reader = new FileReader();
-            reader.onload = function(event) {
+            reader.onload = async function(event) {
                 const imageUrl = event.target.result;
                 const timestamp = Date.now();
                 const iconUrl = imageUrl + '#t=' + timestamp;
 
-                localStorage.setItem('icon_' + selectedApp, iconUrl);
+                await setImageData('icon_' + selectedApp, iconUrl);
 
                 document.querySelectorAll('[data-app="' + selectedApp + '"]').forEach(element => {
                     const iconContainer = element.querySelector('.icon-container, .dock-icon');
@@ -30250,10 +30485,10 @@ ${conversationHistory.slice(-10).map(msg => {
         });
 
         // 初始化朋友圈页面
-        function initMoments() {
+        async function initMoments() {
             renderMoments();
             
-            loadMomentsMedia();
+            await loadMomentsMedia();
             
             // 优先使用微信名作为朋友圈用户名
             const profileName = localStorage.getItem('profileName');
@@ -30664,7 +30899,7 @@ ${commenterInfo}
         }
 
         // 处理封面上传
-        function handleMomentsCoverUpload(event) {
+        async function handleMomentsCoverUpload(event) {
             const file = event.target.files[0];
             if (!file) return;
 
@@ -30685,11 +30920,11 @@ ${commenterInfo}
             }
             
             const reader = new FileReader();
-            reader.onload = function(e) {
+            reader.onload = async function(e) {
                 const coverImg = document.getElementById('moments-cover-img');
                 coverImg.src = e.target.result;
                 coverImg.style.display = 'block';
-                localStorage.setItem('momentsCover', e.target.result);
+                await setImageData('momentsCover', e.target.result);
             };
             reader.readAsDataURL(file);
             event.target.value = '';
@@ -30701,7 +30936,7 @@ ${commenterInfo}
         }
 
         // 处理头像上传
-        function handleMomentsAvatarUpload(event) {
+        async function handleMomentsAvatarUpload(event) {
             const file = event.target.files[0];
             if (!file) return;
 
@@ -30722,28 +30957,28 @@ ${commenterInfo}
             }
             
             const reader = new FileReader();
-            reader.onload = function(e) {
+            reader.onload = async function(e) {
                 const avatarEl = document.getElementById('moments-avatar');
                 avatarEl.innerHTML = `
                     <img src="${e.target.result}" alt="头像">
                     <div class="moments-avatar-hint">更换</div>
                 `;
-                localStorage.setItem('momentsAvatar', e.target.result);
+                await setImageData('momentsAvatar', e.target.result);
             };
             reader.readAsDataURL(file);
             event.target.value = '';
         }
 
         // 加载保存的封面和头像
-        function loadMomentsMedia() {
-            const savedCover = localStorage.getItem('momentsCover');
+        async function loadMomentsMedia() {
+            const savedCover = await getImageData('momentsCover');
             if (savedCover) {
                 const coverImg = document.getElementById('moments-cover-img');
                 coverImg.src = savedCover;
                 coverImg.style.display = 'block';
             }
             
-            const savedAvatar = localStorage.getItem('momentsAvatar');
+            const savedAvatar = await getImageData('momentsAvatar');
             if (savedAvatar) {
                 const avatarEl = document.getElementById('moments-avatar');
                 avatarEl.innerHTML = `
@@ -31473,7 +31708,7 @@ ${commenterInfo}
             }
         }
 
-        function neteaseApplyVinylImage() {
+        async function neteaseApplyVinylImage() {
             const vinylSlide = document.getElementById('neteaseVinylSlide');
             if(!vinylSlide) {
                 console.error('Vinyl slide element not found');
@@ -31490,7 +31725,7 @@ ${commenterInfo}
                 vinylSlide.style.backgroundSize = 'cover';
                 vinylSlide.style.backgroundPosition = 'center';
                 vinylSlide.style.backgroundRepeat = 'no-repeat';
-                localStorage.setItem('neteaseVinylImage', imageUrl);
+                await setImageData('neteaseVinylImage', imageUrl);
                 console.log('Vinyl image URL applied:', imageUrl);
                 alert('图片链接已应用！');
                 return;
@@ -31505,7 +31740,7 @@ ${commenterInfo}
             console.log('Starting to read file:', neteaseVinylImageFile.name, 'size:', neteaseVinylImageFile.size);
 
             const reader = new FileReader();
-            reader.onload = function(e) {
+            reader.onload = async function(e) {
                 console.log('File read complete, data length:', e.target.result.length);
                 const imageData = e.target.result;
                 vinylSlide.style.backgroundImage = `url(${imageData})`;
@@ -31513,17 +31748,12 @@ ${commenterInfo}
                 vinylSlide.style.backgroundPosition = 'center';
                 vinylSlide.style.backgroundRepeat = 'no-repeat';
                 
-                try {
-                    localStorage.setItem('neteaseVinylImage', imageData);
+                const success = await setImageData('neteaseVinylImage', imageData);
+                if (success) {
                     console.log('Vinyl image saved, size:', imageData.length);
                     alert('图片保存成功！');
-                } catch(err) {
-                    console.error('localStorage error:', err.name, err.message);
-                    if (err.name === 'QuotaExceededError' || err.code === 22) {
-                        alert('图片太大！建议使用图片链接方式。');
-                    } else {
-                        alert('保存出错: ' + err.message);
-                    }
+                } else {
+                    alert('图片保存失败，请重试');
                 }
             };
             reader.onerror = function(e) {
@@ -31533,7 +31763,7 @@ ${commenterInfo}
             reader.readAsDataURL(neteaseVinylImageFile);
         }
 
-        function neteaseApplyCoverImages() {
+        async function neteaseApplyCoverImages() {
             const coverMap = [
                 { file: neteaseCover1File, elementId: 'neteaseCoverAcoustics', name: 'Morning Coffee', storageKey: 'neteaseCover1', urlInputId: 'neteaseCover1UrlInput' },
                 { file: neteaseCover2File, elementId: 'neteaseCoverPiano', name: 'White Linen', storageKey: 'neteaseCover2', urlInputId: 'neteaseCover2UrlInput' },
@@ -31542,9 +31772,9 @@ ${commenterInfo}
 
             let appliedCount = 0;
 
-            coverMap.forEach(item => {
+            for (const item of coverMap) {
                 const element = document.getElementById(item.elementId);
-                if (!element) return;
+                if (!element) continue;
 
                 // Check for URL input first
                 const urlInput = document.getElementById(item.urlInputId);
@@ -31555,32 +31785,30 @@ ${commenterInfo}
                     element.style.backgroundSize = 'cover';
                     element.style.backgroundPosition = 'center';
                     element.style.backgroundRepeat = 'no-repeat';
-                    localStorage.setItem(item.storageKey, imageUrl);
+                    await setImageData(item.storageKey, imageUrl);
                     console.log(`${item.name} cover URL applied:`, imageUrl);
                     appliedCount++;
-                    return;
+                    continue;
                 }
 
                 // Fall back to file input
                 if (item.file) {
                     const reader = new FileReader();
-                    reader.onload = function(e) {
-                        const imageData = e.target.result;
-                        element.style.backgroundImage = `url(${imageData})`;
-                        element.style.backgroundSize = 'cover';
-                        element.style.backgroundPosition = 'center';
-                        element.style.backgroundRepeat = 'no-repeat';
-                        try {
-                            localStorage.setItem(item.storageKey, imageData);
-                            console.log(`${item.name} cover saved, size:`, imageData.length);
-                        } catch(err) {
-                            console.error('Failed to save cover:', err);
-                        }
-                    };
-                    reader.readAsDataURL(item.file);
+                    const imageData = await new Promise((resolve, reject) => {
+                        reader.onload = (e) => resolve(e.target.result);
+                        reader.onerror = reject;
+                        reader.readAsDataURL(item.file);
+                    });
+                    
+                    element.style.backgroundImage = `url(${imageData})`;
+                    element.style.backgroundSize = 'cover';
+                    element.style.backgroundPosition = 'center';
+                    element.style.backgroundRepeat = 'no-repeat';
+                    await setImageData(item.storageKey, imageData);
+                    console.log(`${item.name} cover saved, size:`, imageData.length);
                     appliedCount++;
                 }
-            });
+            }
 
             if (appliedCount === 0) {
                 alert("请至少选择一张图片或输入图片链接。");
@@ -31589,10 +31817,10 @@ ${commenterInfo}
             }
         }
 
-        function neteaseLoadSavedImages() {
+        async function neteaseLoadSavedImages() {
             console.log('neteaseLoadSavedImages called');
             
-            const vinylImage = localStorage.getItem('neteaseVinylImage');
+            const vinylImage = await getImageData('neteaseVinylImage');
             console.log('Vinyl image from storage:', vinylImage ? 'found, length: ' + vinylImage.length : 'not found');
             if (vinylImage) {
                 const vinylSlide = document.getElementById('neteaseVinylSlide');
@@ -31611,8 +31839,8 @@ ${commenterInfo}
                 { storageKey: 'neteaseCover3', elementId: 'neteaseCoverElectro' }
             ];
 
-            coverMap.forEach(item => {
-                const savedImage = localStorage.getItem(item.storageKey);
+            for (const item of coverMap) {
+                const savedImage = await getImageData(item.storageKey);
                 console.log(`${item.storageKey} from storage:`, savedImage ? 'found, length: ' + savedImage.length : 'not found');
                 if (savedImage) {
                     const element = document.getElementById(item.elementId);
@@ -31624,7 +31852,7 @@ ${commenterInfo}
                         console.log(`${item.storageKey} image applied from storage`);
                     }
                 }
-            });
+            }
         }
 
         function neteaseFetchMusicFromAPI(keyword) {
@@ -31872,12 +32100,12 @@ ${commenterInfo}
         }
 
         // 打开微信应用
-        function openWechat() {
+        async function openWechat() {
             document.getElementById('wechat-app').style.display = 'flex';
             document.getElementById('ios-glass-tabbar').classList.add('visible');
             loadMessages();
             loadContacts();
-            applyWechatBackgrounds();
+            await applyWechatBackgrounds();
         }
 
         // 返回上一级（根据当前视图层级返回）
@@ -31950,7 +32178,7 @@ ${commenterInfo}
         }
 
         // 处理底栏点击事件
-        function handleTabbarClick(event, tab) {
+        async function handleTabbarClick(event, tab) {
             const item = event.currentTarget;
             
             document.querySelectorAll('.tabbar-item').forEach(i => i.classList.remove('active'));
@@ -31970,7 +32198,7 @@ ${commenterInfo}
                 case 'discover':
                     document.getElementById('wechat-moments').style.display = 'flex';
                     document.getElementById('ios-glass-tabbar').classList.remove('visible');
-                    initMoments();
+                    await initMoments();
                     break;
                 case 'profile':
                     document.getElementById('wechat-profile').style.display = 'flex';
@@ -32792,7 +33020,7 @@ ${commenterInfo}
         }
 
         // 打开聊天窗口
-        function openChat(role) {
+        async function openChat(role) {
             const previousRoleId = currentChatRole ? currentChatRole.id : null;
             const newRoleId = role.id;
             
@@ -32839,7 +33067,7 @@ ${commenterInfo}
             }
             
             loadChatMessages(role.id);
-            loadChatWallpaper(role.id);
+            await loadChatWallpaper(role.id);
             applyRoleCustomCss(role.id);
             applyCustomPlaceholder(role.id);
             checkChatApiStatus();
@@ -32862,7 +33090,7 @@ ${commenterInfo}
             }
         }
 
-        function toggleChatMenu(event) {
+        async function toggleChatMenu(event) {
             event.stopPropagation();
             const overlay = document.getElementById('chat-menu-overlay');
             const panel = document.getElementById('chat-menu-panel');
@@ -32873,7 +33101,7 @@ ${commenterInfo}
             } else {
                 overlay.classList.add('active');
                 panel.classList.add('active');
-                updateChatWallpaperPreview();
+                await updateChatWallpaperPreview();
                 loadSummaryContent();
                 loadRoleMomentsSettings();
                 renderCssPresetList();
@@ -32882,6 +33110,7 @@ ${commenterInfo}
                 if (currentChatRole) {
                     loadRoleCustomCss(currentChatRole.id);
                     loadCustomPlaceholder(currentChatRole.id);
+                    initEmojiProbabilityUI();
                 }
                 updateChatMenuCharCount();
             }
@@ -32976,7 +33205,7 @@ ${commenterInfo}
             roleMessages.forEach(msg => {
                 let contentStr = '';
                 if (msg.content && typeof msg.content === 'object') {
-                    if (msg.content.type === 'photo') contentStr = msg.content.description || '';
+                    if (msg.content.type === 'photo') contentStr = msg.content.description || '[图片]';
                     else if (msg.content.type === 'voice') contentStr = msg.content.text || '';
                     else if (msg.content.type === 'emoji') contentStr = `[发送了表情包: "${msg.content.desc || '自定义表情'}"]`;
                     else contentStr = JSON.stringify(msg.content);
@@ -32989,7 +33218,7 @@ ${commenterInfo}
             recentMessages.forEach(msg => {
                 let contentStr = '';
                 if (msg.content && typeof msg.content === 'object') {
-                    if (msg.content.type === 'photo') contentStr = '[照片] ' + (msg.content.description || '');
+                    if (msg.content.type === 'photo') contentStr = '[照片] ' + (msg.content.description || '图片');
                     else if (msg.content.type === 'voice') contentStr = '[语音] ' + (msg.content.text || '');
                     else if (msg.content.type === 'emoji') contentStr = '[表情] ' + (msg.content.desc || '自定义表情');
                     else contentStr = JSON.stringify(msg.content);
@@ -33873,26 +34102,18 @@ ${commenterInfo}
         }
 
         function sendPhotoMessage(imageData, fileName) {
-            const chatMessages = document.getElementById('chat-messages');
-            if (!chatMessages) return;
+            if (!currentChatRole) {
+                alert('请先选择一个角色进行对话');
+                return;
+            }
 
-            const messageDiv = document.createElement('div');
-            messageDiv.className = 'message sent';
-            
-            const now = new Date();
-            const timeStr = now.toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' });
-            
-            messageDiv.innerHTML = `
-                <div class="message-content" style="padding: 8px; max-width: 280px;">
-                    <img src="${imageData}" alt="${fileName || '图片'}" style="max-width: 100%; border-radius: 12px; display: block; cursor: pointer;" onclick="previewImage(this.src)">
-                </div>
-                <div class="message-time">${timeStr}</div>
-            `;
-            
-            chatMessages.appendChild(messageDiv);
-            chatMessages.scrollTop = chatMessages.scrollHeight;
-            
-            saveChatHistory();
+            const photoContent = {
+                type: 'photo',
+                imageData: imageData,
+                fileName: fileName || '图片'
+            };
+
+            addMessage(currentChatRole.id, 'sent', photoContent);
         }
 
         function previewImage(src) {
@@ -34381,14 +34602,14 @@ ${commenterInfo}
                 dropdown.style.display = '';
             }
             
-            loadMusicRoomImages();
-            loadMusicRoomBackground();
+            await loadMusicRoomImages();
+            await loadMusicRoomBackground();
             
             const roleAvatarImg = document.getElementById('music-p-left');
             const userAvatarImg = document.getElementById('music-p-right');
             
-            const savedLeftImg = localStorage.getItem('music-p-left');
-            const savedRightImg = localStorage.getItem('music-p-right');
+            const savedLeftImg = await getImageData('music-p-left');
+            const savedRightImg = await getImageData('music-p-right');
             
             if (!savedLeftImg) {
                 if (currentChatRole && currentChatRole.avatar && roleAvatarImg) {
@@ -34452,7 +34673,7 @@ ${commenterInfo}
             }
         }
 
-        function openMusicHistory(sessionId) {
+        async function openMusicHistory(sessionId) {
             if (!currentChatRole) return;
             
             const sessions = musicSessionHistory[currentChatRole.id] || [];
@@ -34467,7 +34688,7 @@ ${commenterInfo}
                 overlay.classList.add('active');
             }
             
-            loadMusicRoomBackground();
+            await loadMusicRoomBackground();
             
             const roleAvatarImg = document.getElementById('music-p-left');
             const userAvatarImg = document.getElementById('music-p-right');
@@ -34542,49 +34763,49 @@ ${commenterInfo}
             }
         });
 
-        function musicPreviewImage(event, targetId) {
+        async function musicPreviewImage(event, targetId) {
             if (event.target.files[0]) {
                 const file = event.target.files[0];
                 const reader = new FileReader();
-                reader.onload = function(e) {
+                reader.onload = async function(e) {
                     const url = e.target.result;
                     document.getElementById(targetId).src = url;
-                    localStorage.setItem(targetId, url);
+                    await setImageData(targetId, url);
                 };
                 reader.readAsDataURL(file);
                 document.getElementById('music-option-menu').classList.remove('show');
             }
         }
 
-        function loadMusicRoomImages() {
+        async function loadMusicRoomImages() {
             const imageIds = ['music-main-album', 'music-p-left', 'music-p-right'];
-            imageIds.forEach(function(id) {
-                const saved = localStorage.getItem(id);
+            for (const id of imageIds) {
+                const saved = await getImageData(id);
                 if (saved) {
                     const el = document.getElementById(id);
                     if (el) {
                         el.src = saved;
                     }
                 }
-            });
+            }
         }
 
-        function musicChangeBackground(event) {
+        async function musicChangeBackground(event) {
             if (event.target.files[0]) {
                 const file = event.target.files[0];
                 const reader = new FileReader();
-                reader.onload = function(e) {
+                reader.onload = async function(e) {
                     const url = e.target.result;
                     document.getElementById('music-dynamic-bg').style.backgroundImage = `url(${url})`;
-                    localStorage.setItem('musicRoomBackground', url);
+                    await setImageData('musicRoomBackground', url);
                 };
                 reader.readAsDataURL(file);
                 document.getElementById('music-option-menu').classList.remove('show');
             }
         }
 
-        function loadMusicRoomBackground() {
-            const savedBg = localStorage.getItem('musicRoomBackground');
+        async function loadMusicRoomBackground() {
+            const savedBg = await getImageData('musicRoomBackground');
             if (savedBg) {
                 const bgEl = document.getElementById('music-dynamic-bg');
                 if (bgEl) {
@@ -34809,7 +35030,7 @@ ${songInfo}
                             if (msg.content.type === 'voice') {
                                 msgContent = `[语音消息] ${msg.content.text}`;
                             } else if (msg.content.type === 'photo') {
-                                msgContent = `[图片消息] ${msg.content.description}`;
+                                msgContent = `[图片消息] ${msg.content.description || '图片'}`;
                             }
                         } else {
                             msgContent = msg.content;
@@ -35073,12 +35294,12 @@ ${songInfo}
             }
         }
 
-        function updateChatWallpaperPreview() {
+        async function updateChatWallpaperPreview() {
             const preview = document.getElementById('chat-wallpaper-preview');
             if (!currentChatRole || !preview) return;
             
             const wallpaperKey = 'chatWallpaper_' + currentChatRole.id;
-            const wallpaper = localStorage.getItem(wallpaperKey);
+            const wallpaper = await getImageData(wallpaperKey);
             
             if (wallpaper) {
                 preview.innerHTML = `<img src="${wallpaper}" alt="当前壁纸">`;
@@ -35091,7 +35312,7 @@ ${songInfo}
             document.getElementById('chat-wallpaper-input').click();
         }
 
-        function handleChatWallpaperUpload(event) {
+        async function handleChatWallpaperUpload(event) {
             const file = event.target.files[0];
             if (!file || !currentChatRole) return;
 
@@ -35112,11 +35333,11 @@ ${songInfo}
             }
             
             const reader = new FileReader();
-            reader.onload = function(e) {
+            reader.onload = async function(e) {
                 const wallpaperKey = 'chatWallpaper_' + currentChatRole.id;
-                localStorage.setItem(wallpaperKey, e.target.result);
+                await setImageData(wallpaperKey, e.target.result);
                 applyChatWallpaper(e.target.result);
-                updateChatWallpaperPreview();
+                await updateChatWallpaperPreview();
                 closeChatMenu();
             };
             reader.readAsDataURL(file);
@@ -35139,7 +35360,7 @@ ${songInfo}
                 preloadWallpaper(
                     wallpaperUrl,
                     (url) => {
-                        wechatChat.style.backgroundImage = `url(${url})`;
+                        wechatChat.style.backgroundImage = `url('${url}')`;
                         wechatChat.style.backgroundSize = 'cover';
                         wechatChat.style.backgroundPosition = 'center';
                     },
@@ -35151,11 +35372,12 @@ ${songInfo}
             }
         }
 
-        function resetChatWallpaper() {
+        async function resetChatWallpaper() {
             if (!currentChatRole) return;
             
             const wallpaperKey = 'chatWallpaper_' + currentChatRole.id;
-            localStorage.removeItem(wallpaperKey);
+            await ImageStorage.init();
+            await ImageStorage.remove(wallpaperKey);
             
             const wechatChat = document.getElementById('wechat-chat');
             if (wechatChat) {
@@ -35164,8 +35386,53 @@ ${songInfo}
                 wechatChat.style.backgroundPosition = 'center';
             }
             
-            updateChatWallpaperPreview();
+            await updateChatWallpaperPreview();
             closeChatMenu();
+        }
+
+        function openWallpaperUrlModal() {
+            document.getElementById('wallpaper-url-input').value = '';
+            document.getElementById('wallpaper-url-modal').style.display = 'flex';
+        }
+
+        function closeWallpaperUrlModal() {
+            document.getElementById('wallpaper-url-modal').style.display = 'none';
+        }
+
+        async function setWallpaperFromUrl() {
+            if (!currentChatRole) {
+                showSwipeToast('请先选择角色');
+                return;
+            }
+            
+            const url = document.getElementById('wallpaper-url-input').value.trim();
+            if (!url) {
+                showSwipeToast('请输入图片URL');
+                return;
+            }
+            
+            try {
+                new URL(url);
+            } catch (e) {
+                showSwipeToast('请输入有效的URL地址');
+                return;
+            }
+            
+            const wallpaperKey = 'chatWallpaper_' + currentChatRole.id;
+            
+            const img = new Image();
+            img.onload = async () => {
+                await setImageData(wallpaperKey, url);
+                applyChatWallpaper(url);
+                await updateChatWallpaperPreview();
+                closeWallpaperUrlModal();
+                closeChatMenu();
+                showSwipeToast('壁纸设置成功');
+            };
+            img.onerror = () => {
+                showSwipeToast('图片加载失败，请检查URL是否正确');
+            };
+            img.src = url;
         }
 
         function summarizeChat() {
@@ -35629,6 +35896,138 @@ ${songInfo}
             
             applyRoleCustomCss(currentChatRole.id);
             alert('自定义CSS样式已保存！');
+        }
+
+        function getEmojiProbabilityKey(roleId) {
+            return 'emojiProbability_' + roleId;
+        }
+
+        function getEmojiFeatureKey(roleId) {
+            return 'emojiFeature_' + roleId;
+        }
+
+        function loadEmojiProbability(roleId) {
+            const key = getEmojiProbabilityKey(roleId);
+            const saved = localStorage.getItem(key);
+            return saved !== null ? parseInt(saved) : 50;
+        }
+
+        function loadEmojiFeatureEnabled(roleId) {
+            const key = getEmojiFeatureKey(roleId);
+            const saved = localStorage.getItem(key);
+            return saved !== null ? saved === 'true' : true;
+        }
+
+        function updateEmojiProbabilityDisplay(value) {
+            document.getElementById('emoji-probability-value').textContent = value + '%';
+        }
+
+        function toggleEmojiFeature() {
+            const toggle = document.getElementById('emoji-feature-toggle');
+            const status = document.getElementById('emoji-feature-status');
+            
+            if (toggle.classList.contains('active')) {
+                toggle.classList.remove('active');
+                status.textContent = '当前状态: 已关闭';
+                status.className = 'toggle-status-text off';
+            } else {
+                toggle.classList.add('active');
+                status.textContent = '当前状态: 已开启';
+                status.className = 'toggle-status-text on';
+            }
+        }
+
+        function saveEmojiProbability() {
+            if (!currentChatRole) {
+                alert('请先选择一个角色');
+                return;
+            }
+            
+            const slider = document.getElementById('emoji-probability-slider');
+            const toggle = document.getElementById('emoji-feature-toggle');
+            const probability = parseInt(slider.value);
+            const enabled = toggle.classList.contains('active');
+            
+            const probKey = getEmojiProbabilityKey(currentChatRole.id);
+            const featureKey = getEmojiFeatureKey(currentChatRole.id);
+            
+            localStorage.setItem(probKey, probability.toString());
+            localStorage.setItem(featureKey, enabled.toString());
+            
+            let message = '表情包设置已保存！\n';
+            message += `表情包功能: ${enabled ? '已开启' : '已关闭'}\n`;
+            message += `发送概率: ${probability}%`;
+            alert(message);
+        }
+
+        function resetEmojiProbability() {
+            if (!currentChatRole) {
+                alert('请先选择一个角色');
+                return;
+            }
+            
+            const slider = document.getElementById('emoji-probability-slider');
+            const toggle = document.getElementById('emoji-feature-toggle');
+            const status = document.getElementById('emoji-feature-status');
+            
+            slider.value = 50;
+            document.getElementById('emoji-probability-value').textContent = '50%';
+            
+            toggle.classList.add('active');
+            status.textContent = '当前状态: 已开启';
+            status.className = 'toggle-status-text on';
+            
+            const probKey = getEmojiProbabilityKey(currentChatRole.id);
+            const featureKey = getEmojiFeatureKey(currentChatRole.id);
+            localStorage.removeItem(probKey);
+            localStorage.removeItem(featureKey);
+            
+            alert('已恢复默认设置！');
+        }
+
+        function initEmojiProbabilityUI() {
+            if (!currentChatRole) return;
+            
+            const probability = loadEmojiProbability(currentChatRole.id);
+            const enabled = loadEmojiFeatureEnabled(currentChatRole.id);
+            
+            const slider = document.getElementById('emoji-probability-slider');
+            const toggle = document.getElementById('emoji-feature-toggle');
+            const status = document.getElementById('emoji-feature-status');
+            const valueDisplay = document.getElementById('emoji-probability-value');
+            
+            if (slider) {
+                slider.value = probability;
+            }
+            if (valueDisplay) {
+                valueDisplay.textContent = probability + '%';
+            }
+            if (toggle) {
+                if (enabled) {
+                    toggle.classList.add('active');
+                } else {
+                    toggle.classList.remove('active');
+                }
+            }
+            if (status) {
+                if (enabled) {
+                    status.textContent = '当前状态: 已开启';
+                    status.className = 'toggle-status-text on';
+                } else {
+                    status.textContent = '当前状态: 已关闭';
+                    status.className = 'toggle-status-text off';
+                }
+            }
+        }
+
+        function shouldEnableEmojiForRole(roleId) {
+            const enabled = loadEmojiFeatureEnabled(roleId);
+            if (!enabled) return { enabled: false, probability: 0 };
+            
+            const probability = loadEmojiProbability(roleId);
+            if (probability === 0) return { enabled: false, probability: 0 };
+            
+            return { enabled: true, probability: probability };
         }
 
         function clearRoleCustomCss() {
@@ -36476,7 +36875,7 @@ ${recentHistory.map(msg => {
             if (msg.content.type === 'voice') {
                 content = `[语音消息] ${msg.content.text}`;
             } else if (msg.content.type === 'photo') {
-                content = `[图片消息] ${msg.content.description}`;
+                content = `[图片消息] ${msg.content.description || '图片'}`;
             } else {
                 content = JSON.stringify(msg.content);
             }
@@ -36585,9 +36984,9 @@ ${recentHistory.map(msg => {
             await generateAiSummary('manual');
         }
 
-        function loadChatWallpaper(roleId) {
+        async function loadChatWallpaper(roleId) {
             const wallpaperKey = 'chatWallpaper_' + roleId;
-            const wallpaper = localStorage.getItem(wallpaperKey);
+            const wallpaper = await getImageData(wallpaperKey);
             const wechatChat = document.getElementById('wechat-chat');
             
             if (wechatChat) {
@@ -36595,7 +36994,7 @@ ${recentHistory.map(msg => {
                     preloadWallpaper(
                         wallpaper,
                         (url) => {
-                            wechatChat.style.backgroundImage = `url(${url})`;
+                            wechatChat.style.backgroundImage = `url('${url}')`;
                             wechatChat.style.backgroundSize = 'cover';
                             wechatChat.style.backgroundPosition = 'center';
                         },
@@ -37148,7 +37547,7 @@ ${recentHistory.map(msg => {
             }
         }
 
-        function confirmClearChatHistory() {
+        async function confirmClearChatHistory() {
             if (!currentDetailRole) {
                 closeClearChatHistoryConfirmModal();
                 return;
@@ -37173,6 +37572,8 @@ ${recentHistory.map(msg => {
                 localStorage.removeItem(summaryKey);
                 
                 const wallpaperKey = 'chatWallpaper_' + roleId;
+                await ImageStorage.init();
+                await ImageStorage.remove(wallpaperKey);
                 localStorage.removeItem(wallpaperKey);
                 
                 const backgroundKey = 'characterBackground_' + roleId;
@@ -37204,7 +37605,7 @@ ${recentHistory.map(msg => {
                     if (chatArea) {
                         chatArea.innerHTML = '';
                     }
-                    loadChatWallpaper(roleId);
+                    await loadChatWallpaper(roleId);
                     applyRoleCustomCss(roleId);
                     applyCustomPlaceholder(roleId);
                 }
@@ -37436,39 +37837,47 @@ ${recentHistory.map(msg => {
                 `;
             } else if (msg.content && typeof msg.content === 'object' && msg.content.type === 'photo') {
                 const photoMsg = msg.content;
-                const photoDate = msg.timestamp 
-                    ? `${new Date(msg.timestamp).getFullYear()}.${new Date(msg.timestamp).getMonth() + 1}.${new Date(msg.timestamp).getDate()}`
-                    : `${new Date().getFullYear()}.${new Date().getMonth() + 1}.${new Date().getDate()}`;
-                const envelopeId = 'envelope-' + messageIndex + '-' + Date.now();
-                contentHTML = `
-                    <div class="envelope-wrapper" id="${envelopeId}">
-                        <div class="envelope-cover">
-                            <div class="envelope-svg">
-                                <svg viewBox="0 0 200 140" xmlns="http://www.w3.org/2000/svg">
-                                    <rect x="0" y="0" width="200" height="140" rx="8" fill="#fcf0f2"/>
-                                    <path d="M0 0 L 100 70 L 0 140 Z" fill="#fae6e9"/>
-                                    <path d="M200 0 L 100 70 L 200 140 Z" fill="#fae6e9"/>
-                                    <path d="M0 140 C 30 140, 100 70, 100 70 C 100 70, 170 140, 200 140 Z" fill="#fbe1e5"/>
-                                    <path d="M0 0 C 40 0, 100 70, 100 70 C 100 70, 160 0, 200 0 Z" fill="#ffeaf0" style="filter: drop-shadow(0 2px 2px rgba(220,130,150,0.1))"/>
-                                    <g transform="translate(100, 70)">
-                                        <g class="heart-seal">
-                                            <circle cx="0" cy="0" r="14" fill="#ff7596" />
-                                            <path d="M0, -4 C -3,-7 -7,-4 -7,0 C -7,4 0,8 0,8 C 0,8 7,4 7,0 C 7,-4 3,-7 0,-4 Z" fill="#ffeaf0"/>
+                if (photoMsg.imageData) {
+                    contentHTML = `
+                        <div class="photo-message-content">
+                            <img src="${photoMsg.imageData}" alt="${photoMsg.fileName || '图片'}" style="max-width: 100%; max-height: 300px; border-radius: 12px; display: block; cursor: pointer;" onclick="previewImage(this.src)">
+                        </div>
+                    `;
+                } else if (photoMsg.description) {
+                    const photoDate = msg.timestamp 
+                        ? `${new Date(msg.timestamp).getFullYear()}.${new Date(msg.timestamp).getMonth() + 1}.${new Date(msg.timestamp).getDate()}`
+                        : `${new Date().getFullYear()}.${new Date().getMonth() + 1}.${new Date().getDate()}`;
+                    const envelopeId = 'envelope-' + messageIndex + '-' + Date.now();
+                    contentHTML = `
+                        <div class="envelope-wrapper" id="${envelopeId}">
+                            <div class="envelope-cover">
+                                <div class="envelope-svg">
+                                    <svg viewBox="0 0 200 140" xmlns="http://www.w3.org/2000/svg">
+                                        <rect x="0" y="0" width="200" height="140" rx="8" fill="#fcf0f2"/>
+                                        <path d="M0 0 L 100 70 L 0 140 Z" fill="#fae6e9"/>
+                                        <path d="M200 0 L 100 70 L 200 140 Z" fill="#fae6e9"/>
+                                        <path d="M0 140 C 30 140, 100 70, 100 70 C 100 70, 170 140, 200 140 Z" fill="#fbe1e5"/>
+                                        <path d="M0 0 C 40 0, 100 70, 100 70 C 100 70, 160 0, 200 0 Z" fill="#ffeaf0" style="filter: drop-shadow(0 2px 2px rgba(220,130,150,0.1))"/>
+                                        <g transform="translate(100, 70)">
+                                            <g class="heart-seal">
+                                                <circle cx="0" cy="0" r="14" fill="#ff7596" />
+                                                <path d="M0, -4 C -3,-7 -7,-4 -7,0 C -7,4 0,8 0,8 C 0,8 7,4 7,0 C 7,-4 3,-7 0,-4 Z" fill="#ffeaf0"/>
+                                            </g>
                                         </g>
-                                    </g>
-                                </svg>
+                                    </svg>
+                                </div>
+                                <div class="envelope-tip">Open Me</div>
                             </div>
-                            <div class="envelope-tip">Open Me</div>
-                        </div>
-                        <div class="letter-paper">
-                            <div class="letter-content">
-                                <div class="letter-date">${photoDate}</div>
-                                <div class="letter-divider">ʚ♡ɞ</div>
-                                <div class="letter-text">${photoMsg.description}</div>
+                            <div class="letter-paper">
+                                <div class="letter-content">
+                                    <div class="letter-date">${photoDate}</div>
+                                    <div class="letter-divider">ʚ♡ɞ</div>
+                                    <div class="letter-text">${photoMsg.description}</div>
+                                </div>
                             </div>
                         </div>
-                    </div>
-                `;
+                    `;
+                }
             } else if (msg.content && typeof msg.content === 'object' && msg.content.type === 'emoji') {
                 const emojiMsg = msg.content;
                 const emojiDesc = emojiMsg.desc || '自定义表情';
@@ -37945,12 +38354,13 @@ ${recentHistory.map(msg => {
                 }
                 
                 const availableEmojis = getAvailableEmojisForAI();
-                if (availableEmojis.length > 0) {
+                const emojiConfig = shouldEnableEmojiForRole(currentChatRole.id);
+                if (availableEmojis.length > 0 && emojiConfig.enabled) {
                     systemPrompt += '\n\n【可用表情包】\n你可以在回复中发送表情包来表达情感。发送表情包的格式：[EMOJI:表情描述]\n\n可用的表情包列表：\n';
                     availableEmojis.forEach((emoji, index) => {
                         systemPrompt += `${index + 1}. ${emoji.desc}\n`;
                     });
-                    systemPrompt += '\n注意：只能发送列表中存在的表情包，请根据对话情境选择合适的表情。如果需要发送表情包，请在回复中使用 [EMOJI:表情描述] 格式。\n\n基本规则：\n1. 表情包是用来在情绪强烈时用来表达情感的，不能频繁使用\n2. 表情包使用应该符合当前聊天氛围，需要有逻辑，而不是乱用\n3. 表情应与当前对话内容和情感状态匹配\n4. 使用表情包时也需要考虑角色的性格，这个角色是否是会发表情包的人？';
+                    systemPrompt += `\n注意：只能发送列表中存在的表情包，请根据对话情境选择合适的表情。如果需要发送表情包，请在回复中使用 [EMOJI:表情描述] 格式。\n\n基本规则：\n1. 表情包是用来在情绪强烈时用来表达情感的，不能频繁使用\n2. 表情包使用应该符合当前聊天氛围，需要有逻辑，而不是乱用\n3. 表情应与当前对话内容和情感状态匹配\n4. 使用表情包时也需要考虑角色的性格，这个角色是否是会发表情包的人？\n5. 当前角色发送表情包的概率设定为${emojiConfig.probability}%，请根据这个概率决定是否在回复中发送表情包（0%表示绝不发送，100%表示总是可以考虑发送）`;
                 }
                 
                 function getMessageText(msg) {
@@ -37960,7 +38370,10 @@ ${recentHistory.map(msg => {
                             return `[语音消息] ${msg.content.text}`;
                         }
                         if (msg.content.type === 'photo') {
-                            return `[图片消息] ${msg.content.description}`;
+                            if (msg.content.imageData) {
+                                return { hasImage: true, imageData: msg.content.imageData, description: msg.content.description || '图片' };
+                            }
+                            return `[图片消息] ${msg.content.description || '图片'}`;
                         }
                         if (msg.content.type === 'emoji') {
                             return `[发送了表情包: "${msg.content.desc || '自定义表情'}"]`;
@@ -38027,10 +38440,20 @@ ${recentHistory.map(msg => {
                 finalHistory.forEach(msg => {
                     const msgContent = getMessageText(msg);
                     const timePrefix = formatMsgTime(msg.timestamp);
-                    const fullContent = timePrefix + msgContent;
+                    
                     if (msg.type === 'sent') {
-                        apiMessages.push({ role: 'user', content: fullContent });
+                        if (typeof msgContent === 'object' && msgContent.hasImage) {
+                            const multimodalContent = [
+                                { type: 'text', text: timePrefix + `[发送了一张图片]` },
+                                { type: 'image_url', image_url: { url: msgContent.imageData } }
+                            ];
+                            apiMessages.push({ role: 'user', content: multimodalContent });
+                        } else {
+                            const fullContent = timePrefix + msgContent;
+                            apiMessages.push({ role: 'user', content: fullContent });
+                        }
                     } else if (msg.type === 'received') {
+                        const fullContent = timePrefix + msgContent;
                         apiMessages.push({ role: 'assistant', content: fullContent });
                     }
                 });
@@ -38038,14 +38461,24 @@ ${recentHistory.map(msg => {
                 const lastHistoryUserMsg = [...finalHistory].reverse().find(m => m.type === 'sent');
                 const lastHistoryUserMsgText = lastHistoryUserMsg ? getMessageText(lastHistoryUserMsg) : '';
                 const lastUserMessageText = getMessageText({ content: content, type: 'sent' });
+                const lastHistoryUserMsgTextStr = typeof lastHistoryUserMsgText === 'object' ? JSON.stringify(lastHistoryUserMsgText) : lastHistoryUserMsgText;
+                const lastUserMessageTextStr = typeof lastUserMessageText === 'object' ? JSON.stringify(lastUserMessageText) : lastUserMessageText;
                 const isLastMsgInHistory = lastHistoryUserMsg && 
-                    lastHistoryUserMsgText === lastUserMessageText &&
+                    lastHistoryUserMsgTextStr === lastUserMessageTextStr &&
                     lastHistoryUserMsg.timestamp === lastUserMessage.timestamp;
                 
                 if (!isLastMsgInHistory) {
                     const timePrefix = formatMsgTime(new Date().toISOString());
-                    const fullContent = timePrefix + lastUserMessageText;
-                    apiMessages.push({ role: 'user', content: fullContent });
+                    if (typeof lastUserMessageText === 'object' && lastUserMessageText.hasImage) {
+                        const multimodalContent = [
+                            { type: 'text', text: timePrefix + `[发送了一张图片]` },
+                            { type: 'image_url', image_url: { url: lastUserMessageText.imageData } }
+                        ];
+                        apiMessages.push({ role: 'user', content: multimodalContent });
+                    } else {
+                        const fullContent = timePrefix + lastUserMessageText;
+                        apiMessages.push({ role: 'user', content: fullContent });
+                    }
                 }
 
                 currentAbortController = new AbortController();
@@ -38444,8 +38877,9 @@ ${recentHistory.map(msg => {
                 
                 const isEmojiBubble = bubble.classList.contains('emoji-message-bubble');
                 const isTransferBubble = bubble.classList.contains('transfer-message-bubble');
+                const isPhotoBubble = bubble.classList.contains('photo-message-bubble');
                 
-                if (isEmojiBubble || isTransferBubble) {
+                if (isEmojiBubble || isTransferBubble || isPhotoBubble) {
                     let longPressTimer = null;
                     let longPressTriggered = false;
                     
@@ -38480,6 +38914,12 @@ ${recentHistory.map(msg => {
                                 const url = emojiImg.dataset.emojiUrl;
                                 const desc = emojiImg.dataset.emojiDesc || '自定义表情';
                                 showEmojiPreview(url, desc);
+                                return;
+                            }
+                        }
+                        if (isPhotoBubble) {
+                            const photoImg = e.target.closest('img');
+                            if (photoImg && photoImg.onclick) {
                                 return;
                             }
                         }
@@ -39455,6 +39895,18 @@ ${recentHistory.map(msg => {
                 return false;
             }
             
+            let imageCount = 0;
+            messagesToDelete.forEach(msg => {
+                if (msg.content && typeof msg.content === 'object' && msg.content.type === 'photo' && msg.content.imageData) {
+                    msg.content.imageData = null;
+                    msg.content.fileName = null;
+                    imageCount++;
+                }
+            });
+            if (imageCount > 0) {
+                console.log(`[RewindMessages] 已清理 ${imageCount} 张图片数据`);
+            }
+            
             const chatMessages = document.getElementById('chat-messages');
             const messageElements = chatMessages.querySelectorAll('.message:not(#typing-indicator):not(.load-more-btn)');
             
@@ -39754,6 +40206,13 @@ ${recentHistory.map(msg => {
             if (!roleMessages || !roleMessages[messageIndex]) {
                 console.error('[DeleteMessage] 消息不存在:', messageIndex);
                 return false;
+            }
+            
+            const msgToDelete = roleMessages[messageIndex];
+            if (msgToDelete.content && typeof msgToDelete.content === 'object' && msgToDelete.content.type === 'photo' && msgToDelete.content.imageData) {
+                msgToDelete.content.imageData = null;
+                msgToDelete.content.fileName = null;
+                console.log('[DeleteMessage] 已清理图片数据');
             }
             
             const chatMessages = document.getElementById('chat-messages');
@@ -40451,11 +40910,11 @@ ${recentHistory.map(msg => {
         // 微信背景设置功能
         // ============================================
 
-        function openWechatSettings() {
+        async function openWechatSettings() {
             document.getElementById('wechat-profile').style.display = 'none';
             document.getElementById('wechat-settings').style.display = 'flex';
             document.getElementById('ios-glass-tabbar').classList.remove('visible');
-            loadBackgroundPreviews();
+            await loadBackgroundPreviews();
             
             setTimeout(() => {
                 const settingsContent = document.querySelector('.wechat-settings-content');
@@ -40485,14 +40944,14 @@ ${recentHistory.map(msg => {
             document.getElementById('ios-glass-tabbar').classList.add('visible');
         }
 
-        function toggleDarkMode(event) {
+        async function toggleDarkMode(event) {
             event.stopPropagation();
             event.preventDefault();
             const toggle = document.getElementById('dark-mode-toggle');
             const isDarkMode = document.body.classList.toggle('dark-mode');
             toggle.classList.toggle('active', isDarkMode);
             localStorage.setItem('darkMode', isDarkMode);
-            applyWechatBackgrounds();
+            await applyWechatBackgrounds();
         }
 
         function initDarkMode() {
@@ -40509,8 +40968,9 @@ ${recentHistory.map(msg => {
 
         initDarkMode();
 
-        function loadBackgroundPreviews() {
-            const backgrounds = JSON.parse(localStorage.getItem('wechatBackgrounds')) || {};
+        async function loadBackgroundPreviews() {
+            const backgroundsData = await getImageData('wechatBackgrounds');
+            const backgrounds = backgroundsData ? JSON.parse(backgroundsData) : {};
             
             ['message', 'contacts', 'profile'].forEach(type => {
                 const preview = document.getElementById(`${type}-bg-preview`);
@@ -40527,7 +40987,7 @@ ${recentHistory.map(msg => {
             });
         }
 
-        function handleBackgroundSelect(type, event) {
+        async function handleBackgroundSelect(type, event) {
             const file = event.target.files[0];
             if (!file) return;
 
@@ -40548,9 +41008,10 @@ ${recentHistory.map(msg => {
             }
 
             const reader = new FileReader();
-            reader.onload = function(e) {
+            reader.onload = async function(e) {
                 try {
-                    const backgrounds = JSON.parse(localStorage.getItem('wechatBackgrounds')) || {};
+                    const backgroundsData = await getImageData('wechatBackgrounds');
+                    const backgrounds = backgroundsData ? JSON.parse(backgroundsData) : {};
                     
                     backgrounds[type] = {
                         image: e.target.result,
@@ -40558,10 +41019,10 @@ ${recentHistory.map(msg => {
                         positionY: 50
                     };
                     
-                    localStorage.setItem('wechatBackgrounds', JSON.stringify(backgrounds));
+                    await setImageData('wechatBackgrounds', JSON.stringify(backgrounds));
                     
-                    loadBackgroundPreviews();
-                    applyWechatBackgrounds();
+                    await loadBackgroundPreviews();
+                    await applyWechatBackgrounds();
                     showAvatarToast('背景设置成功');
                 } catch (err) {
                     showAvatarToast('保存失败，请重试');
@@ -40572,18 +41033,20 @@ ${recentHistory.map(msg => {
             event.target.value = '';
         }
 
-        function resetBackground(type) {
-            const backgrounds = JSON.parse(localStorage.getItem('wechatBackgrounds')) || {};
+        async function resetBackground(type) {
+            const backgroundsData = await getImageData('wechatBackgrounds');
+            const backgrounds = backgroundsData ? JSON.parse(backgroundsData) : {};
             delete backgrounds[type];
-            localStorage.setItem('wechatBackgrounds', JSON.stringify(backgrounds));
+            await setImageData('wechatBackgrounds', JSON.stringify(backgrounds));
             
-            loadBackgroundPreviews();
-            applyWechatBackgrounds();
+            await loadBackgroundPreviews();
+            await applyWechatBackgrounds();
             showAvatarToast('已恢复默认背景');
         }
 
-        function applyWechatBackgrounds() {
-            const backgrounds = JSON.parse(localStorage.getItem('wechatBackgrounds')) || {};
+        async function applyWechatBackgrounds() {
+            const backgroundsData = await getImageData('wechatBackgrounds');
+            const backgrounds = backgroundsData ? JSON.parse(backgroundsData) : {};
             const isDarkMode = document.body.classList.contains('dark-mode');
             
             const wechatMain = document.getElementById('wechat-main');
