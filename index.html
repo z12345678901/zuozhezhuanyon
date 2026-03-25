@@ -151,6 +151,80 @@
             --text-tertiary: #8E8E93;
             --border-color: rgba(0, 0, 0, 0.05);
             --shadow-color: rgba(0, 0, 0, 0.08);
+            
+            --ui-scale-factor: 1;
+            --dock-icon-size: 52px;
+            --dock-gap: 22px;
+            --dock-padding: 14px 24px;
+            --profile-card-scale: 0.85;
+            --note-widget-width: 200px;
+            --minimal-widget-album-size: 90px;
+            --minimal-widget-info-width: 180px;
+        }
+        
+        @media (max-width: 360px) {
+            :root {
+                --ui-scale-factor: 0.85;
+                --dock-icon-size: 44px;
+                --dock-gap: 16px;
+                --dock-padding: 12px 18px;
+                --profile-card-scale: 0.75;
+                --note-widget-width: 170px;
+                --minimal-widget-album-size: 70px;
+                --minimal-widget-info-width: 140px;
+            }
+        }
+        
+        @media (min-width: 361px) and (max-width: 390px) {
+            :root {
+                --ui-scale-factor: 0.92;
+                --dock-icon-size: 48px;
+                --dock-gap: 18px;
+                --dock-padding: 12px 20px;
+                --profile-card-scale: 0.80;
+                --note-widget-width: 185px;
+                --minimal-widget-album-size: 80px;
+                --minimal-widget-info-width: 160px;
+            }
+        }
+        
+        @media (min-width: 391px) and (max-width: 413px) {
+            :root {
+                --ui-scale-factor: 0.96;
+                --dock-icon-size: 50px;
+                --dock-gap: 20px;
+                --dock-padding: 13px 22px;
+                --profile-card-scale: 0.82;
+                --note-widget-width: 195px;
+                --minimal-widget-album-size: 85px;
+                --minimal-widget-info-width: 170px;
+            }
+        }
+        
+        @media (min-width: 414px) and (max-width: 430px) {
+            :root {
+                --ui-scale-factor: 1;
+                --dock-icon-size: 52px;
+                --dock-gap: 22px;
+                --dock-padding: 14px 24px;
+                --profile-card-scale: 0.85;
+                --note-widget-width: 200px;
+                --minimal-widget-album-size: 90px;
+                --minimal-widget-info-width: 180px;
+            }
+        }
+        
+        @media (min-width: 431px) {
+            :root {
+                --ui-scale-factor: 1.02;
+                --dock-icon-size: 54px;
+                --dock-gap: 24px;
+                --dock-padding: 14px 26px;
+                --profile-card-scale: 0.88;
+                --note-widget-width: 210px;
+                --minimal-widget-album-size: 95px;
+                --minimal-widget-info-width: 190px;
+            }
         }
 
         body.dark-mode {
@@ -1713,7 +1787,7 @@
         /* 韩系Ins风便签 */
         .note-widget {
             position: absolute;
-            width: 200px;
+            width: var(--note-widget-width, 200px);
             background-color: rgba(255, 255, 255, 0.6);
             backdrop-filter: blur(10px);
             -webkit-backdrop-filter: blur(10px);
@@ -2484,11 +2558,11 @@
      transform: translateX(-50%); 
      display: flex; 
      justify-content: center; 
-     gap: 22px; 
+     gap: var(--dock-gap, 22px); 
      background: rgba(255, 255, 255, 0.2); 
      backdrop-filter: blur(25px); 
      -webkit-backdrop-filter: blur(25px); 
-     padding: 14px 24px; 
+     padding: var(--dock-padding, 14px 24px); 
      border-radius: 35px; 
      border: 1px solid rgba(255, 255, 255, 0.2); 
      box-shadow: 0 15px 35px rgba(0, 0, 0, 0.03); 
@@ -2507,8 +2581,8 @@
  } 
  
  .dock-icon { 
-     width: 52px; 
-     height: 52px; 
+     width: var(--dock-icon-size, 52px); 
+     height: var(--dock-icon-size, 52px); 
      border-radius: 18px; 
      background: #ffffff; 
      box-shadow: 0 8px 20px rgba(150, 150, 150, 0.06); 
@@ -2537,8 +2611,8 @@
  
  .dock-icon svg { 
      position: absolute; 
-     width: 24px; 
-     height: 24px; 
+     width: calc(var(--dock-icon-size, 52px) * 0.46); 
+     height: calc(var(--dock-icon-size, 52px) * 0.46); 
      stroke-width: 1.5; 
      stroke: #999999; 
      fill: none; 
@@ -2634,11 +2708,6 @@
             
             .app-grid {
                 gap: 12px;
-            }
-            
-            .dock-icon {
-                width: 54px;
-                height: 54px;
             }
             
             .chat-avatar {
@@ -2748,11 +2817,6 @@
             .icon-container {
                 width: 58px;
                 height: 58px;
-            }
-            
-            .dock-icon {
-                width: 62px;
-                height: 62px;
             }
         }
 
@@ -20096,8 +20160,8 @@
 
         .album-wrapper {
             position: relative;
-            width: 90px;
-            height: 90px;
+            width: var(--minimal-widget-album-size, 90px);
+            height: var(--minimal-widget-album-size, 90px);
             border-radius: 16px;
             flex-shrink: 0;
             background: #fff;
@@ -20137,7 +20201,7 @@
             display: flex;
             flex-direction: column;
             justify-content: center;
-            width: 180px;
+            width: var(--minimal-widget-info-width, 180px);
         }
 
         .status-bar {
@@ -20361,7 +20425,7 @@
             text-align: center;
             padding-bottom: 20px;
             margin: 40px auto 20px auto;
-            transform: scale(0.85);
+            transform: scale(var(--profile-card-scale, 0.85));
             transform-origin: top center;
         }
 
@@ -51801,6 +51865,92 @@ ${chatHistoryText}
                 });
             }
         };
+
+        const DeviceAdapter = (function() {
+            const BREAKPOINTS = {
+                XS: 360,
+                SM: 390,
+                MD: 414,
+                LG: 430
+            };
+            
+            const SCALE_FACTORS = {
+                XS: { scale: 0.85, dockIcon: 44, dockGap: 16, profileScale: 0.75 },
+                SM: { scale: 0.92, dockIcon: 48, dockGap: 18, profileScale: 0.80 },
+                MD: { scale: 0.96, dockIcon: 50, dockGap: 20, profileScale: 0.82 },
+                LG: { scale: 1.00, dockIcon: 52, dockGap: 22, profileScale: 0.85 },
+                XL: { scale: 1.02, dockIcon: 54, dockGap: 24, profileScale: 0.88 }
+            };
+            
+            let currentBreakpoint = null;
+            
+            function getDeviceInfo() {
+                const width = window.innerWidth;
+                const height = window.innerHeight;
+                const dpr = window.devicePixelRatio || 1;
+                const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+                const isAndroid = /Android/.test(navigator.userAgent);
+                const isMobile = isIOS || isAndroid;
+                
+                return { width, height, dpr, isIOS, isAndroid, isMobile };
+            }
+            
+            function getBreakpoint(width) {
+                if (width <= BREAKPOINTS.XS) return 'XS';
+                if (width <= BREAKPOINTS.SM) return 'SM';
+                if (width <= BREAKPOINTS.MD) return 'MD';
+                if (width <= BREAKPOINTS.LG) return 'LG';
+                return 'XL';
+            }
+            
+            function applyScaling() {
+                const device = getDeviceInfo();
+                const breakpoint = getBreakpoint(device.width);
+                
+                if (breakpoint === currentBreakpoint) return;
+                currentBreakpoint = breakpoint;
+                
+                const root = document.documentElement;
+                const factors = SCALE_FACTORS[breakpoint];
+                
+                root.style.setProperty('--ui-scale-factor', factors.scale);
+                root.style.setProperty('--dock-icon-size', factors.dockIcon + 'px');
+                root.style.setProperty('--dock-gap', factors.dockGap + 'px');
+                root.style.setProperty('--profile-card-scale', factors.profileScale);
+                
+                const noteWidgetWidth = Math.round(200 * factors.scale);
+                const albumSize = Math.round(90 * factors.scale);
+                const infoWidth = Math.round(180 * factors.scale);
+                
+                root.style.setProperty('--note-widget-width', noteWidgetWidth + 'px');
+                root.style.setProperty('--minimal-widget-album-size', albumSize + 'px');
+                root.style.setProperty('--minimal-widget-info-width', infoWidth + 'px');
+                
+                if (device.dpr > 1 && device.dpr <= 3) {
+                    root.style.setProperty('--dpr-adjustment', (1 / device.dpr));
+                }
+            }
+            
+            function init() {
+                applyScaling();
+                
+                let resizeTimeout;
+                window.addEventListener('resize', function() {
+                    clearTimeout(resizeTimeout);
+                    resizeTimeout = setTimeout(applyScaling, 100);
+                });
+                
+                window.addEventListener('orientationchange', function() {
+                    setTimeout(applyScaling, 200);
+                });
+            }
+            
+            return { init, getDeviceInfo, applyScaling };
+        })();
+        
+        document.addEventListener('DOMContentLoaded', function() {
+            DeviceAdapter.init();
+        });
 
         initErrorLogging();
 
