@@ -247,6 +247,8 @@
 
         html.android {
             --android-scrollbar-width: 0px;
+            --ins-card-width: 420px;
+            --profile-card-scale: 0.92;
         }
         
         html.android .ios-container {
@@ -271,6 +273,30 @@
             left: 0 !important;
             right: 0 !important;
             position: relative !important;
+            width: var(--ins-card-width) !important;
+            max-width: calc(100vw - 20px) !important;
+            transform: scale(var(--profile-card-scale)) !important;
+        }
+        
+        html.android .heart-icon {
+            --heart-icon-width: 180px !important;
+            --heart-icon-avatar-size: 40px !important;
+            --heart-icon-bubble-width: 180px !important;
+            top: calc(79% - 250px) !important;
+        }
+        
+        html.android .heart-icon .chat-container {
+            max-width: 180px !important;
+        }
+        
+        html.android .heart-icon .avatar-them,
+        html.android .heart-icon .avatar-me {
+            width: 40px !important;
+            height: 40px !important;
+        }
+        
+        html.android .heart-icon .bubble {
+            width: 180px !important;
         }
         
         @supports not (overflow-x: clip) {
