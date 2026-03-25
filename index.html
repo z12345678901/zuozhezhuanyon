@@ -2600,7 +2600,7 @@
  
  .app-name { 
      font-size: 10px; 
-     color: #999999; 
+     color: #787878; 
      font-weight: 500; 
      letter-spacing: 0.5px; 
  } 
@@ -20199,7 +20199,7 @@
         /* Ins风音乐播放器小组件 */
         .minimal-widget {
             position: absolute;
-            top: 30px;
+            top: 41px;
             left: 50%;
             transform: translateX(-50%);
             z-index: 100;
@@ -20653,14 +20653,14 @@
         <div class="announcement-card">
             <div class="announcement-header">
                 <h2 class="announcement-title">本次更新内容</h2>
-                <div class="announcement-date" id="announcement-date">2026年3月14日</div>
+                <div class="announcement-date" id="announcement-date">2026年3月26日</div>
             </div>
             <div class="announcement-body">
                 <div class="announcement-content">
                     <ul>
-                        <li>📝 修了一下断句问题</li>
-                        <li>🔧 修复了消息失效的问题</li>
-                        <li style="color: orange;">⏳ 待修复：语音接入待实装</li>
+                        <li>📱 修改了桌面，增加了第二页，安卓适配待改</li>
+                        <li>🔍 查手机功能制作中</li>
+                        <li>🔧 修复了消息引索异常的问题，旧版本的消息无法改变了，后续是否还有问题还需要多多测试哦</li>
                     </ul>
                 </div>
             </div>
@@ -21482,8 +21482,8 @@
                                 <div class="color-options">
                                     <div class="color-option">
                                         <label for="desktop-color" style="color: rgb(51, 51, 51);">桌面字体颜色:</label>
-                                        <input type="color" id="desktop-color" value="#000000" onchange="saveToColorPalette(this.value); updateColorCode(this)">
-                                        <input type="text" class="color-code-input" id="desktop-color-code" value="#000000" onchange="updateColorFromCode(&#39;desktop-color&#39;, this.value)">
+                                        <input type="color" id="desktop-color" value="#787878" onchange="saveToColorPalette(this.value); updateColorCode(this)">
+                                        <input type="text" class="color-code-input" id="desktop-color-code" value="#787878" onchange="updateColorFromCode(&#39;desktop-color&#39;, this.value)">
                                     </div>
                                     <div class="color-option">
                                         <label for="menu-color" style="color: rgb(51, 51, 51);">菜单字体颜色:</label>
@@ -27241,6 +27241,14 @@ ${role.tags && role.tags.length > 0 ? `- 性格特点：${role.tags.join('、')}
                         reject(request.error);
                     };
                 });
+            },
+            
+            close() {
+                if (this.db) {
+                    this.db.close();
+                    this.db = null;
+                    console.log('ImageStorage 数据库连接已关闭');
+                }
             }
         };
         
@@ -27357,6 +27365,14 @@ ${role.tags && role.tags.length > 0 ? `- 性格特点：${role.tags.join('、')}
                         reject(e);
                     }
                 });
+            },
+            
+            close() {
+                if (this.db) {
+                    this.db.close();
+                    this.db = null;
+                    console.log('ShopStorage 数据库连接已关闭');
+                }
             }
         };
         
@@ -27575,6 +27591,15 @@ ${role.tags && role.tags.length > 0 ? `- 性格特点：${role.tags.join('、')}
                         reject(request.error);
                     };
                 });
+            },
+            
+            close() {
+                if (this.db) {
+                    this.db.close();
+                    this.db = null;
+                    this.initialized = false;
+                    console.log('DataStorage 数据库连接已关闭');
+                }
             }
         };
         
@@ -29254,7 +29279,7 @@ ${conversationHistory.slice(-10).map(msg => {
             
             updateApiStatus();
             
-            const desktopColor = localStorage.getItem('desktopColor') || '#000000';
+            const desktopColor = localStorage.getItem('desktopColor') || '#787878';
             const menuColor = localStorage.getItem('menuColor') || '#333333';
             const uiColor = localStorage.getItem('uiColor') || '#333333';
             
@@ -29946,7 +29971,15 @@ ${conversationHistory.slice(-10).map(msg => {
                         'profile-card-avatar-image',
                         'chat-bubble-avatar-them',
                         'chat-bubble-avatar-me',
-                        'vinyl-cover'
+                        'vinyl-cover',
+                        'profile-card-username',
+                        'profile-card-location',
+                        'profile-card-bio',
+                        'profile-card-btn1',
+                        'profile-card-btn2',
+                        'profile-card-btn3',
+                        'profile-card-btn4',
+                        'vinyl-song-info'
                     ];
                     
                     await new Promise(function(resolve, reject) {
@@ -30759,6 +30792,33 @@ ${conversationHistory.slice(-10).map(msg => {
                                     }
                                 }
                             }
+                            var profileTextKeys = ['profile-card-username', 'profile-card-location', 'profile-card-bio', 'profile-card-btn1', 'profile-card-btn2', 'profile-card-btn3', 'profile-card-btn4'];
+                            profileTextKeys.forEach(function(textKey) {
+                                if (importData.desktopDataSettings[textKey]) {
+                                    var textEl = document.getElementById(textKey);
+                                    var textData = importData.desktopDataSettings[textKey];
+                                    if (textEl && textData.text) {
+                                        textEl.textContent = textData.text;
+                                        console.log('Profile card 文字已导入:', textKey);
+                                    }
+                                }
+                            });
+                            if (importData.desktopDataSettings['vinyl-song-info']) {
+                                var songInfoData = importData.desktopDataSettings['vinyl-song-info'];
+                                var songTitleEl = document.getElementById('vinyl-song-title');
+                                var artistNameEl = document.getElementById('vinyl-artist-name');
+                                var topLabelEl = document.getElementById('vinyl-top-label');
+                                if (songTitleEl && songInfoData.songTitle) {
+                                    songTitleEl.textContent = songInfoData.songTitle;
+                                }
+                                if (artistNameEl && songInfoData.artistName) {
+                                    artistNameEl.textContent = songInfoData.artistName;
+                                }
+                                if (topLabelEl && songInfoData.topLabel) {
+                                    topLabelEl.textContent = songInfoData.topLabel;
+                                }
+                                console.log('Vinyl 歌曲信息已导入');
+                            }
                         }
                     } catch (e) {
                         console.error('DesktopData 导入失败:', e);
@@ -31190,8 +31250,34 @@ ${conversationHistory.slice(-10).map(msg => {
             roles = [];
             messages = {};
             moments = [];
+            if (typeof simsRolesData !== 'undefined') simsRolesData = {};
+            if (typeof simsThoughtMessages !== 'undefined') simsThoughtMessages = [];
+            if (typeof simsUsedThoughtMessages !== 'undefined') simsUsedThoughtMessages = [];
+            if (typeof musicMessages !== 'undefined') musicMessages = {};
+            if (typeof musicSessionHistory !== 'undefined') musicSessionHistory = {};
+            if (typeof diarySlots !== 'undefined') diarySlots = [null, null, null, null, null, null];
+            if (typeof worldbookEntries !== 'undefined') worldbookEntries = [];
+            if (typeof emojiData !== 'undefined') {
+                for (const key in emojiData) {
+                    delete emojiData[key];
+                }
+            }
+            if (typeof emojiCategories !== 'undefined') emojiCategories = [];
+            if (typeof selectedMessages !== 'undefined') selectedMessages = [];
+            if (typeof selectedEntryRoles !== 'undefined') selectedEntryRoles = [];
+            if (typeof detailSelectedRoles !== 'undefined') detailSelectedRoles = [];
             localStorage.clear();
             sessionStorage.clear();
+            
+            if (typeof ImageStorage !== 'undefined' && ImageStorage.close) {
+                ImageStorage.close();
+            }
+            if (typeof ShopStorage !== 'undefined' && ShopStorage.close) {
+                ShopStorage.close();
+            }
+            if (typeof DataStorage !== 'undefined' && DataStorage.close) {
+                DataStorage.close();
+            }
             
             const databasesToDelete = [
                 'XiaoShuJiImages',
@@ -31251,7 +31337,7 @@ ${conversationHistory.slice(-10).map(msg => {
             localStorage.removeItem('uiColor');
             localStorage.removeItem('noteColor');
             
-            document.getElementById('desktop-color').value = '#000000';
+            document.getElementById('desktop-color').value = '#787878';
             document.getElementById('menu-color').value = '#333333';
             document.getElementById('ui-color').value = '#333333';
             document.getElementById('note-color').value = 'rgb(98 91 91)';
@@ -31272,7 +31358,7 @@ ${conversationHistory.slice(-10).map(msg => {
 
         // 应用字体颜色设置
         function applyFontColors() {
-            const desktopColor = localStorage.getItem('desktopColor') || '#ffffff';
+            const desktopColor = localStorage.getItem('desktopColor') || '#787878';
             const menuColor = localStorage.getItem('menuColor') || '#333333';
             const uiColor = localStorage.getItem('uiColor') || '#333333';
             const noteColor = localStorage.getItem('noteColor') || 'rgb(98 91 91)';
