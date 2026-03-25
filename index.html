@@ -151,6 +151,52 @@
             --text-tertiary: #8E8E93;
             --border-color: rgba(0, 0, 0, 0.05);
             --shadow-color: rgba(0, 0, 0, 0.08);
+            
+            --widget-scale: 1;
+            --minimal-widget-album-size: 90px;
+            --minimal-widget-info-width: 180px;
+            --minimal-widget-padding: 16px 22px 16px 16px;
+            --minimal-widget-gap: 18px;
+            --note-widget-width: 200px;
+            --note-widget-padding: 20px 16px 16px 16px;
+            --page2-widget-padding: 15px;
+            --page2-widget-min-width: 100px;
+            --input-widget-max-width: 80px;
+            --input-widget-height: 30px;
+            --heart-icon-width: 160px;
+            --heart-icon-bubble-width: 160px;
+        }
+        
+        html.android-device {
+            --widget-scale: 0.85;
+            --minimal-widget-album-size: 76px;
+            --minimal-widget-info-width: 150px;
+            --minimal-widget-padding: 12px 16px 12px 12px;
+            --minimal-widget-gap: 12px;
+            --note-widget-width: 170px;
+            --note-widget-padding: 16px 12px 12px 12px;
+            --page2-widget-padding: 12px;
+            --page2-widget-min-width: 85px;
+            --input-widget-max-width: 65px;
+            --input-widget-height: 26px;
+            --heart-icon-width: 135px;
+            --heart-icon-bubble-width: 135px;
+        }
+        
+        html.android-device.large-screen {
+            --widget-scale: 0.9;
+            --minimal-widget-album-size: 82px;
+            --minimal-widget-info-width: 160px;
+            --minimal-widget-padding: 14px 18px 14px 14px;
+            --minimal-widget-gap: 14px;
+            --note-widget-width: 185px;
+            --note-widget-padding: 18px 14px 14px 14px;
+            --page2-widget-padding: 14px;
+            --page2-widget-min-width: 92px;
+            --input-widget-max-width: 72px;
+            --input-widget-height: 28px;
+            --heart-icon-width: 145px;
+            --heart-icon-bubble-width: 145px;
         }
 
         body.dark-mode {
@@ -1680,8 +1726,8 @@
 
         .input-widget {
             width: 100%;
-            max-width: 80px;
-            height: 30px;
+            max-width: var(--input-widget-max-width);
+            height: var(--input-widget-height);
             border-radius: 12px;
             background: rgba(255, 255, 255, 0.3);
             backdrop-filter: blur(8px);
@@ -1713,12 +1759,12 @@
         /* 韩系Ins风便签 */
         .note-widget {
             position: absolute;
-            width: 200px;
+            width: var(--note-widget-width);
             background-color: rgba(255, 255, 255, 0.6);
             backdrop-filter: blur(10px);
             -webkit-backdrop-filter: blur(10px);
             border-radius: 16px;
-            padding: 20px 16px 16px 16px;
+            padding: var(--note-widget-padding);
             box-shadow:
                 0 10px 30px rgba(0, 0, 0, 0.03),
                 0 1px 3px rgba(0, 0, 0, 0.02);
@@ -1729,6 +1775,8 @@
             z-index: 100;
             box-sizing: border-box;
             transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            transform: scale(var(--widget-scale));
+            transform-origin: bottom right;
         }
 
         .note-widget::before {
@@ -1744,18 +1792,19 @@
         .heart-icon {
             position: absolute;
             top: calc(79% - 280px);
-            left: 50%;
-            transform: translateX(-50%);
+            left: 44%;
+            transform: translateX(-50%) scale(var(--widget-scale));
             z-index: 101;
-            width: 160px;
+            width: var(--heart-icon-width);
             height: auto;
             cursor: pointer;
             animation: floatIn 0.6s cubic-bezier(0.25, 0.8, 0.25, 1) forwards;
+            transform-origin: center center;
         }
 
         .heart-icon .chat-container {
             width: 100%;
-            max-width: 160px;
+            max-width: var(--heart-icon-width);
             padding: 10px 8px;
             display: flex;
             flex-direction: column;
@@ -1865,7 +1914,7 @@
         }
 
         .heart-icon .bubble {
-            width: 160px;
+            width: var(--heart-icon-bubble-width);
             height: 32px;
             padding: 8px 14px;
             position: relative;
@@ -2485,13 +2534,12 @@
      display: flex; 
      justify-content: center; 
      gap: 22px; 
-     background: rgba(255, 255, 255, 0.6); 
+     background: rgba(255, 255, 255, 0.2); 
      backdrop-filter: blur(25px); 
      -webkit-backdrop-filter: blur(25px); 
      padding: 14px 24px; 
      border-radius: 35px; 
-     border: 1px solid rgba(255, 255, 255, 0.8); 
-     border-bottom: 1px solid rgba(255, 255, 255, 0.3); 
+     border: 1px solid rgba(255, 255, 255, 0.2); 
      box-shadow: 0 15px 35px rgba(0, 0, 0, 0.03); 
      z-index: 10; 
  } 
@@ -2512,7 +2560,7 @@
      height: 52px; 
      border-radius: 18px; 
      background: #ffffff; 
-     box-shadow: 0 8px 20px rgba(150, 150, 150, 0.06), inset 0 1px 1px rgba(255, 255, 255, 1); 
+     box-shadow: 0 8px 20px rgba(150, 150, 150, 0.06); 
      border: 1px solid rgba(255, 255, 255, 0.6); 
      display: flex; 
      justify-content: center; 
@@ -2754,6 +2802,53 @@
             .dock-icon {
                 width: 62px;
                 height: 62px;
+            }
+        }
+        
+        /* 安卓设备小组件适配 - 小屏幕 */
+        @media (max-width: 360px) {
+            html.android-device {
+                --widget-scale: 0.8;
+                --minimal-widget-album-size: 70px;
+                --minimal-widget-info-width: 135px;
+                --minimal-widget-padding: 10px 14px 10px 10px;
+                --minimal-widget-gap: 10px;
+                --note-widget-width: 155px;
+                --note-widget-padding: 14px 10px 10px 10px;
+                --page2-widget-padding: 10px;
+                --page2-widget-min-width: 78px;
+                --input-widget-max-width: 58px;
+                --input-widget-height: 24px;
+                --heart-icon-width: 125px;
+                --heart-icon-bubble-width: 125px;
+            }
+        }
+        
+        /* 安卓设备小组件适配 - 中等屏幕 */
+        @media (min-width: 361px) and (max-width: 390px) {
+            html.android-device {
+                --widget-scale: 0.85;
+            }
+        }
+        
+        /* 安卓设备小组件适配 - 大屏幕 */
+        @media (min-width: 391px) and (max-width: 420px) {
+            html.android-device {
+                --widget-scale: 0.88;
+                --minimal-widget-album-size: 78px;
+                --minimal-widget-info-width: 155px;
+            }
+        }
+        
+        /* 安卓设备小组件适配 - 超大屏幕 */
+        @media (min-width: 421px) {
+            html.android-device {
+                --widget-scale: 0.92;
+                --minimal-widget-album-size: 82px;
+                --minimal-widget-info-width: 165px;
+                --note-widget-width: 180px;
+                --heart-icon-width: 150px;
+                --heart-icon-bubble-width: 150px;
             }
         }
 
@@ -20012,13 +20107,15 @@
             backdrop-filter: blur(10px);
             border: 1px solid rgba(255, 255, 255, 0.2);
             border-radius: 20px;
-            padding: 15px;
-            min-width: 100px;
+            padding: var(--page2-widget-padding);
+            min-width: var(--page2-widget-min-width);
             box-shadow: 
                 0 6px 16px rgba(0, 0, 0, 0.08),
                 inset 0 1px 0 rgba(255, 255, 255, 0.25);
             cursor: pointer;
             transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            transform: scale(var(--widget-scale));
+            transform-origin: top right;
         }
 
         .page2-widget-card:active {
@@ -20075,7 +20172,7 @@
             position: absolute;
             top: 30px;
             left: 50%;
-            transform: translateX(-50%);
+            transform: translateX(-50%) scale(var(--widget-scale));
             z-index: 100;
             background: rgba(255, 255, 255, 0.97);
             backdrop-filter: blur(24px);
@@ -20085,9 +20182,10 @@
             box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
             display: flex;
             align-items: center;
-            padding: 16px 22px 16px 16px;
-            gap: 18px;
+            padding: var(--minimal-widget-padding);
+            gap: var(--minimal-widget-gap);
             transition: transform 0.4s ease, box-shadow 0.4s ease;
+            transform-origin: top center;
         }
 
         .minimal-widget:hover {
@@ -20097,8 +20195,8 @@
 
         .album-wrapper {
             position: relative;
-            width: 90px;
-            height: 90px;
+            width: var(--minimal-widget-album-size);
+            height: var(--minimal-widget-album-size);
             border-radius: 16px;
             flex-shrink: 0;
             background: #fff;
@@ -20138,7 +20236,7 @@
             display: flex;
             flex-direction: column;
             justify-content: center;
-            width: 180px;
+            width: var(--minimal-widget-info-width);
         }
 
         .status-bar {
@@ -51804,6 +51902,46 @@ ${chatHistoryText}
         };
 
         initErrorLogging();
+        
+        (function() {
+            function detectAndroid() {
+                const ua = navigator.userAgent.toLowerCase();
+                const isAndroid = ua.indexOf('android') > -1;
+                
+                if (isAndroid) {
+                    document.documentElement.classList.add('android-device');
+                    
+                    const screenWidth = window.screen.width;
+                    const dpr = window.devicePixelRatio || 1;
+                    const viewportWidth = window.innerWidth;
+                    
+                    if (screenWidth > 400 || viewportWidth > 400 || dpr <= 2) {
+                        document.documentElement.classList.add('large-screen');
+                    }
+                    
+                    console.log('Android device detected, widget scale applied');
+                }
+            }
+            
+            detectAndroid();
+            
+            let resizeTimeout;
+            window.addEventListener('resize', function() {
+                clearTimeout(resizeTimeout);
+                resizeTimeout = setTimeout(function() {
+                    const screenWidth = window.screen.width;
+                    const viewportWidth = window.innerWidth;
+                    
+                    if (document.documentElement.classList.contains('android-device')) {
+                        if (screenWidth > 400 || viewportWidth > 400) {
+                            document.documentElement.classList.add('large-screen');
+                        } else {
+                            document.documentElement.classList.remove('large-screen');
+                        }
+                    }
+                }, 250);
+            });
+        })();
 
     </script>
 
