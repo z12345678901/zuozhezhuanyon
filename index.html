@@ -2047,6 +2047,7 @@
             color: #BDBDBD;
             margin-left: 2px;
             display: inline-block;
+            font-size: 1.2em;
             animation: gentlePulse 2.5s infinite;
             animation-delay: 1.2s;
         }
@@ -2074,9 +2075,11 @@
         @keyframes gentlePulse {
             0%, 100% {
                 transform: scale(1);
+                opacity: 0.6;
             }
             50% {
-                transform: scale(1.1);
+                transform: scale(1.3);
+                opacity: 1;
             }
         }
 
@@ -20884,7 +20887,7 @@
                                 <input type="file" id="avatar-them-upload" accept="image/*" style="display: none;" onchange="handleChatBubbleAvatarUpload(event, 'them')">
                                 <div class="bubble">
                                     <p class="text">
-                                        和<span id="chat-bubble-partner-name">Alpaca</span>在一起已经<span class="flourish">ᯠ_  ̫ _ ̥ᯄ ੭</span>
+                                        和<span id="chat-bubble-partner-name">Alpaca</span>在一起已经<span class="flourish">⟡</span>
                                     </p>
                                 </div>
                             </div>
