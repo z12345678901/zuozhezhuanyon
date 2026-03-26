@@ -20699,9 +20699,7 @@
             display: flex;
             justify-content: center;
             align-items: center;
-            flex-shrink: 0;
-            width: 366px;
-            height: 756px;
+            transition: transform 0.3s ease;
         }
         .phonecheck-hw-btn {
             position: absolute;
@@ -20716,7 +20714,6 @@
         .phonecheck-iphone-frame {
             width: 366px;
             height: 756px;
-            flex-shrink: 0;
             background: linear-gradient(135deg, #e3e4e8 0%, #9fa2a8 100%);
             border-radius: 56px;
             padding: 4px;
@@ -21252,6 +21249,55 @@
             stroke: #fff;
             stroke-width: 3;
         }
+
+        /* ==================== 查手机页面响应式设计 ==================== */
+        @media screen and (max-height: 800px) {
+            .phonecheck-device-wrapper {
+                transform: scale(0.9);
+                transform-origin: center center;
+            }
+        }
+        @media screen and (max-height: 700px) {
+            .phonecheck-device-wrapper {
+                transform: scale(0.8);
+            }
+        }
+        @media screen and (max-height: 600px) {
+            .phonecheck-device-wrapper {
+                transform: scale(0.7);
+            }
+        }
+        @media screen and (max-height: 500px) {
+            .phonecheck-device-wrapper {
+                transform: scale(0.6);
+            }
+        }
+        @media screen and (max-width: 400px) {
+            .phonecheck-device-wrapper {
+                transform: scale(0.85);
+                transform-origin: center center;
+            }
+        }
+        @media screen and (max-width: 360px) {
+            .phonecheck-device-wrapper {
+                transform: scale(0.75);
+            }
+        }
+        @media screen and (max-width: 320px) {
+            .phonecheck-device-wrapper {
+                transform: scale(0.65);
+            }
+        }
+        @media screen and (max-height: 800px) and (max-width: 400px) {
+            .phonecheck-device-wrapper {
+                transform: scale(0.75);
+            }
+        }
+        @media screen and (max-height: 700px) and (max-width: 360px) {
+            .phonecheck-device-wrapper {
+                transform: scale(0.65);
+            }
+        }
     </style>
 </head>
 <body>
@@ -21265,7 +21311,7 @@
             <div class="announcement-body">
                 <div class="announcement-content">
                     <ul>
-                        <li>📱 修改了桌面，增加了第二页</li>
+                        <li>📱 修改了桌面，增加了第二页，安卓适配待改</li>
                         <li>🔍 查手机功能制作中（目前查微信实装）</li>
                         <li>🔧 修复了消息引索异常的问题，旧版本的消息无法改变了，后续是否还有问题还需要多多测试哦</li>
                     </ul>
