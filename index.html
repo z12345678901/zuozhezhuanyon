@@ -20700,35 +20700,48 @@
             justify-content: center;
             align-items: center;
         }
+        .phonecheck-device-wrapper.android-size .phonecheck-hw-btn-action { left: -4px; top: 150px; width: 4px; height: 24px; }
+        .phonecheck-device-wrapper.android-size .phonecheck-hw-btn-vol-up { left: -4px; top: 200px; width: 4px; height: 50px; }
+        .phonecheck-device-wrapper.android-size .phonecheck-hw-btn-vol-down { left: -4px; top: 265px; width: 4px; height: 50px; }
+        .phonecheck-device-wrapper.android-size .phonecheck-hw-btn-power { right: -4px; top: 215px; width: 4px; height: 75px; }
         .phonecheck-hw-btn {
             position: absolute;
             background: linear-gradient(to right, #b4b6ba, #7a7c81);
             box-shadow: inset 1px 0 1px rgba(255,255,255,0.4), inset -1px 0 1px rgba(0,0,0,0.3);
             z-index: 10;
         }
-        .phonecheck-hw-btn-action { left: -4px; top: 150px; width: 4px; height: 24px; border-radius: 4px 0 0 4px; }
-        .phonecheck-hw-btn-vol-up { left: -4px; top: 200px; width: 4px; height: 50px; border-radius: 4px 0 0 4px; }
-        .phonecheck-hw-btn-vol-down { left: -4px; top: 265px; width: 4px; height: 50px; border-radius: 4px 0 0 4px; }
-        .phonecheck-hw-btn-power { right: -4px; top: 215px; width: 4px; height: 75px; border-radius: 0 4px 4px 0; background: linear-gradient(to left, #b4b6ba, #7a7c81); }
+        .phonecheck-hw-btn-action { left: -4px; top: 160px; width: 4px; height: 26px; border-radius: 4px 0 0 4px; }
+        .phonecheck-hw-btn-vol-up { left: -4px; top: 215px; width: 4px; height: 55px; border-radius: 4px 0 0 4px; }
+        .phonecheck-hw-btn-vol-down { left: -4px; top: 285px; width: 4px; height: 55px; border-radius: 4px 0 0 4px; }
+        .phonecheck-hw-btn-power { right: -4px; top: 230px; width: 4px; height: 80px; border-radius: 0 4px 4px 0; background: linear-gradient(to left, #b4b6ba, #7a7c81); }
         .phonecheck-iphone-frame {
-            width: 340px;
-            height: 700px;
+            width: 366px;
+            height: 756px;
             background: linear-gradient(135deg, #e3e4e8 0%, #9fa2a8 100%);
-            border-radius: 52px;
+            border-radius: 56px;
             padding: 4px;
             position: relative;
             z-index: 20;
             box-shadow: inset 0 0 4px 2px rgba(255, 255, 255, 0.4), inset 0 0 0 1px rgba(0, 0, 0, 0.1),
                 0 60px 100px -20px rgba(50, 50, 93, 0.35), 0 30px 60px -30px rgba(0, 0, 0, 0.3), -10px 0 20px -10px rgba(0,0,0,0.1);
         }
+        .phonecheck-iphone-frame.android-size {
+            width: 340px;
+            height: 700px;
+            border-radius: 52px;
+        }
         .phonecheck-glass-bezel {
             width: 100%;
             height: 100%;
             background-color: #000;
-            border-radius: 48px;
-            padding: 7px;
+            border-radius: 52px;
+            padding: 8px;
             position: relative;
             box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.15);
+        }
+        .phonecheck-iphone-frame.android-size .phonecheck-glass-bezel {
+            border-radius: 48px;
+            padding: 7px;
         }
         .phonecheck-glass-bezel::before {
             content: '';
@@ -20737,43 +20750,60 @@
             left: 0;
             right: 0;
             bottom: 0;
-            border-radius: 48px;
+            border-radius: 52px;
             background: linear-gradient(115deg, rgba(255,255,255,0.08) 0%, rgba(255,255,255,0) 40%);
             pointer-events: none;
             z-index: 999;
+        }
+        .phonecheck-iphone-frame.android-size .phonecheck-glass-bezel::before {
+            border-radius: 48px;
         }
         .phonecheck-screen {
             width: 100%;
             height: 100%;
             background: #ffffff;
-            border-radius: 41px;
+            border-radius: 44px;
             position: relative;
             overflow: hidden;
             box-shadow: inset 0 0 0 1px rgba(0,0,0,0.05);
         }
+        .phonecheck-iphone-frame.android-size .phonecheck-screen {
+            border-radius: 41px;
+        }
         .phonecheck-dynamic-island {
             position: absolute;
-            top: 9px;
+            top: 10px;
             left: 50%;
             transform: translateX(-50%);
-            width: 102px;
-            height: 30px;
+            width: 110px;
+            height: 32px;
             background-color: #000;
-            border-radius: 19px;
+            border-radius: 20px;
             z-index: 100;
             transition: transform 0.5s cubic-bezier(0.16, 1, 0.3, 1), background-color 0.4s;
             display: flex;
             align-items: center;
             justify-content: space-between;
+            padding: 0 10px;
+        }
+        .phonecheck-iphone-frame.android-size .phonecheck-dynamic-island {
+            top: 9px;
+            width: 102px;
+            height: 30px;
+            border-radius: 19px;
             padding: 0 9px;
         }
         .phonecheck-island-camera {
-            width: 11px;
-            height: 11px;
+            width: 12px;
+            height: 12px;
             background: #080808;
             border-radius: 50%;
             box-shadow: inset 0 0 2px rgba(255,255,255,0.15);
             position: relative;
+        }
+        .phonecheck-iphone-frame.android-size .phonecheck-island-camera {
+            width: 11px;
+            height: 11px;
         }
         .phonecheck-island-camera::after {
             content: '';
@@ -20787,26 +20817,35 @@
             transform: translate(-50%, -50%);
         }
         .phonecheck-island-dot {
-            width: 7px;
-            height: 7px;
+            width: 8px;
+            height: 8px;
             background: #111;
             border-radius: 50%;
         }
+        .phonecheck-iphone-frame.android-size .phonecheck-island-dot {
+            width: 7px;
+            height: 7px;
+        }
         .phonecheck-status-bar {
             position: absolute;
-            top: 13px;
+            top: 14px;
             width: 100%;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 0 26px;
-            font-size: 13px;
+            padding: 0 28px;
+            font-size: 14px;
             font-weight: 600;
             letter-spacing: -0.3px;
             color: #000;
             z-index: 50;
             transition: color 0.4s ease;
             font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", sans-serif;
+        }
+        .phonecheck-iphone-frame.android-size .phonecheck-status-bar {
+            top: 13px;
+            padding: 0 26px;
+            font-size: 13px;
         }
         .phonecheck-status-left {
             display: flex;
@@ -20823,12 +20862,17 @@
             gap: 2px;
         }
         .phonecheck-battery-body {
-            width: 22px;
-            height: 10px;
+            width: 24px;
+            height: 11px;
             border: 1.5px solid #000;
-            border-radius: 2px;
+            border-radius: 3px;
             padding: 1px;
             position: relative;
+        }
+        .phonecheck-iphone-frame.android-size .phonecheck-battery-body {
+            width: 22px;
+            height: 10px;
+            border-radius: 2px;
         }
         .phonecheck-battery-level {
             width: 80%;
@@ -20838,14 +20882,20 @@
         }
         .phonecheck-battery-cap {
             width: 2px;
-            height: 4px;
+            height: 5px;
             background: #000;
             border-radius: 0 1px 1px 0;
+        }
+        .phonecheck-iphone-frame.android-size .phonecheck-battery-cap {
+            height: 4px;
         }
         .phonecheck-signal {
             display: flex;
             align-items: flex-end;
             gap: 1px;
+            height: 12px;
+        }
+        .phonecheck-iphone-frame.android-size .phonecheck-signal {
             height: 11px;
         }
         .phonecheck-signal-bar {
@@ -20856,24 +20906,35 @@
         .phonecheck-signal-bar:nth-child(1) { height: 4px; }
         .phonecheck-signal-bar:nth-child(2) { height: 6px; }
         .phonecheck-signal-bar:nth-child(3) { height: 8px; }
-        .phonecheck-signal-bar:nth-child(4) { height: 10px; }
+        .phonecheck-signal-bar:nth-child(4) { height: 11px; }
+        .phonecheck-iphone-frame.android-size .phonecheck-signal-bar:nth-child(4) { height: 10px; }
         .phonecheck-app-grid {
-            margin-top: 74px;
+            margin-top: 80px;
             display: grid;
             grid-template-columns: repeat(4, 1fr);
+            gap: 20px 18px;
+            padding: 0 20px;
+        }
+        .phonecheck-iphone-frame.android-size .phonecheck-app-grid {
+            margin-top: 74px;
             gap: 18px 16px;
             padding: 0 18px;
         }
         .phonecheck-desktop-widget {
             grid-column: span 4;
-            height: 135px;
-            border-radius: 24px;
+            height: 146px;
+            border-radius: 26px;
             position: relative;
             overflow: hidden;
             background-color: #f4f5f7;
             box-shadow: 0 12px 24px -8px rgba(0,0,0,0.06), inset 0 0 0 1px rgba(0,0,0,0.06);
             cursor: pointer;
             transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+            margin-bottom: 8px;
+        }
+        .phonecheck-iphone-frame.android-size .phonecheck-desktop-widget {
+            height: 135px;
+            border-radius: 24px;
             margin-bottom: 7px;
         }
         .phonecheck-desktop-widget:active {
@@ -20897,6 +20958,9 @@
             display: flex;
             flex-direction: column;
             justify-content: space-between;
+            padding: 18px 20px;
+        }
+        .phonecheck-iphone-frame.android-size .phonecheck-widget-content {
             padding: 16px 18px;
         }
         .phonecheck-app-item {
@@ -20910,9 +20974,9 @@
             transform: scale(0.85);
         }
         .phonecheck-app-icon {
-            width: 54px;
-            height: 54px;
-            border-radius: 17px;
+            width: 58px;
+            height: 58px;
+            border-radius: 18px;
             display: flex;
             justify-content: center;
             align-items: center;
@@ -20920,33 +20984,54 @@
             color: #444;
             box-shadow: 0 10px 24px -4px rgba(0,0,0,0.04), 0 2px 6px rgba(0,0,0,0.02);
         }
+        .phonecheck-iphone-frame.android-size .phonecheck-app-icon {
+            width: 54px;
+            height: 54px;
+            border-radius: 17px;
+        }
         .phonecheck-app-icon svg {
-            width: 21px;
-            height: 21px;
+            width: 22px;
+            height: 22px;
             stroke-width: 1.2;
         }
+        .phonecheck-iphone-frame.android-size .phonecheck-app-icon svg {
+            width: 21px;
+            height: 21px;
+        }
         .phonecheck-app-name {
-            margin-top: 9px;
-            font-size: 9px;
+            margin-top: 10px;
+            font-size: 10px;
             color: #888;
             font-weight: 500;
             letter-spacing: 0.5px;
         }
+        .phonecheck-iphone-frame.android-size .phonecheck-app-name {
+            margin-top: 9px;
+            font-size: 9px;
+        }
         .phonecheck-dock {
             position: absolute;
+            bottom: 24px;
+            left: 18px;
+            right: 18px;
+            height: 84px;
+            background: rgba(255, 255, 255, 0.4);
+            backdrop-filter: blur(25px);
+            -webkit-backdrop-filter: blur(25px);
+            border-radius: 32px;
+            display: flex;
+            justify-content: space-evenly;
+            align-items: center;
+            padding: 0 10px;
+            border: 1px solid rgba(255,255,255,0.8);
+        }
+        .phonecheck-iphone-frame.android-size .phonecheck-dock {
             bottom: 22px;
             left: 16px;
             right: 16px;
             height: 78px;
-            background: rgba(255, 255, 255, 0.4);
-            backdrop-filter: blur(25px);
-            -webkit-backdrop-filter: blur(25px);
             border-radius: 30px;
-            display: flex;
-            justify-content: space-evenly;
-            align-items: center;
             padding: 0 9px;
-            border: 1px solid rgba(255,255,255,0.8);
         }
         .phonecheck-app-window {
             position: absolute;
@@ -20956,7 +21041,7 @@
             height: 100%;
             background-color: #fff;
             z-index: 80;
-            border-radius: 41px;
+            border-radius: 44px;
             transform: translateY(100%) scale(0.95);
             opacity: 0;
             pointer-events: none;
@@ -20964,6 +21049,9 @@
             overflow: hidden;
             display: flex;
             flex-direction: column;
+        }
+        .phonecheck-iphone-frame.android-size .phonecheck-app-window {
+            border-radius: 41px;
         }
         .phonecheck-app-window.active {
             transform: translateY(0) scale(1);
@@ -52044,6 +52132,17 @@ ${chatHistoryText}
 
         function openPhonecheck() {
             initPhonecheck();
+            var wrapper = document.querySelector('.phonecheck-device-wrapper');
+            var frame = document.querySelector('.phonecheck-iphone-frame');
+            if (wrapper && frame) {
+                wrapper.classList.remove('android-size');
+                frame.classList.remove('android-size');
+                var isAndroid = /Android/i.test(navigator.userAgent);
+                if (isAndroid) {
+                    wrapper.classList.add('android-size');
+                    frame.classList.add('android-size');
+                }
+            }
             document.getElementById('phonecheck-overlay').classList.add('show');
         }
 
