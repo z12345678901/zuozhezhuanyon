@@ -1291,7 +1291,7 @@
         }
 
         .dark-mode .unread-dot {
-            background: #0A84FF;
+            background: #8E8E93;
         }
 
         .dark-mode .add-btn-new .contact-avatar-wrapper {
@@ -20275,7 +20275,7 @@
 
         .status-icon svg { width: 14px; height: 14px; stroke: #C0C0C8; stroke-width: 2; fill: none; stroke-linecap: round; stroke-linejoin: round; }
 
-        .unread-dot { width: 6px; height: 6px; background: #2A2A2C; border-radius: 50%; flex-shrink: 0; }
+        .unread-dot { width: 7px; height: 7px; background: #8E8E93; border-radius: 50%; flex-shrink: 0; }
 
         /* 下雪特效样式 */
         .snow-container {
@@ -40225,7 +40225,7 @@ ${conversationHistory.slice(-10).map(msg => {
 
         // 微信应用功能
         let currentChatRole = null;
-        let currentAbortController = null;
+        const abortControllers = {};   // 按角色ID存储AbortController，支持后台请求不被打断
         let isSendingMessages = false;
         let isAutoSummarizing = false;
         let isDataInitialized = false;
@@ -45872,17 +45872,12 @@ ${commenterInfo}
                     const roleMessages = (messages[role.id] || []).filter(msg => msg.context !== 'call');
                     if (roleMessages.length > 0) {
                         const lastMsg = roleMessages[roleMessages.length - 1];
-                        if (lastMsg.role === 'assistant' && !lastMsg.read) {
+                        if (UnreadManager.hasUnreadMessages(role.id)) {
                             const badge = document.createElement('div');
                             badge.className = 'contact-badge';
                             avatarWrapper.appendChild(badge);
                             avatarWrapper.classList.add('has-update');
                         }
-                        roleMessages.forEach(msg => {
-                            if (msg.role === 'assistant' && !msg.read) {
-                                totalUnread++;
-                            }
-                        });
                     }
 
                     const name = document.createElement('span');
@@ -45972,14 +45967,9 @@ ${commenterInfo}
                             }
                         }
                     }
-                    if (lastMessage.role === 'assistant' && !lastMessage.read) {
+                    if (UnreadManager.hasUnreadMessages(role.id)) {
                         hasUnread = true;
                     }
-                    roleMessages.forEach(msg => {
-                        if (msg.role === 'assistant' && !msg.read) {
-                            totalUnread++;
-                        }
-                    });
                 }
 
                 const time = document.createElement('span');
@@ -52238,13 +52228,16 @@ ${chatHistoryText}
             const envelopeIcon = document.getElementById('envelope-icon');
             if (envelopeIcon && envelopeIcon.classList.contains('loading')) return;
 
-            if (currentAbortController) {
-                currentAbortController.abort();
-                currentAbortController = null;
+            const capturedRoleId = currentChatRole.id;
+
+            // 仅取消同一角色的上次请求，不影响其他角色正在后台进行的请求
+            if (abortControllers[capturedRoleId]) {
+                abortControllers[capturedRoleId].abort();
+                delete abortControllers[capturedRoleId];
             }
             isSendingMessages = true;
 
-            const conversationHistory = messages[currentChatRole.id] || [];
+            const conversationHistory = messages[capturedRoleId] || [];
             const lastUserMessage = [...conversationHistory].reverse().find(msg => msg.type === 'sent');
             
             if (!lastUserMessage) {
@@ -52347,7 +52340,7 @@ ${chatHistoryText}
                 };
                 
                 // 步骤3：读取全局世界书以及和角色绑定的世界书
-                const worldbookPrompt = getWorldbookPrompt(currentChatRole.id);
+                const worldbookPrompt = getWorldbookPrompt(capturedRoleId);
                 
                 // 步骤4：读取系统提示词并构建完整提示词
                 let systemPrompt = PromptsConfig.buildFullPrompt(roleInfo, userInfo);
@@ -52387,7 +52380,7 @@ ${chatHistoryText}
                 }
                 
                 const availableEmojis = getAvailableEmojisForAI();
-                const emojiConfig = shouldEnableEmojiForRole(currentChatRole.id);
+                const emojiConfig = shouldEnableEmojiForRole(capturedRoleId);
                 if (availableEmojis.length > 0 && emojiConfig.enabled) {
                     systemPrompt += '\n\n【可用表情包】\n你可以在回复中发送表情包来表达情感。发送表情包的格式：[EMOJI:表情描述]\n\n可用的表情包列表：\n';
                     availableEmojis.forEach((emoji, index) => {
@@ -52414,7 +52407,7 @@ ${chatHistoryText}
                         if (msg.content.type === 'tiktok') {
                             const tiktokType = msg.content.contentType === 'live' ? '直播' : '视频';
                             const tagStr = Array.isArray(msg.content.tag) ? msg.content.tag.join(' ') : (msg.content.tag || '');
-                            const currentRole = roles.find(r => r.id === currentChatRole?.id);
+                            const currentRole = roles.find(r => r.id === capturedRoleId);
                             const roleName = currentRole?.name || '我';
                             const summaryText = msg.content.summary || '无内容概括';
                             return `[分享抖音${tiktokType}] 标题：${msg.content.title || '未知标题'}，作者：${msg.content.author || '未知作者'}，标签：${tagStr}\n内容概括：${summaryText}\n这是${roleName}看完后的感想：${msg.content.thoughts || '无感想'}\n（这是你观看过的视频或直播，用户看到了并分享给你。你可以和用户讨论这个视频或者直播的内容。）\n注意事项：讨论时你需要延续感想中的想法，不能和感想中的想法驴头不对马嘴`;
@@ -52558,10 +52551,10 @@ ${chatHistoryText}
                     }
                 }
 
-                currentAbortController = new AbortController();
+                abortControllers[capturedRoleId] = new AbortController();
                 const timeoutId = setTimeout(() => {
-                    if (currentAbortController) {
-                        currentAbortController.abort(new DOMException('请求超时', 'TimeoutError'));
+                    if (abortControllers[capturedRoleId]) {
+                        abortControllers[capturedRoleId].abort(new DOMException('请求超时', 'TimeoutError'));
                     }
                 }, 60000);
 
@@ -52578,10 +52571,11 @@ ${chatHistoryText}
                         presence_penalty: 0.6,
                         frequency_penalty: 0.5
                     }),
-                    signal: currentAbortController.signal
+                    signal: abortControllers[capturedRoleId].signal
                 });
 
                 clearTimeout(timeoutId);
+                delete abortControllers[capturedRoleId];
 
                 const indicator = document.getElementById('typing-indicator');
                 if (indicator) {
@@ -52591,8 +52585,6 @@ ${chatHistoryText}
                 if (envelopeIcon) {
                     envelopeIcon.classList.remove('loading');
                 }
-
-                currentAbortController = null;
 
                 if (response.ok) {
                     const data = await response.json();
@@ -52654,9 +52646,9 @@ ${chatHistoryText}
                         }
                         
                         if (extractedLocation || extractedMood || extractedThought || extractedAffection !== null) {
-                            console.log('[InsProfile] 准备更新资料:', { roleId: currentChatRole.id, extractedLocation, extractedMood, extractedThought, extractedAffection });
+                            console.log('[InsProfile] 准备更新资料:', { roleId: capturedRoleId, extractedLocation, extractedMood, extractedThought, extractedAffection });
                             InsProfileModule.updateFromAPIResponse(
-                                currentChatRole.id,
+                                capturedRoleId,
                                 extractedLocation,
                                 extractedMood,
                                 extractedThought,
@@ -52677,20 +52669,20 @@ ${chatHistoryText}
                         
                         const finalStatus = extractedStatus || extractedMood;
                         if (finalStatus) {
-                            RoleStatusManager.updateUI(finalStatus, currentChatRole.id);
+                            RoleStatusManager.updateUI(finalStatus, capturedRoleId);
                             console.log('[RoleStatus] 已更新在线状态:', finalStatus);
                         }
                         
-                        await sendMultipleMessages(currentChatRole.id, messageList);
+                        await sendMultipleMessages(capturedRoleId, messageList);
                         isSendingMessages = false;
                     } else if (data.error) {
                         console.error('API返回错误:', data.error);
                         const errorReply = `❌ API错误: ${data.error.message || JSON.stringify(data.error)}`;
-                        addMessage(currentChatRole.id, 'received', errorReply);
+                        addMessage(capturedRoleId, 'received', errorReply);
                         isSendingMessages = false;
                     } else {
                         const unknownReply = '抱歉，收到了无法理解的回复格式。';
-                        addMessage(currentChatRole.id, 'received', unknownReply);
+                        addMessage(capturedRoleId, 'received', unknownReply);
                         isSendingMessages = false;
                     }
                 } else {
@@ -52734,7 +52726,7 @@ ${chatHistoryText}
                         }
                     }
                     
-                    addMessage(currentChatRole.id, 'received', errorMessage);
+                    addMessage(capturedRoleId, 'received', errorMessage);
                 }
             } catch (error) {
                 if (error.name === 'AbortError' || error.name === 'TimeoutError') {
@@ -52749,11 +52741,11 @@ ${chatHistoryText}
                         envelopeIcon.classList.remove('loading');
                     }
 
-                    currentAbortController = null;
+                    delete abortControllers[capturedRoleId];
                     isSendingMessages = false;
                     
                     if (error.name === 'TimeoutError') {
-                        addMessage(currentChatRole.id, 'received', '❌ 请求超时，请稍后重试');
+                        addMessage(capturedRoleId, 'received', '❌ 请求超时，请稍后重试');
                     }
                     return;
                 }
@@ -52770,7 +52762,7 @@ ${chatHistoryText}
                     envelopeIcon.classList.remove('loading');
                 }
 
-                currentAbortController = null;
+                delete abortControllers[capturedRoleId];
                 isSendingMessages = false;
                 
                 let errorMessage = '抱歉，发生了一个错误';
@@ -52785,7 +52777,7 @@ ${chatHistoryText}
                     errorMessage = `❌ 错误: ${error.message}`;
                 }
                 
-                addMessage(currentChatRole.id, 'received', errorMessage);
+                addMessage(capturedRoleId, 'received', errorMessage);
             }
         }
 
