@@ -50607,13 +50607,18 @@ ${songInfo}
             const customSummaryPrompt = localStorage.getItem('customSummaryPrompt') || '';
             let summaryPrompt;
             if (customSummaryPrompt.trim()) {
-                summaryPrompt = customSummaryPrompt
+                let tpl = customSummaryPrompt;
+                // 若自定义提示词未包含 {chatHistory}，自动在末尾追加聊天记录，防止 AI 收不到内容
+                if (!tpl.includes('{chatHistory}')) {
+                    tpl += '\n\n【聊天记录】\n{chatHistory}';
+                }
+                summaryPrompt = tpl
                     .replace(/\{roleName\}/g, roleName)
                     .replace(/\{userName\}/g, userName)
                     .replace(/\{roleDescription\}/g, roleDescription)
                     .replace(/\{dateStr\}/g, dateStr)
                     .replace(/\{chatHistory\}/g, chatHistoryText);
-                console.log('[AutoSummary] 使用自定义提示词');
+                console.log('[AutoSummary] 使用自定义提示词', tpl.includes('{chatHistory}') ? '' : '（已自动追加聊天记录）');
             } else {
                 summaryPrompt = `请根据以下聊天记录，以${roleName}的第一人称视角（使用"我"）来精准直白地总结发生了什么。
 
