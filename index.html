@@ -25236,7 +25236,7 @@
         <div class="announcement-card">
             <div class="announcement-header">
                 <h2 class="announcement-title">本次更新内容</h2>
-                <div class="announcement-date" id="announcement-date">2026年4月10日</div>
+                <div class="announcement-date" id="announcement-date">2026年4月11日</div>
             </div>
             <div class="announcement-body">
                 <div class="announcement-content">
@@ -25245,6 +25245,8 @@
                         <li>📞 打电话功能实装</li>
                         <li>🌿 线下模式实装</li>
                         <li>📦 批量导入表情包实装</li>
+                        <li>🐛 修复自定义总结提示词未含 {chatHistory} 时总结失效的问题</li>
+                        <li>🐛 修复线下模式/打电话模式显示备注名而非角色名的问题</li>
                     </ul>
                 </div>
             </div>
@@ -30927,7 +30929,7 @@ ${role.tags && role.tags.length > 0 ? `- 性格特点：${role.tags.join('、')}
                     
                     // 设置呼叫页面信息
                     if (ringingName && currentChatRole) {
-                        ringingName.textContent = currentChatRole.remark || currentChatRole.name;
+                        ringingName.textContent = currentChatRole.name;
                     }
                     if (ringingAvatar && currentChatRole) {
                         const existingRings = ringingAvatar.querySelectorAll('.call-ringing-ring');
@@ -30961,7 +30963,7 @@ ${role.tags && role.tags.length > 0 ? `- 性格特点：${role.tags.join('、')}
                     
                     // 设置通话页面联系人信息（先准备好）
                     if (callContactName && currentChatRole) {
-                        callContactName.textContent = currentChatRole.remark || currentChatRole.name;
+                        callContactName.textContent = currentChatRole.name;
                     }
                     if (callAvatar && currentChatRole) {
                         if (currentChatRole.avatar) {
@@ -31061,7 +31063,7 @@ ${role.tags && role.tags.length > 0 ? `- 性格特点：${role.tags.join('、')}
                     const userSettings = getUserPersona();
                     const userName = userSettings.name || '用户';
                     const userPersona = userSettings.persona || '';
-                    const roleName = currentChatRole.remark || currentChatRole.name;
+                    const roleName = currentChatRole.name;
 
                     // 构建含用户人设的系统提示
                     let systemContent = currentChatRole.prompt || `你是${roleName}`;
@@ -31989,7 +31991,7 @@ ${contextSummary || '无'}
                 }
                 if (optionsBar) optionsBar.innerHTML = '';
 
-                const roleName = currentChatRole.remark || currentChatRole.name;
+                const roleName = currentChatRole.name;
                 if (nameEl) nameEl.textContent = roleName;
 
                 // 设置场景地点（默认，等AI回复后更新）
@@ -32229,7 +32231,7 @@ ${(() => {
                 const userSettings = getUserPersona();
                 const userName = userSettings.name || '用户';
                 const userPersona = userSettings.persona || '';
-                const roleName = currentChatRole.remark || currentChatRole.name;
+                const roleName = currentChatRole.name;
 
                 const systemPrompt = buildMeetSystemPrompt(currentChatRole, userName, userPersona);
 
@@ -32408,7 +32410,7 @@ ${(() => {
                     const userSettings = getUserPersona();
                     _speakerText = userSettings.name || '我';
                 } else if (type === 'received' && currentChatRole) {
-                    _speakerText = currentChatRole.remark || currentChatRole.name || '';
+                    _speakerText = currentChatRole.name || '';
                 }
                 speakerEl.innerHTML = meetStarSVG() + ' ' + _speakerText + ' ' + meetStarSVG();
                 wrapper.appendChild(speakerEl);
@@ -32655,7 +32657,7 @@ ${(() => {
             function addMeetRecordToChat() {
                 if (!currentChatRole || meetMessages.length === 0) return;
                 const roleId = currentChatRole.id;
-                const roleName = currentChatRole.remark || currentChatRole.name;
+                const roleName = currentChatRole.name;
 
                 // 构建简要摘要
                 const totalRounds = meetMessages.filter(m => m.role === 'assistant').length;
@@ -32936,7 +32938,7 @@ ${(() => {
                 if (chatArea) chatArea.innerHTML = '';
                 if (optionsBar) optionsBar.innerHTML = '';
 
-                const roleName = recordData.roleName || (currentChatRole ? (currentChatRole.remark || currentChatRole.name) : '');
+                const roleName = recordData.roleName || (currentChatRole ? currentChatRole.name : '');
                 if (nameEl) nameEl.textContent = roleName;
                 if (sceneEl) sceneEl.textContent = '回顾';
 
@@ -48136,15 +48138,61 @@ ${commenterInfo}
             });
         }
 
-        function playVoiceMessage(text, duration) {
+        async function playVoiceMessage(text, duration) {
+            // 优先使用 MiniMax TTS（如果已配置）
+            const voiceConfig = window.VoiceSettings && window.VoiceSettings.getVoiceConfig ? window.VoiceSettings.getVoiceConfig() : null;
+            if (voiceConfig) {
+                // 找到被点击的气泡，显示 loading 状态
+                const allWaveforms = document.querySelectorAll('.voice-waveform');
+                let clickedWaveform = null;
+                for (const wf of allWaveforms) {
+                    const onclickStr = wf.getAttribute('onclick') || '';
+                    if (onclickStr.includes(JSON.stringify(text).slice(1, -1))) {
+                        clickedWaveform = wf;
+                        break;
+                    }
+                }
+                if (clickedWaveform) {
+                    if (clickedWaveform.dataset.playing === '1') return; // 防止重复点击
+                    clickedWaveform.dataset.playing = '1';
+                    clickedWaveform.style.opacity = '0.5';
+                }
+                try {
+                    const blobUrl = await window.VoiceSettings.synthesizeSpeech(text);
+                    if (blobUrl) {
+                        const audio = new Audio(blobUrl);
+                        audio.onended = function() {
+                            URL.revokeObjectURL(blobUrl);
+                            if (clickedWaveform) {
+                                clickedWaveform.dataset.playing = '';
+                                clickedWaveform.style.opacity = '1';
+                            }
+                        };
+                        audio.onerror = function() {
+                            URL.revokeObjectURL(blobUrl);
+                            if (clickedWaveform) {
+                                clickedWaveform.dataset.playing = '';
+                                clickedWaveform.style.opacity = '1';
+                            }
+                        };
+                        await audio.play();
+                        return;
+                    }
+                } catch (err) {
+                    console.warn('MiniMax TTS 失败，降级到系统 TTS:', err);
+                    if (clickedWaveform) {
+                        clickedWaveform.dataset.playing = '';
+                        clickedWaveform.style.opacity = '1';
+                    }
+                }
+            }
+            // 降级：使用浏览器内置 speechSynthesis
             if ('speechSynthesis' in window) {
                 window.speechSynthesis.cancel();
-                
                 const utterance = new SpeechSynthesisUtterance(text);
                 utterance.lang = 'zh-CN';
                 utterance.rate = 1;
                 utterance.pitch = 1;
-                
                 window.speechSynthesis.speak(utterance);
             } else {
                 alert(`语音消息内容: ${text}\n时长: ${duration}秒`);
@@ -58902,6 +58950,16 @@ ${conversationContext.slice(-10).map(m => {
                 return btoa(binary);
             }
 
+            // hex 字符串直接转为 Blob URL，移动端兼容性更好
+            function hexToBlobUrl(hexString) {
+                const bytes = new Uint8Array(hexString.length / 2);
+                for (let i = 0; i < hexString.length; i += 2) {
+                    bytes[i / 2] = parseInt(hexString.substr(i, 2), 16);
+                }
+                const blob = new Blob([bytes], { type: 'audio/mpeg' });
+                return URL.createObjectURL(blob);
+            }
+
             function saveMinimaxVoiceConfig() {
                 const proxyUrl = 'https://aged-water-5916.2936719012.workers.dev';
                 const apiKey = document.getElementById('minimax-api-key').value.trim();
@@ -59031,13 +59089,24 @@ ${conversationContext.slice(-10).map(m => {
                         throw new Error('响应中没有音频数据');
                     }
 
-                    const base64Audio = hexToBase64(hexAudio);
+                    const blobUrl = hexToBlobUrl(hexAudio);
                     const audio = document.getElementById('voice-audio');
-                    
+
                     if (audio) {
-                        audio.src = `data:audio/mp3;base64,${base64Audio}`;
-                        audio.play();
-                        showVoiceStatus('✅ 语音生成成功，正在播放...', false);
+                        // 释放上一次播放的 Blob URL
+                        if (audio._prevBlobUrl) {
+                            URL.revokeObjectURL(audio._prevBlobUrl);
+                            audio._prevBlobUrl = null;
+                        }
+                        audio._prevBlobUrl = blobUrl;
+                        audio.src = blobUrl;
+                        audio.load();
+                        audio.play().then(() => {
+                            showVoiceStatus('✅ 语音生成成功，正在播放...', false);
+                        }).catch(err => {
+                            console.error('播放失败:', err);
+                            showVoiceStatus('⚠️ 语音已生成，但播放被阅览器拦截（请尝试在页面有互动后再试）', true);
+                        });
                     }
                 } catch (error) {
                     console.error('测试语音失败:', error);
@@ -59096,8 +59165,8 @@ ${conversationContext.slice(-10).map(m => {
                         throw new Error('响应中没有音频数据');
                     }
 
-                    const base64Audio = hexToBase64(hexAudio);
-                    return `data:audio/mp3;base64,${base64Audio}`;
+                    // 返回 Blob URL，移动端兼容性优于 data URI
+                    return hexToBlobUrl(hexAudio);
                 } catch (error) {
                     console.error('语音合成失败:', error);
                     throw error;
