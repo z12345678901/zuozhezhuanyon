@@ -21941,7 +21941,7 @@
             border-radius: 14px;
             box-shadow: 0 8px 32px rgba(232, 149, 177, 0.18), 0 2px 8px rgba(0, 0, 0, 0.06);
             border: 1px solid var(--td-border, #F7E6EB);
-            z-index: 10000;
+            z-index: 10100;
             overflow: hidden;
             display: flex;
             flex-direction: row;
@@ -26815,15 +26815,14 @@
         <div class="announcement-card">
             <div class="announcement-header">
                 <h2 class="announcement-title">本次更新内容</h2>
-                <div class="announcement-date" id="announcement-date">2026年4月14日</div>
+                <div class="announcement-date" id="announcement-date">2026年4月15日</div>
             </div>
             <div class="announcement-body">
                 <div class="announcement-content">
                     <ul>
-                        <li>💬 离开聊天页面不会终止请求回复</li>
-                        <li>🐛 修复聊天界面未读消息提示</li>
-                        <li>🏪 增加探店功能</li>
-                        <li>📦 增加线下和探店的存档功能</li>
+                        <li>🏪 修复了探店无法更换图标的问题</li>
+                        <li>✨ 探店增加了回溯和删除功能</li>
+                        <li>🐛 修复了字体导入后丢失的问题</li>
                     </ul>
                 </div>
             </div>
@@ -27216,9 +27215,11 @@
                         </div>
                         <div class="app-icon" data-app="探店">
                             <div class="icon-container">
-                                <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
-                                    <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
-                                    <circle cx="12" cy="10" r="3"/>
+                                <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M3 9l2-5h14l2 5"/>
+                                    <path d="M3 9h18"/>
+                                    <path d="M5 9v11h14V9"/>
+                                    <path d="M9 20v-6h6v6"/>
                                 </svg>
                             </div>
                             <div class="app-name">探店</div>
@@ -31455,6 +31456,15 @@
                             <input type="text" id="persona-edit-name" placeholder="此预设中你的称呼">
                         </div>
                         <div class="form-group">
+                            <label>人设头像:</label>
+                            <div class="character-avatar-upload" style="margin-bottom: 0;">
+                                <div class="character-avatar-preview" id="persona-avatar-preview" onclick="document.getElementById('persona-avatar-input').click()">
+                                    <span class="upload-hint"><i class="fas fa-image"></i> 导入头像</span>
+                                </div>
+                                <input type="file" id="persona-avatar-input" accept="image/*" style="display: none;" onchange="handlePersonaAvatarUpload(event)">
+                            </div>
+                        </div>
+                        <div class="form-group">
                             <label>人物设定:</label>
                             <textarea id="persona-edit-persona" placeholder="描述你的人物设定，例如：性格、背景、与角色的关系等。AI会根据这个设定来与你互动。" rows="5"></textarea>
                         </div>
@@ -34222,7 +34232,7 @@ ${(() => {
                 avatarImg.className = 'meet-bubble-avatar';
                 avatarImg.alt = '';
                 if (type === 'sent') {
-                    getImageData('userAvatar').then(src => { if (src) avatarImg.src = src; else avatarImg.style.display = 'none'; }).catch(() => avatarImg.style.display = 'none');
+                    getActiveUserAvatar(currentChatRole ? currentChatRole.id : null).then(src => { if (src) avatarImg.src = src; else avatarImg.style.display = 'none'; }).catch(() => avatarImg.style.display = 'none');
                 } else if (type === 'received' && currentChatRole && currentChatRole.avatar) {
                     avatarImg.src = currentChatRole.avatar;
                 } else {
@@ -34368,7 +34378,7 @@ ${(() => {
                         avatarImg.className = 'meet-bubble-avatar';
                         avatarImg.alt = '';
                         if (type === 'sent') {
-                            getImageData('userAvatar').then(src => { if (src) avatarImg.src = src; else avatarImg.style.display = 'none'; }).catch(() => avatarImg.style.display = 'none');
+                            getActiveUserAvatar(currentChatRole ? currentChatRole.id : null).then(src => { if (src) avatarImg.src = src; else avatarImg.style.display = 'none'; }).catch(() => avatarImg.style.display = 'none');
                         } else if (currentChatRole && currentChatRole.avatar) {
                             avatarImg.src = currentChatRole.avatar;
                         } else {
@@ -36763,7 +36773,7 @@ ${(() => {
             { id: 'worldbook', name: '世界书', svg: '<img src="" alt="世界书">' },
             { id: 'netease', name: '网易云', svg: '<img src="" alt="网易云">' },
             { id: 'phonecheck', name: '查手机', svg: '<img src="" alt="查手机">' },
-            { id: 'placeholder', name: '占位', svg: '<img src="" alt="占位">' },
+            { id: '探店', name: '探店', svg: '<img src="" alt="探店">' },
             { id: 'forum', name: '微博', svg: '<img src="" alt="微博">' },
             { id: 'waimai', name: '外卖', svg: '<img src="" alt="外卖">' },
             { id: 'diary', name: '日记', svg: '<img src="" alt="日记">' },
@@ -50144,7 +50154,7 @@ ${commenterInfo}
             const role = roles.find(r => r.id === roleId);
             const roleAvatar = role ? role.avatar : '';
             const roleName = role ? role.name : '';
-            const userAvatar = await getImageData('userAvatar') || '';
+            const userAvatar = await getActiveUserAvatar(roleId) || '';
             
             const totalMessages = roleMessages.length;
             const startIndex = Math.max(0, totalMessages - visibleMessageCount);
@@ -50222,7 +50232,7 @@ ${commenterInfo}
             }
             
             if (!savedRightImg) {
-                const savedUserAvatar = await getImageData('userAvatar');
+                const savedUserAvatar = await getActiveUserAvatar(currentChatRole ? currentChatRole.id : null);
                 if (savedUserAvatar && userAvatarImg) {
                     userAvatarImg.src = savedUserAvatar;
                 }
@@ -50301,7 +50311,7 @@ ${commenterInfo}
                 roleAvatarImg.src = currentChatRole.avatar;
             }
             
-            getImageData('userAvatar').then(savedUserAvatar => {
+            getActiveUserAvatar(currentChatRole ? currentChatRole.id : null).then(savedUserAvatar => {
                 if (savedUserAvatar && userAvatarImg) {
                     userAvatarImg.src = savedUserAvatar;
                 }
@@ -54022,7 +54032,7 @@ ${chatHistoryText}
             const role = roles.find(r => r.id === roleId);
             const roleAvatar = role ? role.avatar : '';
             const roleName = role ? role.name : '';
-            const userAvatar = await getImageData('userAvatar') || '';
+            const userAvatar = await getActiveUserAvatar(roleId) || '';
             
             if (roleMessages.length === 0) {
                 chatMessages.innerHTML = '';
@@ -54110,7 +54120,7 @@ ${chatHistoryText}
             const role = roles.find(r => r.id === roleId);
             const roleAvatar = role ? role.avatar : '';
             const roleName = role ? role.name : '';
-            const userAvatar = await getImageData('userAvatar') || '';
+            const userAvatar = await getActiveUserAvatar(roleId) || '';
             
             const startIndex = Math.max(0, totalMessages - visibleMessageCount);
             const messagesToShow = roleMessages.slice(startIndex);
@@ -54780,7 +54790,7 @@ ${chatHistoryText}
                 const role = roles.find(r => r.id === roleId);
                 const roleAvatar = role ? role.avatar : '';
                 const roleName = role ? role.name : '';
-                const userAvatar = await getImageData('userAvatar') || '';
+                const userAvatar = await getActiveUserAvatar(roleId) || '';
                 
                 if (type === 'received') {
                     const unclaimedUserTransfer = messages[roleId].find(msg => 
@@ -57023,6 +57033,7 @@ ${chatHistoryText}
 
         // ==================== 人物设定预设系统 ====================
         let editingPresetId = null; // 当前正在编辑的预设 ID
+        let tempPersonaAvatar = '';
 
         // 加载所有预设
         function loadPersonaPresets() {
@@ -57052,6 +57063,38 @@ ${chatHistoryText}
             localStorage.setItem('rolePersonaBindings', JSON.stringify(bindings));
         }
 
+        function updatePersonaAvatarPreview(imageData) {
+            const preview = document.getElementById('persona-avatar-preview');
+            if (!preview) return;
+
+            tempPersonaAvatar = imageData || '';
+
+            if (tempPersonaAvatar) {
+                preview.classList.add('has-image');
+                preview.innerHTML = `<img src="${tempPersonaAvatar}" alt="人设头像"><span class="upload-hint">更换头像</span>`;
+            } else {
+                preview.classList.remove('has-image');
+                preview.innerHTML = `
+                    <div style="display:flex;align-items:center;justify-content:center;width:100%;height:100%;font-size:30px;color:#8E8E93;">
+                        <i class="fas fa-user"></i>
+                    </div>
+                    <span class="upload-hint">导入头像</span>
+                `;
+            }
+        }
+
+        function handlePersonaAvatarUpload(event) {
+            const file = event.target.files && event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                updatePersonaAvatarPreview(e.target.result);
+            };
+            reader.readAsDataURL(file);
+            event.target.value = '';
+        }
+
         // 迁移旧数据：首次打开时将旧的单一人物设定迁移为第一个预设
         function migrateOldPersonaData() {
             const presets = loadPersonaPresets();
@@ -57065,6 +57108,7 @@ ${chatHistoryText}
                     label: '默认设定',
                     userName: oldName || '用户',
                     persona: oldPersona || '',
+                    avatar: '',
                     isDefault: true,
                     createdAt: Date.now()
                 };
@@ -57143,6 +57187,7 @@ ${chatHistoryText}
             const labelInput = document.getElementById('persona-edit-label');
             const nameInput = document.getElementById('persona-edit-name');
             const personaInput = document.getElementById('persona-edit-persona');
+            const avatarInput = document.getElementById('persona-avatar-input');
 
             if (presetId) {
                 const presets = loadPersonaPresets();
@@ -57151,13 +57196,17 @@ ${chatHistoryText}
                     labelInput.value = preset.label || '';
                     nameInput.value = preset.userName || '';
                     personaInput.value = preset.persona || '';
+                    tempPersonaAvatar = preset.avatar || '';
                 }
             } else {
                 labelInput.value = '';
                 nameInput.value = '';
                 personaInput.value = '';
+                tempPersonaAvatar = '';
             }
 
+            if (avatarInput) avatarInput.value = '';
+            updatePersonaAvatarPreview(tempPersonaAvatar);
             renderBindRoleChips(presetId);
         }
 
@@ -57233,6 +57282,7 @@ ${chatHistoryText}
                     presets[idx].label = label;
                     presets[idx].userName = userName;
                     presets[idx].persona = persona;
+                    presets[idx].avatar = tempPersonaAvatar || '';
                 }
             } else {
                 // 新建模式
@@ -57241,6 +57291,7 @@ ${chatHistoryText}
                     label,
                     userName,
                     persona,
+                    avatar: tempPersonaAvatar || '',
                     isDefault: presets.length === 0, // 第一个自动设为默认
                     createdAt: Date.now()
                 };
@@ -57280,6 +57331,9 @@ ${chatHistoryText}
 
             hidePersonaEditForm();
             renderPersonaPresetList();
+            if (currentChatRole && typeof forceReloadChatMessages === 'function') {
+                forceReloadChatMessages(currentChatRole.id);
+            }
         }
 
         // 设为默认预设
@@ -57296,6 +57350,9 @@ ${chatHistoryText}
             }
 
             renderPersonaPresetList();
+            if (currentChatRole && typeof forceReloadChatMessages === 'function') {
+                forceReloadChatMessages(currentChatRole.id);
+            }
         }
 
         // 编辑预设
@@ -57336,6 +57393,9 @@ ${chatHistoryText}
             }
 
             renderPersonaPresetList();
+            if (currentChatRole && typeof forceReloadChatMessages === 'function') {
+                forceReloadChatMessages(currentChatRole.id);
+            }
         }
 
         // 获取用户人物设定（核心函数 - 支持角色绑定）
@@ -57347,7 +57407,7 @@ ${chatHistoryText}
                 // 无预设，回退到旧数据
                 const name = localStorage.getItem('userName') || '用户';
                 const persona = localStorage.getItem('userPersona') || '';
-                return { name, persona };
+                return { name, persona, avatar: '' };
             }
 
             // 如果有指定角色，查找绑定的预设
@@ -57357,7 +57417,11 @@ ${chatHistoryText}
                 if (boundPresetId) {
                     const boundPreset = presets.find(p => p.id === boundPresetId);
                     if (boundPreset) {
-                        return { name: boundPreset.userName || '用户', persona: boundPreset.persona || '' };
+                        return {
+                            name: boundPreset.userName || '用户',
+                            persona: boundPreset.persona || '',
+                            avatar: boundPreset.avatar || ''
+                        };
                     }
                 }
             }
@@ -57366,8 +57430,21 @@ ${chatHistoryText}
             const defaultPreset = presets.find(p => p.isDefault) || presets[0];
             return {
                 name: defaultPreset.userName || '用户',
-                persona: defaultPreset.persona || ''
+                persona: defaultPreset.persona || '',
+                avatar: defaultPreset.avatar || ''
             };
+        }
+
+        async function getActiveUserAvatar(roleId) {
+            const userSettings = getUserPersona(roleId);
+            if (userSettings && userSettings.avatar) {
+                return userSettings.avatar;
+            }
+            try {
+                return await getImageData('userAvatar') || '';
+            } catch (e) {
+                return '';
+            }
         }
 
         // ==================== 角色设定页面功能 ====================
@@ -61200,60 +61277,175 @@ ${conversationContext.slice(-10).map(m => {
         const FontManagementModule = (function() {
             const STORAGE_KEY = 'custom_fonts';
             const DEFAULT_FONT_KEY = 'default_font';
+            const IDB_NAME = 'FontStorageDB';
+            const IDB_VERSION = 1;
+            const IDB_STORE = 'fontData';
             let fonts = [];
+            let fontDB = null;
 
+            // ---- IndexedDB 字体存储层 ----
+            function openFontDB() {
+                return new Promise((resolve, reject) => {
+                    if (fontDB) { resolve(fontDB); return; }
+                    const req = indexedDB.open(IDB_NAME, IDB_VERSION);
+                    req.onupgradeneeded = function(e) {
+                        const db = e.target.result;
+                        if (!db.objectStoreNames.contains(IDB_STORE)) {
+                            db.createObjectStore(IDB_STORE, { keyPath: 'id' });
+                        }
+                    };
+                    req.onsuccess = function(e) {
+                        fontDB = e.target.result;
+                        resolve(fontDB);
+                    };
+                    req.onerror = function(e) {
+                        console.error('FontDB open error:', e);
+                        reject(e);
+                    };
+                });
+            }
+
+            function saveFontDataToIDB(id, arrayBuffer) {
+                return openFontDB().then(db => {
+                    return new Promise((resolve, reject) => {
+                        const tx = db.transaction(IDB_STORE, 'readwrite');
+                        const store = tx.objectStore(IDB_STORE);
+                        store.put({ id: id, data: arrayBuffer });
+                        tx.oncomplete = () => resolve();
+                        tx.onerror = (e) => reject(e);
+                    });
+                });
+            }
+
+            function getFontDataFromIDB(id) {
+                return openFontDB().then(db => {
+                    return new Promise((resolve, reject) => {
+                        const tx = db.transaction(IDB_STORE, 'readonly');
+                        const store = tx.objectStore(IDB_STORE);
+                        const req = store.get(id);
+                        req.onsuccess = () => resolve(req.result ? req.result.data : null);
+                        req.onerror = (e) => reject(e);
+                    });
+                });
+            }
+
+            function deleteFontDataFromIDB(id) {
+                return openFontDB().then(db => {
+                    return new Promise((resolve, reject) => {
+                        const tx = db.transaction(IDB_STORE, 'readwrite');
+                        const store = tx.objectStore(IDB_STORE);
+                        store.delete(id);
+                        tx.oncomplete = () => resolve();
+                        tx.onerror = (e) => reject(e);
+                    });
+                });
+            }
+
+            // ---- 旧数据迁移：将 localStorage 中的 Base64 字体数据迁移到 IndexedDB ----
+            function migrateOldFontData() {
+                const needMigration = fonts.filter(f => f.type === 'local' && f.data);
+                if (needMigration.length === 0) return Promise.resolve();
+                console.log('正在迁移旧字体数据到 IndexedDB...', needMigration.length, '个字体');
+                const promises = needMigration.map(font => {
+                    const arrayBuffer = base64ToArrayBuffer(font.data);
+                    return saveFontDataToIDB(font.id, arrayBuffer).then(() => {
+                        delete font.data; // 删除 Base64 数据
+                    });
+                });
+                return Promise.all(promises).then(() => {
+                    saveFontsMeta();
+                    console.log('字体数据迁移完成');
+                }).catch(err => {
+                    console.error('字体数据迁移失败:', err);
+                });
+            }
+
+            // ---- 初始化与加载 ----
             function init() {
-                loadFonts();
-                initDragDrop();
-                initFontPreview();
-                updateFontList();
-                updateFontSelect();
+                loadFonts().then(() => {
+                    initDragDrop();
+                    initFontPreview();
+                    updateFontList();
+                    updateFontSelect();
+                });
             }
 
             function loadFonts() {
                 try {
                     const saved = localStorage.getItem(STORAGE_KEY);
                     fonts = saved ? JSON.parse(saved) : [];
+                } catch (e) {
+                    console.error('Load fonts meta error:', e);
+                    fonts = [];
+                }
+
+                // 先迁移旧数据（如果有 Base64 data 字段），再加载字体
+                return migrateOldFontData().then(() => {
                     const invalidFonts = [];
                     const loadPromises = [];
-                    
+
                     fonts.forEach((font, index) => {
-                        if (font.type === 'local' && font.data) {
-                            const loadPromise = loadFontFace(font);
-                            loadPromise.catch(() => {
+                        if (font.type === 'local') {
+                            const loadPromise = loadFontFromIDB(font).catch(() => {
                                 invalidFonts.push(index);
                             });
                             loadPromises.push(loadPromise);
                         } else if (font.type === 'url' && font.url) {
-                            const loadPromise = loadFontFaceFromUrl(font);
-                            loadPromise.catch(() => {
+                            const loadPromise = loadFontFaceFromUrl(font).catch(() => {
                                 invalidFonts.push(index);
                             });
                             loadPromises.push(loadPromise);
                         }
                     });
-                    
-                    Promise.allSettled(loadPromises).then(() => {
+
+                    return Promise.allSettled(loadPromises).then(() => {
                         if (invalidFonts.length > 0) {
+                            invalidFonts.forEach(idx => {
+                                const f = fonts[idx];
+                                if (f) deleteFontDataFromIDB(f.id).catch(() => {});
+                            });
                             fonts = fonts.filter((_, index) => !invalidFonts.includes(index));
-                            saveFonts();
+                            saveFontsMeta();
                             console.log('已自动清除无效的旧字体数据');
                         }
                         applySavedDefaultFont();
                     });
+                });
+            }
+
+            // 只保存元数据到 localStorage（不含字体二进制数据）
+            function saveFontsMeta() {
+                try {
+                    const metaOnly = fonts.map(f => {
+                        const { data, ...meta } = f;
+                        return meta;
+                    });
+                    localStorage.setItem(STORAGE_KEY, JSON.stringify(metaOnly));
                 } catch (e) {
-                    console.error('Load fonts error:', e);
-                    fonts = [];
+                    console.error('Save fonts meta error:', e);
+                    showStatus('字体元数据保存失败', 'error');
                 }
             }
 
+            // 兼容旧调用
             function saveFonts() {
-                try {
-                    localStorage.setItem(STORAGE_KEY, JSON.stringify(fonts));
-                } catch (e) {
-                    console.error('Save fonts error:', e);
-                    showStatus('存储空间不足，请删除部分字体后重试', 'error');
-                }
+                saveFontsMeta();
+            }
+
+            // 从 IndexedDB 加载字体二进制数据并注册
+            function loadFontFromIDB(font) {
+                return getFontDataFromIDB(font.id).then(arrayBuffer => {
+                    if (!arrayBuffer) {
+                        console.warn('IndexedDB 中找不到字体数据:', font.family);
+                        return Promise.reject('No font data in IDB');
+                    }
+                    const fontFace = new FontFace(font.family, arrayBuffer);
+                    return fontFace.load().then(loadedFace => {
+                        document.fonts.add(loadedFace);
+                        console.log('Font loaded from IDB:', font.family);
+                        return loadedFace;
+                    });
+                });
             }
 
             function loadFontFace(font) {
@@ -61369,24 +61561,32 @@ ${conversationContext.slice(-10).map(m => {
                                 type: 'local',
                                 format: ext.replace('.', ''),
                                 size: file.size,
-                                data: arrayBufferToBase64(fontData),
                                 addedAt: new Date().toISOString()
                             };
 
                             const exists = fonts.find(f => f.family === fontName);
                             if (exists) {
+                                // 清除旧的 IDB 数据
+                                deleteFontDataFromIDB(exists.id).catch(() => {});
                                 fonts = fonts.filter(f => f.family !== fontName);
                             }
 
                             fonts.push(fontInfo);
-                            saveFonts();
-                            updateFontList();
-                            updateFontSelect();
 
-                            processed++;
-                            if (processed === total) {
-                                showStatus(`成功导入 ${processed} 个字体`, 'success');
-                            }
+                            // 字体二进制数据存入 IndexedDB
+                            saveFontDataToIDB(fontInfo.id, fontData).then(() => {
+                                saveFontsMeta();
+                                updateFontList();
+                                updateFontSelect();
+
+                                processed++;
+                                if (processed === total) {
+                                    showStatus(`成功导入 ${processed} 个字体`, 'success');
+                                }
+                            }).catch(err => {
+                                console.error('Font IDB save error:', err);
+                                showStatus(`字体存储失败: ${file.name}`, 'error');
+                            });
                         }).catch(err => {
                             console.error('Font load error:', err);
                             showStatus(`字体加载失败: ${file.name}`, 'error');
@@ -61438,7 +61638,7 @@ ${conversationContext.slice(-10).map(m => {
                     }
 
                     fonts.push(fontInfo);
-                    saveFonts();
+                    saveFontsMeta();
                     updateFontList();
                     updateFontSelect();
 
@@ -61687,8 +61887,13 @@ ${conversationContext.slice(-10).map(m => {
                 if (!font) return;
 
                 if (confirm(`确定要删除字体 "${font.name}" 吗？`)) {
+                    // 从 IndexedDB 中删除字体二进制数据
+                    if (font.type === 'local') {
+                        deleteFontDataFromIDB(font.id).catch(() => {});
+                    }
+
                     fonts = fonts.filter(f => f.id !== fontId);
-                    saveFonts();
+                    saveFontsMeta();
                     updateFontList();
                     updateFontSelect();
 
@@ -69691,6 +69896,33 @@ ${chatHistoryText}
         let tandanDetailAffection = 0;
         let isTandanDetailReviewMode = false;
 
+        // 事件委托：探店详情页消息和叙事旁白的点击菜单
+        function tandanBindStoryClickMenu() {
+            var storyEl = document.getElementById('tandan-detail-story');
+            if (!storyEl || storyEl._tandanMenuBound) return;
+            storyEl._tandanMenuBound = true;
+            storyEl.addEventListener('click', function(e) {
+                if (isTandanDetailLoading || isTandanDetailReviewMode) return;
+                if (e.target.closest('.tandan-context-menu')) return;
+
+                // 查找点击的消息或叙事旁白
+                var narration = e.target.closest('.tandan-detail-narration');
+                var bubble = e.target.closest('.tandan-detail-bubble');
+                var wrapper = e.target.closest('.tandan-detail-msg-wrapper');
+
+                if (narration && !wrapper) {
+                    // 点击的是独立叙事旁白（在 wrapper 外部）
+                    var rect = narration.getBoundingClientRect();
+                    showTandanContextMenu(narration, rect, narration);
+                } else if (wrapper && (narration || bubble)) {
+                    // 点击的是 wrapper 内部的 bubble 或 narration
+                    var clickedBlock = narration || bubble;
+                    var rect = clickedBlock.getBoundingClientRect();
+                    showTandanContextMenu(wrapper, rect, clickedBlock);
+                }
+            });
+        }
+
         function tandanOpenShopDetail(index) {
             const shop = tandanCurrentShops[index];
             if (!shop) return;
@@ -69738,6 +69970,9 @@ ${chatHistoryText}
 
             // 显示
             document.getElementById('tandan-detail-overlay').classList.add('active');
+
+            // 绑定点击菜单事件委托
+            tandanBindStoryClickMenu();
 
             // 触发 AI 第一条回复
             fetchTandanDetailReply('__TANDAN_OPEN__');
@@ -69956,6 +70191,59 @@ ${chatHistoryText}
         function tandanRewindFrom(wrapper, targetBlock) {
             var chatArea = document.getElementById('tandan-detail-story');
             if (!chatArea) return;
+
+            // 处理叙事旁白元素（直接是 chatArea 子级，不是 msg-wrapper）
+            if (wrapper.classList.contains('tandan-detail-narration')) {
+                var narrationEl = wrapper;
+                var tdIdx = parseInt(narrationEl.dataset.tdIdx);
+                if (isNaN(tdIdx)) return;
+                if (!narrationEl.nextElementSibling) {
+                    if (typeof showSwipeToast === 'function') showSwipeToast('这已经是最后一条消息了');
+                    return;
+                }
+                // 删除叙事后面的所有元素（保留此叙事本身）
+                var next = narrationEl.nextElementSibling;
+                while (next) {
+                    var toRemove = next;
+                    next = next.nextElementSibling;
+                    toRemove.remove();
+                }
+                tandanDetailMessages = tandanDetailMessages.slice(0, tdIdx + 1);
+                // 重建消息内容：合并所有同一 tdIdx 的剩余 wrapper 和 narration
+                if (tdIdx < tandanDetailMessages.length) {
+                    var allParts = [];
+                    var allElements = chatArea.children;
+                    for (var ei = 0; ei < allElements.length; ei++) {
+                        var el = allElements[ei];
+                        if (parseInt(el.dataset.tdIdx) !== tdIdx) continue;
+                        if (el.classList.contains('tandan-detail-msg-wrapper')) {
+                            allParts.push(reconstructTandanContent(el));
+                        } else if (el.classList.contains('tandan-detail-narration')) {
+                            var nt2 = el.querySelector('.narrative-text');
+                            allParts.push('（' + (nt2 ? nt2.textContent : el.textContent) + '）');
+                        }
+                    }
+                    tandanDetailMessages[tdIdx].content = allParts.join('');
+                }
+                var optionsBar = document.getElementById('tandan-options-bar');
+                if (optionsBar) optionsBar.innerHTML = '';
+                var rounds = tandanDetailMessages.filter(function(m) { return m.role === 'assistant'; }).length;
+                if (rounds <= 1) tandanDetailAffection = 1;
+                else if (rounds <= 2) tandanDetailAffection = 2;
+                else if (rounds <= 4) tandanDetailAffection = 3;
+                else if (rounds <= 6) tandanDetailAffection = 4;
+                else tandanDetailAffection = 5;
+                updateTandanAffection();
+                tandanDetailCount = chatArea.querySelectorAll('.tandan-detail-chapter').length;
+                var lastAssistant = null;
+                for (var j = tandanDetailMessages.length - 1; j >= 0; j--) {
+                    if (tandanDetailMessages[j].role === 'assistant') { lastAssistant = tandanDetailMessages[j]; break; }
+                }
+                if (lastAssistant) parseTandanDetailOptions(lastAssistant.content);
+                if (typeof showSwipeToast === 'function') showSwipeToast('已回溯');
+                return;
+            }
+
             var tdIdx = parseInt(wrapper.dataset.tdIdx);
             if (isNaN(tdIdx)) return;
             var hasContentAfter = false;
@@ -69979,9 +70267,6 @@ ${chatHistoryText}
                     if (children[i].classList.contains('tandan-detail-narration') || children[i].classList.contains('tandan-detail-bubble')) deletedCount++;
                     children[i].remove();
                 }
-                if (tdIdx < tandanDetailMessages.length) {
-                    tandanDetailMessages[tdIdx].content = reconstructTandanContent(wrapper);
-                }
             }
             var next = wrapper.nextElementSibling;
             while (next) {
@@ -69992,6 +70277,22 @@ ${chatHistoryText}
                 toRemove.remove();
             }
             tandanDetailMessages = tandanDetailMessages.slice(0, tdIdx + 1);
+            // 重建消息内容：合并所有同一 tdIdx 的 wrapper 和 narration
+            if (tdIdx < tandanDetailMessages.length) {
+                var allParts = [];
+                var allElements = chatArea.children;
+                for (var ei = 0; ei < allElements.length; ei++) {
+                    var el = allElements[ei];
+                    if (parseInt(el.dataset.tdIdx) !== tdIdx) continue;
+                    if (el.classList.contains('tandan-detail-msg-wrapper')) {
+                        allParts.push(reconstructTandanContent(el));
+                    } else if (el.classList.contains('tandan-detail-narration')) {
+                        var nt = el.querySelector('.narrative-text');
+                        allParts.push('（' + (nt ? nt.textContent : el.textContent) + '）');
+                    }
+                }
+                tandanDetailMessages[tdIdx].content = allParts.join('');
+            }
             var optionsBar = document.getElementById('tandan-options-bar');
             if (optionsBar) optionsBar.innerHTML = '';
             var rounds = tandanDetailMessages.filter(function(m) { return m.role === 'assistant'; }).length;
@@ -70013,6 +70314,72 @@ ${chatHistoryText}
         function tandanDeleteBlock(wrapper, targetBlock) {
             var chatArea = document.getElementById('tandan-detail-story');
             if (!chatArea) return;
+
+            // 辅助：合并所有同一 tdIdx 的剩余内容
+            function rebuildMessageContent(idx) {
+                if (idx >= tandanDetailMessages.length) return;
+                var allParts = [];
+                var allElements = chatArea.children;
+                for (var ei = 0; ei < allElements.length; ei++) {
+                    var el = allElements[ei];
+                    if (parseInt(el.dataset.tdIdx) !== idx) continue;
+                    if (el.classList.contains('tandan-detail-msg-wrapper')) {
+                        allParts.push(reconstructTandanContent(el));
+                    } else if (el.classList.contains('tandan-detail-narration')) {
+                        var nt = el.querySelector('.narrative-text');
+                        allParts.push('（' + (nt ? nt.textContent : el.textContent) + '）');
+                    }
+                }
+                tandanDetailMessages[idx].content = allParts.join('');
+            }
+
+            // 辅助：重置所有 tdIdx（包括 wrapper 和 narration）
+            function rebaseAllIndices() {
+                // 重新分配索引：按消息顺序找到每个消息的第一个元素
+                var currentIdx = -1;
+                var seenIdx = {};
+                var allElements = chatArea.children;
+                for (var ei = 0; ei < allElements.length; ei++) {
+                    var el = allElements[ei];
+                    if (!el.dataset || el.dataset.tdIdx === undefined) continue;
+                    var oldIdx = el.dataset.tdIdx;
+                    if (!(oldIdx in seenIdx)) {
+                        currentIdx++;
+                        seenIdx[oldIdx] = String(currentIdx);
+                    }
+                    el.dataset.tdIdx = seenIdx[oldIdx];
+                }
+            }
+
+            // 处理叙事旁白元素（直接是 chatArea 子级）
+            if (wrapper.classList.contains('tandan-detail-narration')) {
+                var narrationEl = wrapper;
+                var tdIdx = parseInt(narrationEl.dataset.tdIdx);
+                narrationEl.remove();
+                if (!isNaN(tdIdx)) {
+                    rebuildMessageContent(tdIdx);
+                    // 如果该 tdIdx 没有任何剩余内容元素，删除消息
+                    var hasRemaining = false;
+                    var allEls = chatArea.children;
+                    for (var ri = 0; ri < allEls.length; ri++) {
+                        if (parseInt(allEls[ri].dataset.tdIdx) === tdIdx) { hasRemaining = true; break; }
+                    }
+                    if (!hasRemaining && tdIdx < tandanDetailMessages.length) {
+                        tandanDetailMessages.splice(tdIdx, 1);
+                        rebaseAllIndices();
+                    }
+                }
+                var rounds = tandanDetailMessages.filter(function(m) { return m.role === 'assistant'; }).length;
+                if (rounds <= 1) tandanDetailAffection = 1;
+                else if (rounds <= 2) tandanDetailAffection = 2;
+                else if (rounds <= 4) tandanDetailAffection = 3;
+                else if (rounds <= 6) tandanDetailAffection = 4;
+                else tandanDetailAffection = 5;
+                updateTandanAffection();
+                if (typeof showSwipeToast === 'function') showSwipeToast('已删除');
+                return;
+            }
+
             var tdIdx = parseInt(wrapper.dataset.tdIdx);
             if (isNaN(tdIdx)) return;
             if (targetBlock) {
@@ -70025,24 +70392,38 @@ ${chatHistoryText}
                         tandanDetailCount = Math.max(0, tandanDetailCount - 1);
                     }
                     wrapper.remove();
-                    if (tdIdx < tandanDetailMessages.length) tandanDetailMessages.splice(tdIdx, 1);
-                    var allWrappers = chatArea.querySelectorAll('.tandan-detail-msg-wrapper');
-                    allWrappers.forEach(function(w, i) { w.dataset.tdIdx = String(i); });
-                } else {
-                    if (tdIdx < tandanDetailMessages.length) {
-                        tandanDetailMessages[tdIdx].content = reconstructTandanContent(wrapper);
+                    // 检查是否还有同 tdIdx 的其他元素
+                    var hasOther = false;
+                    var allEls2 = chatArea.children;
+                    for (var ri2 = 0; ri2 < allEls2.length; ri2++) {
+                        if (parseInt(allEls2[ri2].dataset.tdIdx) === tdIdx) { hasOther = true; break; }
                     }
+                    if (hasOther) {
+                        rebuildMessageContent(tdIdx);
+                    } else {
+                        if (tdIdx < tandanDetailMessages.length) tandanDetailMessages.splice(tdIdx, 1);
+                        rebaseAllIndices();
+                    }
+                } else {
+                    rebuildMessageContent(tdIdx);
                 }
             } else {
+                // 删除整个 wrapper：同时删除同 tdIdx 的所有关联元素
+                var elemsToRemove = [];
+                var allEls3 = chatArea.children;
+                for (var ri3 = 0; ri3 < allEls3.length; ri3++) {
+                    if (parseInt(allEls3[ri3].dataset.tdIdx) === tdIdx) {
+                        elemsToRemove.push(allEls3[ri3]);
+                    }
+                }
                 var prev2 = wrapper.previousElementSibling;
                 if (prev2 && prev2.classList.contains('tandan-detail-chapter')) {
                     prev2.remove();
                     tandanDetailCount = Math.max(0, tandanDetailCount - 1);
                 }
-                wrapper.remove();
+                elemsToRemove.forEach(function(el) { el.remove(); });
                 if (tdIdx < tandanDetailMessages.length) tandanDetailMessages.splice(tdIdx, 1);
-                var allW = chatArea.querySelectorAll('.tandan-detail-msg-wrapper');
-                allW.forEach(function(w, i) { w.dataset.tdIdx = String(i); });
+                rebaseAllIndices();
             }
             var rounds = tandanDetailMessages.filter(function(m) { return m.role === 'assistant'; }).length;
             if (rounds <= 1) tandanDetailAffection = 1;
@@ -70135,7 +70516,7 @@ ${chatHistoryText}
             const role = tandanCurrentRole;
             if (!role) return '';
             const roleName = role.remark || role.name;
-            const userSettings = getUserPersona();
+            const userSettings = getUserPersona(role.id);
             const userName = userSettings.name || '用户';
             const userPersona = userSettings.persona || '';
             const shop = tandanDetailShop;
@@ -70259,7 +70640,7 @@ ${chatHistoryText}
                 return;
             }
 
-            const userSettings = getUserPersona();
+            const userSettings = getUserPersona(tandanCurrentRole ? tandanCurrentRole.id : null);
             const userName = userSettings.name || '用户';
             const roleName = tandanCurrentRole.remark || tandanCurrentRole.name;
             const shop = tandanDetailShop;
@@ -70398,7 +70779,7 @@ ${chatHistoryText}
             avatarImg.className = 'tandan-detail-bubble-avatar';
             avatarImg.alt = '';
             if (type === 'sent') {
-                getImageData('userAvatar').then(function(src) { if (src) avatarImg.src = src; else avatarImg.style.display = 'none'; }).catch(function() { avatarImg.style.display = 'none'; });
+                getActiveUserAvatar(tandanCurrentRole ? tandanCurrentRole.id : null).then(function(src) { if (src) avatarImg.src = src; else avatarImg.style.display = 'none'; }).catch(function() { avatarImg.style.display = 'none'; });
             } else if (type === 'received' && tandanCurrentRole && tandanCurrentRole.avatar) {
                 avatarImg.src = tandanCurrentRole.avatar;
             } else {
@@ -70430,17 +70811,6 @@ ${chatHistoryText}
 
             // 设置索引
             wrapper.dataset.tdIdx = String(tandanDetailMessages.length);
-
-            // 点击事件 - 上下文菜单
-            if (!isTandanDetailReviewMode) {
-                wrapper.addEventListener('click', function(e) {
-                    if (isTandanDetailLoading) return;
-                    if (e.target.closest('.tandan-context-menu')) return;
-                    var clickedBlock = e.target.closest('.tandan-detail-narration, .tandan-detail-bubble');
-                    var rect = clickedBlock ? clickedBlock.getBoundingClientRect() : wrapper.getBoundingClientRect();
-                    showTandanContextMenu(wrapper, rect, clickedBlock);
-                });
-            }
 
             chatArea.appendChild(wrapper);
             chatArea.scrollTop = chatArea.scrollHeight;
@@ -70489,6 +70859,7 @@ ${chatHistoryText}
 
             let dialogueParts = [];
             var currentWrapper = wrapper;
+            var originalTdIdx = wrapper.dataset.tdIdx || '';
             parts.forEach(function(part) {
                 const trimmed = part.trim();
                 if (!trimmed) return;
@@ -70507,6 +70878,7 @@ ${chatHistoryText}
                     var narrationText = trimmed.replace(/^[（(]/, '').replace(/[）)]$/, '');
                     var narrativeBox = document.createElement('div');
                     narrativeBox.className = 'tandan-detail-narration';
+                    narrativeBox.dataset.tdIdx = originalTdIdx;
                     var nt = document.createElement('div');
                     nt.className = 'narrative-text';
                     nt.textContent = narrationText;
@@ -70515,6 +70887,7 @@ ${chatHistoryText}
                     // 后续对话需要新 wrapper
                     currentWrapper = document.createElement('div');
                     currentWrapper.className = 'tandan-detail-msg-wrapper ' + type;
+                    currentWrapper.dataset.tdIdx = originalTdIdx;
                     chatArea.insertBefore(currentWrapper, narrativeBox.nextSibling);
                 } else {
                     dialogueParts.push(trimmed);
