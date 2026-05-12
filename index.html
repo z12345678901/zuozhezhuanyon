@@ -2491,6 +2491,17 @@
             }
         }
 
+        @keyframes pulse {
+            0%, 100% {
+                opacity: 1;
+                transform: scale(1);
+            }
+            50% {
+                opacity: 0.5;
+                transform: scale(1.2);
+            }
+        }
+
         .note-character-modal {
             display: none;
             position: fixed;
@@ -4159,6 +4170,8 @@
 
         .forum-page { width: 100%; flex: 1; overflow-y: auto; background-color: ##fcfcfc; display: none; }
         .forum-page.active { display: block; }
+        #forum-hot-detail.forum-page { width: auto; flex: none; overflow: visible; position: fixed; top: 0; left: 0; right: 0; bottom: 0; z-index: 1000; background: #fcfcfc; flex-direction: column; }
+        #forum-hot-detail.forum-page.active { display: flex; }
 
         .forum-top-nav { width: 100%; height: 90px; background: #ffffff; display: flex; align-items: flex-end; padding: 0 6px 10px; flex-shrink: 0; position: relative; }
         .forum-back-btn { width: 44px; height: 44px; display: flex; justify-content: center; align-items: center; cursor: pointer; color: #111; }
@@ -4201,6 +4214,28 @@
         .forum-hot-npc-name { font-size: 13px; font-weight: 600; color: #333; display: flex; align-items: center; gap: 4px; margin-bottom: 3px; }
         .forum-hot-npc-badge { font-size: 10px; background: #333; color: #fff; padding: 0 4px; border-radius: 3px; font-weight: 700; line-height: 16px; }
         .forum-hot-npc-text { font-size: 12px; color: #666; line-height: 1.5; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+
+        .forum-hot-item { cursor: pointer; transition: background 0.2s; }
+        .forum-hot-item:hover { background: #f9f9f9; }
+        .forum-hot-item:active { background: #f0f0f0; }
+
+        .forum-hot-detail-header { padding: 16px; background: #fff; border-bottom: 1px solid #f0f0f0; flex-shrink: 0; }
+        .forum-hot-detail-title { font-size: 16px; font-weight: 700; color: #111; margin-bottom: 6px; }
+        .forum-hot-detail-meta { font-size: 11px; color: #999; display: flex; align-items: center; gap: 8px; }
+        .forum-hot-detail-count { color: #ff6b6b; font-weight: 600; }
+        .forum-hot-detail-posts { padding: 12px; flex: 1; overflow-y: auto; }
+        .forum-hot-detail-section-title { font-size: 12px; font-weight: 700; color: #999; letter-spacing: 1.5px; margin-bottom: 12px; padding: 0 4px; }
+
+        #forum-notif-detail { position: fixed; top: 0; left: 0; right: 0; bottom: 0; z-index: 1001; background: #fcfcfc; display: none; flex-direction: column; }
+        #forum-notif-detail.active { display: flex; }
+        .forum-notif-detail-content { flex: 1; overflow-y: auto; }
+        .forum-notif-detail-post { margin: 12px; padding: 14px; background: #fff; border-radius: 14px; box-shadow: 0 1px 6px rgba(0,0,0,0.04); }
+        .forum-notif-detail-comments { margin: 0 12px 12px; padding: 14px; background: #fff; border-radius: 14px; box-shadow: 0 1px 6px rgba(0,0,0,0.04); }
+        .forum-notif-detail-comments-title { font-size: 12px; font-weight: 700; color: #999; letter-spacing: 1.5px; margin-bottom: 12px; }
+
+        .forum-msg-notify-preview { cursor: pointer; transition: background 0.2s; }
+        .forum-msg-notify-preview:hover { background: #f0f0f0; }
+        .forum-msg-notify-preview:active { background: #e8e8e8; }
 
         .forum-post-card { background: #ffffff; margin-bottom: 12px; margin-top: 12px; padding: 14px; border-radius: 14px; margin-left: 12px; margin-right: 12px; box-shadow: 0 1px 6px rgba(0,0,0,0.04); }
         .forum-profile-post { margin-bottom: 10px; padding: 14px; border-radius: 14px; border-bottom: none; box-shadow: 0 1px 6px rgba(0,0,0,0.04); margin-left: 12px; margin-right: 12px; }
@@ -23174,6 +23209,183 @@
             position: relative;
         }
 
+        /* 探店刷新选项菜单 */
+        .tandan-refresh-menu {
+            position: fixed;
+            background: rgba(255, 255, 255, 0.98);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-radius: 16px;
+            box-shadow: 0 12px 40px rgba(212, 136, 154, 0.25), 0 4px 12px rgba(0, 0, 0, 0.08);
+            border: 1px solid rgba(212, 136, 154, 0.2);
+            z-index: 10002;
+            overflow: hidden;
+            animation: tandanMenuSlideIn 0.25s ease;
+            min-width: 200px;
+        }
+        @keyframes tandanMenuSlideIn {
+            from { opacity: 0; transform: scale(0.9) translateY(-10px); }
+            to { opacity: 1; transform: scale(1) translateY(0); }
+        }
+        .tandan-refresh-menu-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 14px 18px;
+            cursor: pointer;
+            transition: all 0.15s ease;
+            font-family: 'Quicksand', sans-serif;
+            font-size: 13px;
+            font-weight: 600;
+            color: #4A3E40;
+            border-bottom: 1px solid rgba(212, 136, 154, 0.1);
+        }
+        .tandan-refresh-menu-item:last-child {
+            border-bottom: none;
+        }
+        .tandan-refresh-menu-item:active {
+            background: rgba(212, 136, 154, 0.12);
+        }
+        .tandan-refresh-menu-item svg {
+            width: 18px;
+            height: 18px;
+            stroke: #d4889a;
+            fill: none;
+            flex-shrink: 0;
+        }
+        .tandan-refresh-menu-item span {
+            flex: 1;
+        }
+        .tandan-refresh-menu-item .menu-desc {
+            font-size: 10px;
+            font-weight: 400;
+            color: #9C898C;
+            margin-top: 2px;
+        }
+
+        /* 自定义输入弹窗 */
+        .tandan-custom-modal {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.4);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            z-index: 10003;
+            display: none;
+            justify-content: center;
+            align-items: center;
+        }
+        .tandan-custom-modal.active {
+            display: flex;
+        }
+        .tandan-custom-modal-content {
+            width: 90%;
+            max-width: 360px;
+            background: #fff;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
+            overflow: hidden;
+            animation: tandanModalIn 0.3s ease;
+        }
+        @keyframes tandanModalIn {
+            from { opacity: 0; transform: scale(0.9) translateY(20px); }
+            to { opacity: 1; transform: scale(1) translateY(0); }
+        }
+        .tandan-custom-modal-header {
+            padding: 18px 20px;
+            border-bottom: 1px solid #f0e6e9;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .tandan-custom-modal-header h3 {
+            font-family: 'Quicksand', sans-serif;
+            font-size: 15px;
+            font-weight: 700;
+            color: #4A3E40;
+            margin: 0;
+        }
+        .tandan-custom-modal-close {
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            border: none;
+            background: #f5f0f2;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.15s ease;
+        }
+        .tandan-custom-modal-close:active {
+            transform: scale(0.9);
+            background: #ebe0e4;
+        }
+        .tandan-custom-modal-close svg {
+            width: 14px;
+            height: 14px;
+            stroke: #9C898C;
+        }
+        .tandan-custom-modal-body {
+            padding: 20px;
+        }
+        .tandan-custom-modal-label {
+            font-family: 'Quicksand', sans-serif;
+            font-size: 12px;
+            font-weight: 600;
+            color: #9C898C;
+            margin-bottom: 10px;
+            letter-spacing: 0.5px;
+        }
+        .tandan-custom-modal-textarea {
+            width: 100%;
+            height: 120px;
+            border: 1.5px solid #f0e6e9;
+            border-radius: 12px;
+            padding: 12px 14px;
+            font-family: 'Quicksand', sans-serif;
+            font-size: 13px;
+            color: #4A3E40;
+            resize: none;
+            outline: none;
+            transition: border-color 0.2s ease;
+            box-sizing: border-box;
+        }
+        .tandan-custom-modal-textarea:focus {
+            border-color: #d4889a;
+        }
+        .tandan-custom-modal-textarea::placeholder {
+            color: #c4b8bc;
+        }
+        .tandan-custom-modal-footer {
+            padding: 0 20px 20px;
+            display: flex;
+            gap: 10px;
+        }
+        .tandan-custom-modal-btn {
+            flex: 1;
+            padding: 12px;
+            border-radius: 12px;
+            border: none;
+            font-family: 'Quicksand', sans-serif;
+            font-size: 13px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.15s ease;
+        }
+        .tandan-custom-modal-btn.cancel {
+            background: #f5f0f2;
+            color: #9C898C;
+        }
+        .tandan-custom-modal-btn.confirm {
+            background: #d4889a;
+            color: #fff;
+        }
+        .tandan-custom-modal-btn:active {
+            transform: scale(0.96);
+        }
+
         /* --- 探店详情页（线下见面风格） --- */
         .tandan-detail-overlay {
             display: none;
@@ -30868,6 +31080,109 @@
                     </div>
                 </div>
 
+                <!-- 后台保活分类 -->
+                <div class="category-wrapper">
+                    <div class="category-header" onclick="toggleCategory('keepalive')">
+                        <div class="category-title" style="color: rgb(51, 51, 51);">
+                            <div class="category-icon">
+                                <svg viewBox="0 0 24 24">
+                                    <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
+                                </svg>
+                            </div>
+                            后台保活
+                        </div>
+                        <svg class="category-arrow" viewBox="0 0 24 24" fill="white">
+                            <path d="M7,10l5,5l5-5H7z"></path>
+                        </svg>
+                    </div>
+                    <div class="category-content" id="category-keepalive">
+                        <div class="settings-section-inner">
+                            <div class="performance-tip" style="background: rgba(52, 199, 89, 0.1); border-color: rgba(52, 199, 89, 0.3);">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#34C759" stroke-width="2">
+                                    <circle cx="12" cy="12" r="10"></circle>
+                                    <line x1="12" y1="16" x2="12" y2="12"></line>
+                                    <line x1="12" y1="8" x2="12.01" y2="8"></line>
+                                </svg>
+                                <span style="color: #34C759;">开启后可防止页面在后台被浏览器冻结或关闭，保持AI对话、音乐播放等功能持续运行</span>
+                            </div>
+                            
+                            <div class="performance-option">
+                                <div class="performance-option-header">
+                                    <div class="performance-option-info">
+                                        <div class="performance-option-title">强保活模式</div>
+                                        <div class="performance-option-desc">使用多重保活技术：Web Worker心跳 + 静音音频 + 视频循环 + 标题闪烁 + 动画帧循环</div>
+                                    </div>
+                                    <label class="perf-toggle">
+                                        <input type="checkbox" id="keepalive-toggle" onchange="toggleKeepAlive(this.checked)">
+                                        <span class="perf-toggle-slider"></span>
+                                    </label>
+                                </div>
+                            </div>
+
+                            <div class="performance-option">
+                                <div class="performance-option-header">
+                                    <div class="performance-option-info">
+                                        <div class="performance-option-title">屏幕常亮</div>
+                                        <div class="performance-option-desc">使用Wake Lock API防止屏幕自动熄灭（需要浏览器支持）</div>
+                                    </div>
+                                    <label class="perf-toggle">
+                                        <input type="checkbox" id="wakelock-toggle" onchange="toggleWakeLock(this.checked)">
+                                        <span class="perf-toggle-slider"></span>
+                                    </label>
+                                </div>
+                            </div>
+
+                            <div class="performance-option">
+                                <div class="performance-option-header">
+                                    <div class="performance-option-info">
+                                        <div class="performance-option-title">后台消息通知</div>
+                                        <div class="performance-option-desc">页面在后台时，收到新消息会弹出系统通知提醒</div>
+                                    </div>
+                                    <label class="perf-toggle">
+                                        <input type="checkbox" id="notification-toggle" onchange="toggleBackgroundNotification(this.checked)">
+                                        <span class="perf-toggle-slider"></span>
+                                    </label>
+                                </div>
+                            </div>
+
+                            <div id="notification-permission-status" style="margin-top: 8px; padding: 10px; border-radius: 8px; background: rgba(0,0,0,0.05); display: none;">
+                                <div style="display: flex; align-items: center; gap: 8px; font-size: 13px;">
+                                    <span id="notification-permission-icon">🔔</span>
+                                    <span id="notification-permission-text">通知权限状态</span>
+                                </div>
+                                <button id="request-notification-btn" class="btn-secondary" onclick="requestNotificationPermission()" style="width: 100%; margin-top: 8px; padding: 8px; font-size: 13px; display: none;">
+                                    请求通知权限
+                                </button>
+                            </div>
+
+                            <div style="margin-top: 12px; padding: 12px; border-radius: 8px; background: rgba(255, 149, 0, 0.1); border: 1px solid rgba(255, 149, 0, 0.2);">
+                                <div style="font-size: 13px; color: #856404; margin-bottom: 8px; font-weight: 600;">⚠️ 移动端注意事项</div>
+                                <ul style="font-size: 12px; color: #856404; margin: 0; padding-left: 16px; line-height: 1.6;">
+                                    <li>iOS Safari 后台限制较严，建议配合"屏幕常亮"使用</li>
+                                    <li>Android Chrome 效果较好，但仍可能被省电模式限制</li>
+                                    <li>建议将浏览器加入系统白名单，关闭省电优化</li>
+                                    <li>部分浏览器需要用户首次点击页面后才能播放音频</li>
+                                </ul>
+                            </div>
+
+                            <div id="keepalive-status" style="margin-top: 16px; padding: 12px; border-radius: 12px; background: rgba(0,0,0,0.05); display: none;">
+                                <div style="display: flex; align-items: center; gap: 8px;">
+                                    <div id="keepalive-indicator" style="width: 10px; height: 10px; border-radius: 50%; background: #34C759; animation: pulse 2s infinite;"></div>
+                                    <span id="keepalive-status-text" style="font-size: 14px; color: #333;">保活服务运行中...</span>
+                                </div>
+                                <div id="keepalive-stats" style="margin-top: 8px; font-size: 12px; color: #666;">
+                                    <span>心跳次数: <span id="keepalive-heartbeat-count">0</span></span>
+                                    <span style="margin-left: 16px;">运行时长: <span id="keepalive-runtime">0秒</span></span>
+                                </div>
+                            </div>
+
+                            <button class="btn-secondary" onclick="resetKeepAliveSettings()" style="width: 100%; margin-top: 16px; color: rgb(51, 51, 51);">
+                                恢复默认设置
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
             </div>
         <div class="scroll-indicator"></div></div>
     </div>
@@ -31416,6 +31731,40 @@
                 <div class="forum-role-profile-tab active">POSTS</div>
             </div>
             <div id="forum-role-profile-posts"></div>
+        </div>
+
+        <!-- 热搜详情页 -->
+        <div id="forum-hot-detail" class="forum-page">
+            <div class="forum-dm-chat-header">
+                <div class="forum-dm-back" onclick="forumCloseHotDetail()">
+                    <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>
+                </div>
+                <div class="forum-dm-chat-name" id="forum-hot-detail-title">热搜详情</div>
+                <div style="width: 22px;"></div>
+            </div>
+            <div class="forum-hot-detail-header" id="forum-hot-detail-header">
+                <div class="forum-hot-detail-title" id="forum-hot-detail-topic"></div>
+                <div class="forum-hot-detail-meta">
+                    <span class="forum-hot-detail-count" id="forum-hot-detail-count"></span>
+                    <span>阅读</span>
+                </div>
+            </div>
+            <div class="forum-hot-detail-posts" id="forum-hot-detail-posts">
+                <div class="forum-hot-detail-section-title">DISCUSSION</div>
+            </div>
+        </div>
+
+        <!-- 通知详情页 -->
+        <div id="forum-notif-detail">
+            <div class="forum-dm-chat-header">
+                <div class="forum-dm-back" onclick="forumCloseNotifDetail()">
+                    <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>
+                </div>
+                <div class="forum-dm-chat-name">微博详情</div>
+                <div style="width: 22px;"></div>
+            </div>
+            <div class="forum-notif-detail-content" id="forum-notif-detail-content">
+            </div>
         </div>
 
         <div class="forum-edit-modal" id="forum-edit-modal">
@@ -50049,7 +50398,7 @@ ${commenterInfo}
                                     tagHtml = '<span class="forum-hot-tag ' + tagMap[item.tag] + '">' + item.tag + '</span>';
                                 }
                                 var safeText = (item.text || '').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-                                hotList.innerHTML += '<div class="forum-hot-item">' +
+                                hotList.innerHTML += '<div class="forum-hot-item" data-hot-index="' + idx + '" onclick="forumOpenHotDetail(' + idx + ')">' +
                                     '<span class="forum-hot-rank' + rankClass + '">' + (idx + 1) + '</span>' +
                                     '<div class="forum-hot-content"><span class="forum-hot-text">' + safeText + '</span>' + tagHtml + '</div>' +
                                     '<span class="forum-hot-count">' + (item.count || 0) + '万</span></div>';
@@ -50199,26 +50548,33 @@ ${commenterInfo}
             // 获取用户 Forum 昵称用于禁止代替用户评论
             var forumMyName2 = (document.querySelector('.forum-profile-name') || {}).innerText || '';
 
-            var prompt = '你是一个模拟微博热搜数据的生成器。请生成以下内容：\n\n' +
+            var prompt = '你是一条微博热搜数据。请生成以下内容：\n\n' +
                 '1. 8 条热搜话题，要求：\n' +
-                '   - 【重要】话题内容要完全生活化、娱乐化、接地气、抓人眼球，聚焦年轻人关心的话题\n' +
-                '   - 话题领域：恋爱/暧昧/分手/绿茶/渣男渣女、追星/pick/八卦/吃瓜、社恐/独居/宠物、奶茶/美食/探店、合租/室友/家居、催婚/家庭关系/长辈、朋友圈/社交媒体/网络梗、剧集/综艺/游戏等\n' +
-                '   - 【禁止】工作、打工、工资、上班、科技、AI、政策、国际新闻等严肃话题\n' +
+                '   - 【重要】话题内容要完全生活化、娱乐化、接地气、抓人眼球，聚焦年轻人关心的话题，要有网感\n' +
+                '   - 话题领域：各种各样有网感的话题都可以\n' +
+                '   - 【禁止】严肃话题，大家刷微博是为了找乐子消遣的\n' +
                 '   - 话题要像真实微博热搜那样有争议性或共鸣感，让人想点进去看\n' +
                 '   - 每条包含话题文字、热度数值（万为单位，50~500之间）\n' +
                 '   - 前3条标记 tag（"热"或"新"），其余条随机有或没有 tag（可选 "热"/"新"/"趣"）\n' +
                 '   - 其中必须有 2 条话题与下面提供的角色相关，以这些角色发布的微博或生活状态为灵感编造话题（但话题本身不直接提角色名，而是泛化为大众共鸣的话题）\n' +
                 roleContext + '\n' +
-                '2. 2 个微博大V的热评，要求：\n' +
+                '2. 为每条热搜话题生成 3 条讨论微博，要求：\n' +
+                '   - 每条微博模拟不同类型的微博用户发帖，类型随机选择：树洞Bot、八卦号、K-POP粉丝、美食探店、穿搭博主、追剧姐妹、塔罗占卜师、二次元宅、电影迷、养猫/养狗博主、恋爱教主、星座命理博主、旅游vlog风、画师 等\n' +
+                '   - 微博内容要紧扣对应的热搜话题，表达观点、分享经历或参与讨论\n' +
+                '   - 每条微博包含：用户昵称（网名风格，3~8个字）、帖子正文（30~80字，口语化）\n' +
+                '   - 【禁止使用任何 emoji 或表情符号】\n' +
+                '   - 【禁止】帖子内容不得包含任何关于图片、照片、视频、配图、截图的描述或提及\n' +
+                '   - 每条微博附带 3~5 条评论，评论要有真实感\n' +
+                '3. 2 个微博大V的热评，要求：\n' +
                 '   - 大V是虚构的，不要用真实人物名字\n' +
                 '   - 每个大V有：名称（2~6个汉字的自媒体/情感/生活类昵称）、一条犀利短评（20~50字）\n' +
-                '   - 名称风格参考：深夜树洞Bot、情感急诊室、当代废话文学、打工人日记、独居生活指南 等\n' +
+                '   - 名称风格参考：xx树洞Bot、xx急诊室、当代xx文学、xx日记、xx指南 等\n' +
                 '   - 短评要毒舌、扎心、共情或幽默，像微博大V那种让人想转发的金句\n' +
                 '   - 短评必须针对热搜话题中的某一条来评论\n' +
                 '   - 【禁止使用任何 emoji 或表情符号】\n\n' +
-                '3. 3 条路人微博帖子（与上面的角色信息完全无关，独立生成），要求：\n' +
-                '   - 模拟不同类型的微博用户发帖，类型随机选择：树洞Bot、八卦号、K-POP粉丝、美食探店、穿搭博主、追剧姐妹、塔罗占卜师、二次元宅、豆瓣文青、养猫/养狗博主、恋爱教主、星座命理博主、旅游vlog风、健身打卡党 等\n' +
-                '   - 【禁止】帖子内容不得涉及工作、上班、工资、加班、摸鱼等话题\n' +
+                '4. 3 条路人微博帖子（与上面的角色信息完全无关，独立生成），要求：\n' +
+                '   - 模拟不同类型的微博用户发帖，类型随机选择\n' +
+                '   - 【禁止】帖子内容不得涉及不娱乐的严肃等话题\n' +
                 '   - 每条帖子包含：用户昵称（网名风格，3~8个字）、帖子正文（30~80字，口语化）、可选的 #话题标签#\n' +
                 '   - 三条帖子的用户类型和风格要各不相同\n' +
                 '   - 帖子要有真实感，像真人在发微博\n' +
@@ -50227,12 +50583,12 @@ ${commenterInfo}
                 '   - 每条帖子附带 6~8 条评论，评论要求：\n' +
                 '     * 评论整体要有真实微博评论区的多样化氛围，不能全是吵架\n' +
                 '     * 评论类型要丰富多样，包括但不限于：\n' +
-                '       - 真诚共鸣/附和（"太真实了""我也是"）\n' +
-                '       - 认真讨论/分析（有理有据地发表看法）\n' +
-                '       - 抖机灵/玩梗（网络热梗、谐音梗、段子手）\n' +
-                '       - 友善打趣/调侃（善意的开玩笑）\n' +
-                '       - 个人经历分享（"我之前也遇到过..."）\n' +
-                '       - 好奇追问（"然后呢？""细说"）\n' +
+                '       - 真诚共鸣/附和\n' +
+                '       - 认真讨论/分析\n' +
+                '       - 抖机灵/玩梗\n' +
+                '       - 友善打趣/调侃\n' +
+                '       - 个人经历分享\n' +
+                '       - 好奇追问\n' +
                 '       - 吵架互怼（杠精、对家撕、阴阳怪气）← 保留但只占 1~2 条\n' +
                 '       - 冷不丁的神回复/离题评论\n' +
                 '     * 每条帖子的评论要自然组合以上多种类型，比例均衡\n' +
@@ -50246,6 +50602,13 @@ ${commenterInfo}
                 '  "hotSearch": [\n' +
                 '    {"text": "话题文字", "count": 384, "tag": "热"},\n' +
                 '    ...(共8条)\n' +
+                '  ],\n' +
+                '  "hotSearchPosts": [\n' +
+                '    [\n' +
+                '      {"username": "用户昵称", "text": "帖子正文", "comments": [{"name": "评论者昵称", "text": "评论内容", "isReply": false}]},\n' +
+                '      ...(每条热搜3条微博)\n' +
+                '    ],\n' +
+                '    ...(共8个数组，对应8条热搜)\n' +
                 '  ],\n' +
                 '  "npcComments": [\n' +
                 '    {"name": "大V名称", "text": "短评内容"},\n' +
@@ -50306,7 +50669,7 @@ ${commenterInfo}
                         tagHtml = '<span class="forum-hot-tag ' + tagMap[item.tag] + '">' + item.tag + '</span>';
                     }
                     var safeText = (item.text || '').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-                    hotList.innerHTML += '<div class="forum-hot-item">' +
+                    hotList.innerHTML += '<div class="forum-hot-item" data-hot-index="' + idx + '" onclick="forumOpenHotDetail(' + idx + ')">' +
                         '<span class="forum-hot-rank' + rankClass + '">' + (idx + 1) + '</span>' +
                         '<div class="forum-hot-content"><span class="forum-hot-text">' + safeText + '</span>' + tagHtml + '</div>' +
                         '<span class="forum-hot-count">' + (item.count || 0) + '万</span>' +
@@ -50413,6 +50776,7 @@ ${commenterInfo}
                 // 持久化保存热搜数据
                 forumSaveImage('forum-hot-search-data', JSON.stringify({
                     hotSearch: parsed.hotSearch,
+                    hotSearchPosts: parsed.hotSearchPosts || [],
                     npcComments: parsed.npcComments || []
                 }));
 
@@ -50422,6 +50786,163 @@ ${commenterInfo}
                 btn.classList.remove('loading');
                 alert('热搜刷新失败，请重试。\n' + (e.message || ''));
             }
+        }
+
+        // ====== 热搜详情页功能 ======
+        var forumHotSearchData = null;
+
+        function forumOpenHotDetail(index) {
+            var request = indexedDB.open('DesktopData', 1);
+            request.onupgradeneeded = function(ev) { var db = ev.target.result; if (!db.objectStoreNames.contains('settings')) db.createObjectStore('settings', { keyPath: 'id' }); };
+            request.onsuccess = function(ev) {
+                var db = ev.target.result;
+                var tx = db.transaction(['settings'], 'readonly');
+                var store = tx.objectStore('settings');
+                var req = store.get('forum-hot-search-data');
+                req.onsuccess = function(e) {
+                    if (!e.target.result || !e.target.result.image) return;
+                    try {
+                        var data = JSON.parse(e.target.result.image);
+                        forumHotSearchData = data;
+                        if (!data.hotSearch || !data.hotSearch[index]) return;
+                        
+                        var hotItem = data.hotSearch[index];
+                        var hotPosts = (data.hotSearchPosts && data.hotSearchPosts[index]) || [];
+                        
+                        document.getElementById('forum-hot-detail-topic').innerText = hotItem.text || '';
+                        document.getElementById('forum-hot-detail-count').innerText = (hotItem.count || 0) + '万';
+                        document.getElementById('forum-hot-detail-title').innerText = '热搜详情';
+                        
+                        var postsContainer = document.getElementById('forum-hot-detail-posts');
+                        postsContainer.innerHTML = '<div class="forum-hot-detail-section-title">DISCUSSION</div>';
+                        
+                        var nowTs = Date.now();
+                        hotPosts.forEach(function(post, idx) {
+                            var postTimestamp = nowTs - idx * (5 + Math.floor(Math.random() * 10)) * 60 * 1000;
+                            var timeLabel = forumFormatPostTime(postTimestamp);
+                            var safeUsername = (post.username || '路人').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+                            var safePostText = (post.text || '').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+                            
+                            var commentsHtml = '';
+                            if (post.comments && Array.isArray(post.comments)) {
+                                post.comments.forEach(function(c) {
+                                    var cn = (c.name || '').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+                                    var ct = (c.text || '').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+                                    var nestedClass = c.isReply ? ' forum-comment-nested' : '';
+                                    commentsHtml += '<div class="forum-comment-item' + nestedClass + '"><div class="forum-comment-body">' +
+                                        '<div class="forum-comment-name">' + cn + '</div>' +
+                                        '<div class="forum-comment-text">' + ct + '</div></div></div>';
+                                });
+                            }
+                            
+                            var reposts = Math.floor(Math.random() * 100) + 5;
+                            var comments = Math.floor(Math.random() * 50) + 3;
+                            var likes = Math.floor(Math.random() * 500) + 20;
+                            var likesStr = likes >= 1000 ? (likes / 1000).toFixed(1) + 'K' : likes;
+                            
+                            var cardHtml = '<div class="forum-post-card">' +
+                                '<div class="forum-post-header">' +
+                                    '<div class="forum-avatar" style="background: linear-gradient(135deg, #e0e0e0, #c0c0c0);"></div>' +
+                                    '<div class="forum-user-info">' +
+                                        '<div class="name">' + safeUsername + '</div>' +
+                                        '<div class="meta">' + timeLabel + '</div>' +
+                                    '</div>' +
+                                '</div>' +
+                                '<div class="forum-post-text">' + safePostText + '</div>' +
+                                '<div class="forum-post-actions">' +
+                                    '<div class="forum-action-btn"><svg viewBox="0 0 24 24"><polyline points="17 1 21 5 17 9"></polyline><path d="M3 11V9a4 4 0 0 1 4-4h14"></path><polyline points="7 23 3 19 7 15"></polyline><path d="M21 13v2a4 4 0 0 1-4 4H3"></path></svg>' + reposts + '</div>' +
+                                    '<div class="forum-action-btn" onclick="forumToggleComments(this)"><svg viewBox="0 0 24 24"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path></svg>' + comments + '</div>' +
+                                    '<div class="forum-action-btn forum-like-btn" onclick="forumToggleLike(this)"><svg viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>' + likesStr + '</div>' +
+                                '</div>' +
+                                '<div class="forum-comments">' +
+                                    commentsHtml +
+                                    '<div class="forum-comment-input-wrap"><input class="forum-comment-input" type="text" placeholder="Add a comment..." onkeydown="if(event.key===\'Enter\')forumAddComment(this)"></div>' +
+                                '</div>' +
+                            '</div>';
+                            
+                            postsContainer.insertAdjacentHTML('beforeend', cardHtml);
+                        });
+                        
+                        document.querySelectorAll('#forum-app .forum-page').forEach(function(p) { p.classList.remove('active'); });
+                        document.getElementById('forum-hot-detail').classList.add('active');
+                    } catch(err) {
+                        console.error('打开热搜详情失败', err);
+                    }
+                };
+            };
+        }
+
+        function forumCloseHotDetail() {
+            document.querySelectorAll('#forum-app .forum-page').forEach(function(p) { p.classList.remove('active'); });
+            document.getElementById('forum-home').classList.add('active');
+        }
+
+        // ====== 通知详情页功能 ======
+        function forumOpenNotifDetail(postId) {
+            if (!postId || postId.indexOf('notify-') !== 0) {
+                return;
+            }
+            var idx = parseInt(postId.split('-').pop(), 10);
+            
+            var request = indexedDB.open('DesktopData', 1);
+            request.onupgradeneeded = function(ev) { var db = ev.target.result; if (!db.objectStoreNames.contains('settings')) db.createObjectStore('settings', { keyPath: 'id' }); };
+            request.onsuccess = function(ev) {
+                var db = ev.target.result;
+                var tx = db.transaction(['settings'], 'readonly');
+                var store = tx.objectStore('settings');
+                var req = store.get('forum-notify-posts-data');
+                req.onsuccess = function(e) {
+                    if (!e.target.result || !e.target.result.image) return;
+                    try {
+                        var posts = JSON.parse(e.target.result.image);
+                        if (!posts || !posts[idx]) return;
+                        
+                        var post = posts[idx];
+                        var contentEl = document.getElementById('forum-notif-detail-content');
+                        contentEl.innerHTML = '';
+                        
+                        var safeUsername = (post.username || '路人').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+                        var safePostText = (post.text || '').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+                        
+                        var postHtml = '<div class="forum-notif-detail-post">' +
+                            '<div class="forum-post-header">' +
+                                '<div class="forum-avatar" style="background: linear-gradient(135deg, #e0e0e0, #c0c0c0);"></div>' +
+                                '<div class="forum-user-info">' +
+                                    '<div class="name">' + safeUsername + '</div>' +
+                                    '<div class="meta">刚刚</div>' +
+                                '</div>' +
+                            '</div>' +
+                            '<div class="forum-post-text">' + safePostText + '</div>' +
+                        '</div>';
+                        contentEl.insertAdjacentHTML('beforeend', postHtml);
+                        
+                        var commentsHtml = '';
+                        if (post.comments && Array.isArray(post.comments)) {
+                            post.comments.forEach(function(c) {
+                                var cn = (c.name || '').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+                                var ct = (c.text || '').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+                                commentsHtml += '<div class="forum-comment-item"><div class="forum-comment-body">' +
+                                    '<div class="forum-comment-name">' + cn + '</div>' +
+                                    '<div class="forum-comment-text">' + ct + '</div></div></div>';
+                            });
+                        }
+                        
+                        var commentsSectionHtml = '<div class="forum-notif-detail-comments">' +
+                            '<div class="forum-notif-detail-comments-title">COMMENTS</div>' +
+                            commentsHtml +
+                        '</div>';
+                        contentEl.insertAdjacentHTML('beforeend', commentsSectionHtml);
+                        
+                        document.getElementById('forum-notif-detail').classList.add('active');
+                    } catch(err) {
+                        console.error('打开通知详情失败', err);
+                    }
+                };
+            };
+        }
+
+        function forumCloseNotifDetail() {
+            document.getElementById('forum-notif-detail').classList.remove('active');
         }
 
         // ====== 导航右侧按钮功能 ======
@@ -50499,15 +51020,144 @@ ${commenterInfo}
             if (profileNameEl) myName = profileNameEl.innerText.trim();
 
             try {
-                await forumGenerateMentionNotification(role, myName, chatEndpoint, apiKey, selectedModel);
-                await forumGenerateCommentNotification(role, myName, chatEndpoint, apiKey, selectedModel);
-                await forumGenerateLikeNotification(role, chatEndpoint, apiKey, selectedModel);
+                await forumGenerateAllNotifications(role, myName, chatEndpoint, apiKey, selectedModel);
             } catch (e) {
                 console.error('生成通知失败:', e);
             }
 
             generating.classList.remove('show');
             forumCloseMsgRoleModal();
+        }
+
+        async function forumGenerateAllNotifications(role, myName, chatEndpoint, apiKey, selectedModel) {
+            var promptText = '你正在模拟社交媒体的通知场景。\n\n' +
+                '角色"' + role.name + '"（' + (role.description || role.remark || '') + '）在刷微博时进行了各种互动。\n\n' +
+                '请生成以下内容：\n\n' +
+                '1. 5条艾特通知：角色在5条路人微博的评论区艾特了用户"' + myName + '"\n' +
+                '   - 每条包含：路人微博内容（30~80字，戏剧性、吸引人眼球）、角色评论（15~50字，必须包含 @' + myName + '）\n\n' +
+                '2. 5条评论通知：角色在5条路人微博下发表了评论\n' +
+                '   - 每条包含：路人微博内容（30~80字）、角色评论（15~50字，符合角色人设）\n\n' +
+                '3. 5条点赞通知：角色点赞了5条路人微博\n' +
+                '   - 每条包含：路人微博内容（30~80字）\n\n' +
+                '4. 15条通知预览微博（对应上面15条路人微博），每条附带10条评论\n' +
+                '   - 每条包含：用户昵称（3~8个字）、帖子正文（30~80字）、10条评论\n\n' +
+                '要求：\n' +
+                '- 所有微博内容要有戏剧性、吸引人眼球（有网感）\n' +
+                '- 禁止使用任何 emoji 或表情符号\n' +
+                '- 【禁止】不要代替用户本人发言，评论者名字不得使用用户本人名字"' + myName + '"\n' +
+                '- 只输出 JSON，不要其他文字\n\n' +
+                'JSON格式：\n' +
+                '{\n' +
+                '  "mentionNotifs": [{"post":"微博内容","comment":"角色评论"},...共5条],\n' +
+                '  "commentNotifs": [{"post":"微博内容","comment":"角色评论"},...共5条],\n' +
+                '  "likeNotifs": [{"post":"微博内容"},...共5条],\n' +
+                '  "notifyPosts": [{"username":"用户昵称","text":"帖子正文","comments":[{"name":"评论者","text":"评论内容"}]},...共15条，每条10条评论]\n' +
+                '}';
+
+            try {
+                var resp = await fetch(chatEndpoint, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + apiKey },
+                    body: JSON.stringify({
+                        model: selectedModel,
+                        messages: [
+                            { role: 'system', content: '你是一个模拟社交媒体互动的助手。只输出 JSON 格式，不要其他文字。' },
+                            { role: 'user', content: promptText }
+                        ],
+                        temperature: 1.0,
+                        stream: false
+                    })
+                });
+                if (!resp.ok) return;
+                var data = await resp.json();
+                var content = data.choices && data.choices[0] && data.choices[0].message && data.choices[0].message.content;
+                if (!content) return;
+
+                content = content.trim().replace(/^```json\s*/i, '').replace(/^```\s*/i, '').replace(/```\s*$/i, '').trim();
+                var parsed = JSON.parse(content);
+                
+                var nowTs = Date.now();
+                
+                // 保存艾特通知
+                if (parsed.mentionNotifs && Array.isArray(parsed.mentionNotifs)) {
+                    var mentionNotifications = [];
+                    parsed.mentionNotifs.forEach(function(item, idx) {
+                        if (!item.post || !item.comment) return;
+                        var colors = forumRandomAvatarColors();
+                        mentionNotifications.push({
+                            id: 'mention-' + nowTs + '-' + idx,
+                            name: role.name,
+                            postId: 'notify-' + nowTs + '-' + idx,
+                            text: item.comment,
+                            refText: item.post.length > 60 ? item.post.substring(0, 60) + '…' : item.post,
+                            avatar: role.avatar,
+                            avatarColor: colors[0],
+                            avatarColor2: colors[1],
+                            timestamp: nowTs + idx,
+                            timeLabel: '刚刚'
+                        });
+                    });
+                    if (mentionNotifications.length > 0) {
+                        forumSaveMsgNotifications('mention', mentionNotifications);
+                    }
+                }
+                
+                // 保存评论通知
+                if (parsed.commentNotifs && Array.isArray(parsed.commentNotifs)) {
+                    var commentNotifications = [];
+                    parsed.commentNotifs.forEach(function(item, idx) {
+                        if (!item.post || !item.comment) return;
+                        var colors = forumRandomAvatarColors();
+                        commentNotifications.push({
+                            id: 'comment-' + nowTs + '-' + idx,
+                            name: role.name,
+                            postId: 'notify-' + nowTs + '-' + (5 + idx),
+                            text: item.comment,
+                            refText: item.post.length > 60 ? item.post.substring(0, 60) + '…' : item.post,
+                            avatar: role.avatar,
+                            avatarColor: colors[0],
+                            avatarColor2: colors[1],
+                            timestamp: nowTs + 5 + idx,
+                            timeLabel: '刚刚'
+                        });
+                    });
+                    if (commentNotifications.length > 0) {
+                        forumSaveMsgNotifications('comment', commentNotifications);
+                    }
+                }
+                
+                // 保存点赞通知
+                if (parsed.likeNotifs && Array.isArray(parsed.likeNotifs)) {
+                    var likeNotifications = [];
+                    parsed.likeNotifs.forEach(function(item, idx) {
+                        if (!item.post) return;
+                        var colors = forumRandomAvatarColors();
+                        likeNotifications.push({
+                            id: 'like-' + nowTs + '-' + idx,
+                            name: role.name,
+                            postId: 'notify-' + nowTs + '-' + (10 + idx),
+                            text: '',
+                            refText: item.post.length > 60 ? item.post.substring(0, 60) + '…' : item.post,
+                            avatar: role.avatar,
+                            avatarColor: colors[0],
+                            avatarColor2: colors[1],
+                            timestamp: nowTs + 10 + idx,
+                            timeLabel: '刚刚'
+                        });
+                    });
+                    if (likeNotifications.length > 0) {
+                        forumSaveMsgNotifications('like', likeNotifications);
+                    }
+                }
+                
+                // 保存通知预览微博数据
+                if (parsed.notifyPosts && Array.isArray(parsed.notifyPosts)) {
+                    forumSaveImage('forum-notify-posts-data', JSON.stringify(parsed.notifyPosts));
+                }
+                
+            } catch (e) {
+                console.error('生成通知失败:', e);
+            }
         }
 
         async function forumGenerateMentionNotification(role, myName, chatEndpoint, apiKey, selectedModel) {
@@ -51360,7 +52010,7 @@ ${commenterInfo}
 
             var previewHtml = '';
             if (notif.refText) {
-                previewHtml = '<div class="forum-msg-notify-preview">' +
+                previewHtml = '<div class="forum-msg-notify-preview" onclick="event.stopPropagation();forumOpenNotifDetail(\'' + notif.postId + '\')">' +
                     '<div class="forum-msg-notify-preview-label">路人微博</div>' +
                     '<div class="forum-msg-notify-preview-text">' + forumEscHtml(notif.refText) + '</div>' +
                     '</div>';
@@ -56178,6 +56828,676 @@ ${songInfo}
         }
         // ===== END 性能调整功能 =====
 
+        // ===== 后台保活功能 =====
+        const KeepAliveManager = {
+            worker: null,
+            audioContext: null,
+            silentAudio: null,
+            wakeLock: null,
+            videoElement: null,
+            heartbeatCount: 0,
+            startTime: null,
+            runtimeInterval: null,
+            isEnabled: false,
+            wakeLockEnabled: false,
+            titleInterval: null,
+            originalTitle: '',
+            animationFrameId: null,
+            storageInterval: null,
+
+            init() {
+                this.loadSettings();
+                this.setupVisibilityHandler();
+                this.setupPageShowHandler();
+            },
+
+            loadSettings() {
+                const settings = JSON.parse(localStorage.getItem('keepAliveSettings') || '{}');
+                const keepaliveToggle = document.getElementById('keepalive-toggle');
+                const wakelockToggle = document.getElementById('wakelock-toggle');
+                
+                if (keepaliveToggle) {
+                    keepaliveToggle.checked = settings.keepAliveEnabled || false;
+                }
+                if (wakelockToggle) {
+                    wakelockToggle.checked = settings.wakeLockEnabled || false;
+                }
+
+                if (settings.keepAliveEnabled) {
+                    this.enable();
+                }
+                if (settings.wakeLockEnabled) {
+                    this.enableWakeLock();
+                }
+            },
+
+            saveSettings() {
+                const settings = {
+                    keepAliveEnabled: this.isEnabled,
+                    wakeLockEnabled: this.wakeLockEnabled
+                };
+                localStorage.setItem('keepAliveSettings', JSON.stringify(settings));
+            },
+
+            setupVisibilityHandler() {
+                document.addEventListener('visibilitychange', () => {
+                    if (this.isEnabled) {
+                        if (document.visibilityState === 'hidden') {
+                            this.startBackgroundMode();
+                        } else {
+                            this.stopBackgroundMode();
+                        }
+                    }
+                    this.updateStatus();
+                });
+
+                window.addEventListener('beforeunload', () => {
+                    this.disable();
+                });
+            },
+
+            setupPageShowHandler() {
+                window.addEventListener('pageshow', (e) => {
+                    if (e.persisted && this.isEnabled) {
+                        console.log('Page restored from bfcache, re-enabling keepalive');
+                        this.enable();
+                    }
+                });
+            },
+
+            createWorker() {
+                const workerCode = `
+                    let count = 0;
+                    const interval = setInterval(() => {
+                        count++;
+                        postMessage({ type: 'heartbeat', count: count });
+                    }, 1000);
+                    
+                    self.onmessage = function(e) {
+                        if (e.data.type === 'ping') {
+                            postMessage({ type: 'pong' });
+                        }
+                    };
+                `;
+                const blob = new Blob([workerCode], { type: 'application/javascript' });
+                return new Worker(URL.createObjectURL(blob));
+            },
+
+            startHeartbeat() {
+                if (this.worker) return;
+
+                this.worker = this.createWorker();
+                this.worker.onmessage = (e) => {
+                    if (e.data.type === 'heartbeat') {
+                        this.heartbeatCount++;
+                        this.updateStatus();
+                    }
+                };
+                this.worker.onerror = (e) => {
+                    console.error('KeepAlive Worker Error:', e);
+                };
+            },
+
+            stopHeartbeat() {
+                if (this.worker) {
+                    this.worker.terminate();
+                    this.worker = null;
+                }
+            },
+
+            createSilentAudioLoop() {
+                try {
+                    this.stopSilentAudio();
+
+                    const silentMp3 = 'data:audio/mp3;base64,SUQzBAAAAAAAI1RTU0UAAAAPAAADTGF2ZjU4Ljc2LjEwMAAAAAAAAAAAAAAA//tQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAWGluZwAAAA8AAAACAAABhgC7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7//////////////////////////////////////////////////////////////////8AAAAATGF2YzU4LjEzAAAAAAAAAAAAAAAAJAAAAAAAAAAAAYYAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA//tQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAWGluZwAAAA8AAAACAAABhgC7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7//////////////////////////////////////////////////////////////////8AAAAATGF2YzU4LjEzAAAAAAAAAAAAAAAAJAAAAAAAAAAAAYYAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA';
+                    
+                    this.silentAudio = new Audio(silentMp3);
+                    this.silentAudio.loop = true;
+                    this.silentAudio.volume = 0.001;
+                    this.silentAudio.play().catch(e => {
+                        console.warn('Silent audio play failed, trying user interaction workaround:', e);
+                    });
+
+                    this.audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                    if (this.audioContext.state === 'suspended') {
+                        this.audioContext.resume();
+                    }
+                    
+                    const oscillator = this.audioContext.createOscillator();
+                    const gainNode = this.audioContext.createGain();
+                    gainNode.gain.value = 0.001;
+                    oscillator.connect(gainNode);
+                    gainNode.connect(this.audioContext.destination);
+                    oscillator.start();
+                    
+                    this.oscillator = oscillator;
+                    this.gainNode = gainNode;
+
+                } catch (e) {
+                    console.warn('Failed to create silent audio:', e);
+                }
+            },
+
+            stopSilentAudio() {
+                if (this.silentAudio) {
+                    this.silentAudio.pause();
+                    this.silentAudio.src = '';
+                    this.silentAudio = null;
+                }
+                if (this.oscillator) {
+                    try { this.oscillator.stop(); } catch(e) {}
+                    this.oscillator = null;
+                }
+                if (this.gainNode) {
+                    this.gainNode = null;
+                }
+                if (this.audioContext) {
+                    try { this.audioContext.close(); } catch(e) {}
+                    this.audioContext = null;
+                }
+            },
+
+            createVideoHack() {
+                try {
+                    const videoData = 'data:video/mp4;base64,AAAAIGZ0eXBpc29tAAACAGlzb21pc28yYXZjMW1wNDEAAAAIZnJlZQAAA+NtZGF0AAACrQYF//+p3EXpvebZSLeWLNgg2SPu73gyNjQgLSBjb3JlIDE1MiByMjg1NCBlOWE1OTAzIC0gSC4yNjQvTVBFRy00IEFWQyBjb2RlYyAtIENvcHlsZWZ0IDIwMDMtMjAxNyAtIGh0dHA6Ly93d3cudmlkZW9sYW4ub3JnL3gyNjQuaHRtbCAtIG9wdGlvbnM6IGNhYmFjPTEgcmVmPTMgZGVibG9jaz0xOjA6MCBhbmFseXNlPTB4MzoweDExMyBtZT1oZXggc3VibWU9NyBwc3k9MSBwc3lfcmQ9MS4wMDowLjAwIG1peGVkX3JlZj0xIG1lX3JhbmdlPTE2IGNocm9tYV9tZT0xIHRyZWxsaXM9MSA4eDhkY3Q9MSBjcW09MCBkZWFkem9uZT0yMSwxMSBmYXN0X3Bza2lwPTEgY2hyb21hX3FwX29mZnNldD0tMiB0aHJlYWRzPTMgbG9va2FoZWFkX3RocmVhZHM9MSBzbGljZWRfdGhyZWFkcz0wIG5yPTAgZGVjaW1hdGU9MSBpbnRlcmxhY2VkPTAgYmx1cmF5X2NvbXBhdD0wIGNvbnN0cmFpbmVkX2ludHJhPTAgYmZyYW1lcz0zIGJfcHlyYW1pZD0yIGJfYWRhcHQ9MSBiX2JpYXM9MCBkaXJlY3Q9MSB3ZWlnaHRiPTEgb3Blbl9nb3A9MCB3ZWlnaHRwPTIga2V5aW50PTI1MCBrZXlpbnRfbWluPTEgc2NlbmVjdXQ9NDAgaW50cmFfcmVmcmVzaD0wIHJjX2xvb2thaGVhZD00MCByYz1jcmYgbWJ0cmVlPTEgY3JmPTIzLjAgcWNvbXA9MC42MCBxcG1pbj0wIHFwbWF4PTY5IHFwc3RlcD00IGlwX3JhdGlvPTEuNDAgYXE9MToxLjAwAIAAAAAwZYiEAD//8m+P5OXfBeLGOfKE3xkODvFZuBflHv/+VwJIta6cbpIo8s/xKNg==';
+                    
+                    this.videoElement = document.createElement('video');
+                    this.videoElement.src = videoData;
+                    this.videoElement.loop = true;
+                    this.videoElement.muted = true;
+                    this.videoElement.playsInline = true;
+                    this.videoElement.setAttribute('playsinline', '');
+                    this.videoElement.setAttribute('webkit-playsinline', '');
+                    this.videoElement.style.position = 'absolute';
+                    this.videoElement.style.width = '1px';
+                    this.videoElement.style.height = '1px';
+                    this.videoElement.style.opacity = '0';
+                    this.videoElement.style.pointerEvents = 'none';
+                    document.body.appendChild(this.videoElement);
+                    
+                    this.videoElement.play().catch(e => {
+                        console.warn('Video hack play failed:', e);
+                    });
+                } catch (e) {
+                    console.warn('Failed to create video hack:', e);
+                }
+            },
+
+            stopVideoHack() {
+                if (this.videoElement) {
+                    this.videoElement.pause();
+                    this.videoElement.src = '';
+                    if (this.videoElement.parentNode) {
+                        this.videoElement.parentNode.removeChild(this.videoElement);
+                    }
+                    this.videoElement = null;
+                }
+            },
+
+            startTitleBlink() {
+                this.originalTitle = document.title;
+                let toggle = false;
+                this.titleInterval = setInterval(() => {
+                    if (document.visibilityState === 'hidden') {
+                        document.title = toggle ? '● ' + this.originalTitle : '○ ' + this.originalTitle;
+                        toggle = !toggle;
+                    } else {
+                        document.title = this.originalTitle;
+                    }
+                }, 2000);
+            },
+
+            stopTitleBlink() {
+                if (this.titleInterval) {
+                    clearInterval(this.titleInterval);
+                    this.titleInterval = null;
+                }
+                if (this.originalTitle) {
+                    document.title = this.originalTitle;
+                }
+            },
+
+            startAnimationLoop() {
+                const loop = () => {
+                    if (this.isEnabled) {
+                        this.animationFrameId = requestAnimationFrame(loop);
+                    }
+                };
+                this.animationFrameId = requestAnimationFrame(loop);
+            },
+
+            stopAnimationLoop() {
+                if (this.animationFrameId) {
+                    cancelAnimationFrame(this.animationFrameId);
+                    this.animationFrameId = null;
+                }
+            },
+
+            startStorageHeartbeat() {
+                this.storageInterval = setInterval(() => {
+                    const now = Date.now();
+                    localStorage.setItem('keepalive_heartbeat', now.toString());
+                }, 5000);
+            },
+
+            stopStorageHeartbeat() {
+                if (this.storageInterval) {
+                    clearInterval(this.storageInterval);
+                    this.storageInterval = null;
+                }
+            },
+
+            startBackgroundMode() {
+                console.log('Entering background mode, activating all keepalive mechanisms');
+            },
+
+            stopBackgroundMode() {
+                console.log('Exiting background mode');
+            },
+
+            async enableWakeLock() {
+                if ('wakeLock' in navigator) {
+                    try {
+                        this.wakeLock = await navigator.wakeLock.request('screen');
+                        this.wakeLock.addEventListener('release', () => {
+                            console.log('Wake Lock released');
+                            if (this.wakeLockEnabled && document.visibilityState === 'visible') {
+                                setTimeout(() => this.enableWakeLock(), 100);
+                            }
+                        });
+                        this.wakeLockEnabled = true;
+                        console.log('Wake Lock enabled');
+                    } catch (e) {
+                        console.warn('Wake Lock failed:', e);
+                        showToast('屏幕常亮功能不可用：' + e.message);
+                    }
+                } else {
+                    showToast('您的浏览器不支持屏幕常亮功能');
+                }
+            },
+
+            disableWakeLock() {
+                if (this.wakeLock) {
+                    this.wakeLock.release();
+                    this.wakeLock = null;
+                }
+                this.wakeLockEnabled = false;
+            },
+
+            enable() {
+                if (this.isEnabled) return;
+
+                this.isEnabled = true;
+                this.startTime = Date.now();
+                this.heartbeatCount = 0;
+
+                this.startHeartbeat();
+                this.createSilentAudioLoop();
+                this.createVideoHack();
+                this.startTitleBlink();
+                this.startAnimationLoop();
+                this.startStorageHeartbeat();
+
+                this.runtimeInterval = setInterval(() => {
+                    this.updateRuntime();
+                }, 1000);
+
+                this.updateStatusUI(true);
+                this.saveSettings();
+                showToast('后台保活已开启（多重保活模式）');
+                
+                console.log('KeepAlive enabled with all mechanisms');
+            },
+
+            disable() {
+                if (!this.isEnabled) return;
+
+                this.isEnabled = false;
+
+                this.stopHeartbeat();
+                this.stopSilentAudio();
+                this.stopVideoHack();
+                this.stopTitleBlink();
+                this.stopAnimationLoop();
+                this.stopStorageHeartbeat();
+
+                if (this.runtimeInterval) {
+                    clearInterval(this.runtimeInterval);
+                    this.runtimeInterval = null;
+                }
+
+                this.startTime = null;
+                this.updateStatusUI(false);
+                this.saveSettings();
+                showToast('后台保活已关闭');
+                
+                console.log('KeepAlive disabled');
+            },
+
+            updateStatus() {
+                const countEl = document.getElementById('keepalive-heartbeat-count');
+                if (countEl) {
+                    countEl.textContent = this.heartbeatCount;
+                }
+            },
+
+            updateRuntime() {
+                const runtimeEl = document.getElementById('keepalive-runtime');
+                if (runtimeEl && this.startTime) {
+                    const seconds = Math.floor((Date.now() - this.startTime) / 1000);
+                    const minutes = Math.floor(seconds / 60);
+                    const hours = Math.floor(minutes / 60);
+                    
+                    if (hours > 0) {
+                        runtimeEl.textContent = `${hours}小时${minutes % 60}分`;
+                    } else if (minutes > 0) {
+                        runtimeEl.textContent = `${minutes}分${seconds % 60}秒`;
+                    } else {
+                        runtimeEl.textContent = `${seconds}秒`;
+                    }
+                }
+            },
+
+            updateStatusUI(isRunning) {
+                const statusEl = document.getElementById('keepalive-status');
+                const indicatorEl = document.getElementById('keepalive-indicator');
+                const textEl = document.getElementById('keepalive-status-text');
+
+                if (statusEl) {
+                    statusEl.style.display = isRunning ? 'block' : 'none';
+                }
+
+                if (indicatorEl) {
+                    indicatorEl.style.background = isRunning ? '#34C759' : '#8E8E93';
+                }
+
+                if (textEl) {
+                    textEl.textContent = isRunning ? '保活服务运行中...' : '保活服务已停止';
+                }
+            }
+        };
+
+        function toggleKeepAlive(enabled) {
+            if (enabled) {
+                KeepAliveManager.enable();
+            } else {
+                KeepAliveManager.disable();
+            }
+        }
+
+        async function toggleWakeLock(enabled) {
+            if (enabled) {
+                await KeepAliveManager.enableWakeLock();
+            } else {
+                KeepAliveManager.disableWakeLock();
+            }
+            KeepAliveManager.saveSettings();
+        }
+
+        function resetKeepAliveSettings() {
+            KeepAliveManager.disable();
+            KeepAliveManager.disableWakeLock();
+            KeepAliveManager.saveSettings();
+
+            const keepaliveToggle = document.getElementById('keepalive-toggle');
+            const wakelockToggle = document.getElementById('wakelock-toggle');
+            const notificationToggle = document.getElementById('notification-toggle');
+            
+            if (keepaliveToggle) keepaliveToggle.checked = false;
+            if (wakelockToggle) wakelockToggle.checked = false;
+            if (notificationToggle) notificationToggle.checked = false;
+
+            NotificationManager.disable();
+
+            showToast('后台保活设置已恢复默认');
+        }
+
+        // ===== 后台通知管理器 =====
+        const NotificationManager = {
+            isEnabled: false,
+            permission: 'default',
+
+            init() {
+                this.loadSettings();
+                this.checkPermission();
+            },
+
+            loadSettings() {
+                const settings = JSON.parse(localStorage.getItem('keepAliveSettings') || '{}');
+                const notificationToggle = document.getElementById('notification-toggle');
+                
+                if (notificationToggle) {
+                    notificationToggle.checked = settings.notificationEnabled || false;
+                }
+
+                if (settings.notificationEnabled) {
+                    this.isEnabled = true;
+                }
+            },
+
+            saveSettings() {
+                const settings = JSON.parse(localStorage.getItem('keepAliveSettings') || '{}');
+                settings.notificationEnabled = this.isEnabled;
+                localStorage.setItem('keepAliveSettings', JSON.stringify(settings));
+            },
+
+            checkPermission() {
+                if (!('Notification' in window)) {
+                    this.permission = 'unsupported';
+                    this.updatePermissionUI();
+                    return;
+                }
+
+                this.permission = Notification.permission;
+                this.updatePermissionUI();
+
+                if (Notification.permission === 'granted' && this.isEnabled) {
+                    this.isEnabled = true;
+                }
+            },
+
+            updatePermissionUI() {
+                const statusEl = document.getElementById('notification-permission-status');
+                const iconEl = document.getElementById('notification-permission-icon');
+                const textEl = document.getElementById('notification-permission-text');
+                const btnEl = document.getElementById('request-notification-btn');
+
+                if (!statusEl) return;
+
+                if (this.permission === 'unsupported') {
+                    statusEl.style.display = 'block';
+                    if (iconEl) iconEl.textContent = '❌';
+                    if (textEl) textEl.textContent = '您的浏览器不支持通知功能';
+                    if (btnEl) btnEl.style.display = 'none';
+                } else if (this.permission === 'granted') {
+                    statusEl.style.display = 'block';
+                    if (iconEl) iconEl.textContent = '✅';
+                    if (textEl) textEl.textContent = '通知权限已授权';
+                    if (btnEl) btnEl.style.display = 'none';
+                } else if (this.permission === 'denied') {
+                    statusEl.style.display = 'block';
+                    if (iconEl) iconEl.textContent = '🚫';
+                    if (textEl) textEl.textContent = '通知权限被拒绝，请在浏览器设置中允许通知';
+                    if (btnEl) btnEl.style.display = 'none';
+                } else {
+                    statusEl.style.display = 'block';
+                    if (iconEl) iconEl.textContent = '🔔';
+                    if (textEl) textEl.textContent = '需要授权通知权限才能接收后台消息';
+                    if (btnEl) btnEl.style.display = 'block';
+                }
+            },
+
+            async requestPermission() {
+                if (!('Notification' in window)) {
+                    showToast('您的浏览器不支持通知功能');
+                    return false;
+                }
+
+                try {
+                    const permission = await Notification.requestPermission();
+                    this.permission = permission;
+                    this.updatePermissionUI();
+
+                    if (permission === 'granted') {
+                        showToast('通知权限已授权');
+                        return true;
+                    } else if (permission === 'denied') {
+                        showToast('通知权限被拒绝，请在浏览器设置中允许');
+                        return false;
+                    } else {
+                        showToast('通知权限未授权');
+                        return false;
+                    }
+                } catch (e) {
+                    console.error('请求通知权限失败:', e);
+                    showToast('请求通知权限失败');
+                    return false;
+                }
+            },
+
+            enable() {
+                if (!('Notification' in window)) {
+                    showToast('您的浏览器不支持通知功能');
+                    const toggle = document.getElementById('notification-toggle');
+                    if (toggle) toggle.checked = false;
+                    return;
+                }
+
+                if (Notification.permission !== 'granted') {
+                    this.requestPermission().then(granted => {
+                        if (!granted) {
+                            const toggle = document.getElementById('notification-toggle');
+                            if (toggle) toggle.checked = false;
+                        } else {
+                            this.isEnabled = true;
+                            this.saveSettings();
+                            showToast('后台消息通知已开启');
+                        }
+                    });
+                } else {
+                    this.isEnabled = true;
+                    this.saveSettings();
+                    showToast('后台消息通知已开启');
+                }
+            },
+
+            disable() {
+                this.isEnabled = false;
+                this.saveSettings();
+            },
+
+            showNotification(title, body, icon, tag, data) {
+                if (!this.isEnabled) return null;
+                if (!('Notification' in window)) return null;
+                if (Notification.permission !== 'granted') return null;
+                if (document.visibilityState === 'visible') return null;
+
+                try {
+                    const notification = new Notification(title, {
+                        body: body,
+                        icon: icon || '/favicon.ico',
+                        tag: tag || 'chat-message',
+                        requireInteraction: false,
+                        silent: false,
+                        data: data || {}
+                    });
+
+                    notification.onclick = (event) => {
+                        event.preventDefault();
+                        window.focus();
+                        
+                        const notificationData = notification.data || {};
+                        if (notificationData.roleId) {
+                            this.navigateToChat(notificationData.roleId);
+                        }
+                        
+                        notification.close();
+                    };
+
+                    setTimeout(() => {
+                        notification.close();
+                    }, 5000);
+
+                    return notification;
+                } catch (e) {
+                    console.error('显示通知失败:', e);
+                    return null;
+                }
+            },
+
+            navigateToChat(roleId) {
+                if (!roleId) return;
+                
+                const role = roles.find(r => r.id === roleId);
+                if (!role) {
+                    console.warn('未找到对应角色:', roleId);
+                    return;
+                }
+
+                if (typeof openChat === 'function') {
+                    openChat(role);
+                } else {
+                    currentChatRole = role;
+                    const wechatChat = document.getElementById('wechat-chat');
+                    const wechatMain = document.getElementById('wechat-main');
+                    if (wechatChat) wechatChat.style.display = 'flex';
+                    if (wechatMain) wechatMain.style.display = 'none';
+                    
+                    if (typeof loadChatMessages === 'function') {
+                        loadChatMessages(roleId);
+                    }
+                    const chatTitle = document.getElementById('chat-title');
+                    if (chatTitle) {
+                        chatTitle.innerHTML = role.remark || role.name;
+                    }
+                }
+                
+                console.log('已导航到角色聊天:', role.name);
+            },
+
+            notifyNewMessage(senderName, messagePreview, avatarUrl, roleId) {
+                if (!this.isEnabled) return;
+                if (document.visibilityState === 'visible') return;
+
+                const truncatedBody = messagePreview.length > 100 
+                    ? messagePreview.substring(0, 100) + '...' 
+                    : messagePreview;
+
+                this.showNotification(
+                    senderName || '新消息',
+                    truncatedBody,
+                    avatarUrl,
+                    'chat-message-' + Date.now(),
+                    { roleId: roleId }
+                );
+            }
+        };
+
+        async function requestNotificationPermission() {
+            await NotificationManager.requestPermission();
+        }
+
+        function toggleBackgroundNotification(enabled) {
+            if (enabled) {
+                NotificationManager.enable();
+            } else {
+                NotificationManager.disable();
+                showToast('后台消息通知已关闭');
+            }
+        }
+
+        function notifyNewChatMessage(senderName, messagePreview, avatarUrl, roleId) {
+            NotificationManager.notifyNewMessage(senderName, messagePreview, avatarUrl, roleId);
+        }
+
+        // ===== END 后台保活功能 =====
+
+        // 初始化后台保活功能（必须在 KeepAliveManager 定义之后）
+        document.addEventListener('DOMContentLoaded', function() {
+            KeepAliveManager.init();
+            NotificationManager.init();
+        });
+
         async function updateChatWallpaperPreview() {
             const preview = document.getElementById('chat-wallpaper-preview');
             if (!currentChatRole || !preview) return;
@@ -57260,9 +58580,8 @@ ${songInfo}
 - 距离${userName}上一次回复你，已经过去了${timeSinceLastMessage}
 
 请注意以下几点：
-1. 这不是双方有来有回的对话，是你在给一个因为某种原因不回复你的人发消息
-2. **判断对方为什么不回消息时，请重点参考最近1-2轮的聊天记录**（越近的记录越能反映当前情况，可能是吵架、生闷气、在忙等原因）
-3. 消息内容必须严格符合你的人设，严禁ooc
+1. **判断对方为什么不回消息时，请重点参考最近1-2轮的聊天记录**（越近的记录越能反映当前情况）
+2. 消息内容必须严格符合你的人设，严禁ooc
 
 ## 情绪递进规则（时间+原因综合判断）
 你是一个活生生的人，你的情绪由**时间间隔**和**不回消息的原因**共同决定：
@@ -57270,7 +58589,7 @@ ${songInfo}
 **优先级最高：如果用户在自定义提示词中设定了特定情境，请优先按照该设定来决定情绪，不要自行判断。**
 
 **如果没有自定义设定，则根据最近聊天记录判断原因：**
-- 如果最近聊天记录中有明显的争吵、冲突、不愉快的对话：无论时间长短，情绪都会比较强烈（委屈、生气、想和好、倔强等）
+- 如果最近聊天记录中有明显的争吵、冲突、不愉快的对话：无论时间长短，情绪都会比较强烈，什么样的情绪根据角色设定来判断
 - 如果最近聊天记录氛围和谐、愉快，没有冲突：不要强行判定为吵架，用户可能只是没空回消息
 - 如果是正常对话突然断联：情绪随时间递进
 - 如果是对方说在忙后断联：可能会理解，但也可能随时间变长而担心
@@ -57283,13 +58602,13 @@ ${songInfo}
 
 **重要：不要过度解读。如果聊天氛围和谐，就不要强行判定为吵架。原因优先于时间。**
 
-## 主动发消息核心 
-1. 完全沉浸在角色中，用第一人称思考和表达 
-2. 你必须要扮演好这个角色，就像真人一样，你不是人机 
+## 主动发消息核心
+1. 完全沉浸在角色中，用第一人称思考和表达
+2. 你就是角色本人
 3. **对话连贯性第一**：哪怕是你单方面的在发消息也不能前言不搭后语
-4. 不能和一个复读机一样一直给出和上文差不多的消息
+4. 要有逻辑性，不能和一个复读机一样一直给出和上文差不多的消息
 
-请以你角色的身份，自然地给${userName}发3-8条消息。`;
+请以你，给${userName}发3-8条消息。`;
             systemPrompt += '\n\n' + proactivePrompt;
             
             if (config.prompt && config.prompt.trim()) {
@@ -66892,6 +68211,8 @@ ${chatHistoryText}
             if (!messages || messages.length === 0) return;
             
             const chatMessages = document.getElementById('chat-messages');
+            let firstMessageContent = null;
+            let roleInfo = null;
             
             for (let i = 0; i < messages.length; i++) {
                 let messageContent = messages[i];
@@ -66982,11 +68303,28 @@ ${chatHistoryText}
                             duration: voiceText.length
                         };
                         addMessage(roleId, 'received', voiceData);
+                        if (!firstMessageContent) {
+                            firstMessageContent = voiceText;
+                            roleInfo = roles.find(r => r.id === roleId);
+                        }
                         continue;
                     }
                 }
                 
                 addMessage(roleId, 'received', messageContent);
+                if (!firstMessageContent) {
+                    firstMessageContent = messageContent;
+                    roleInfo = roles.find(r => r.id === roleId);
+                }
+            }
+
+            if (firstMessageContent && roleInfo) {
+                notifyNewChatMessage(
+                    roleInfo.name || '新消息',
+                    typeof firstMessageContent === 'string' ? firstMessageContent : '发来了一条消息',
+                    roleInfo.avatar || null,
+                    roleInfo.id
+                );
             }
         }
 
@@ -77974,6 +79312,7 @@ ${characterInfo}
         let tandanCurrentRole = null;
         let tandanCurrentView = 'roles'; // 'roles' | 'shops'
         let tandanCurrentShops = []; // 当前渲染的店铺列表
+        let tandanCurrentCustomPrompt = ''; // 当前自定义情景（空则表示探店模式）
 
         function openTandan() {
             document.getElementById('tandan-app').classList.add('show');
@@ -78026,6 +79365,7 @@ ${characterInfo}
             if (!role) return;
             tandanCurrentRole = role;
             tandanCurrentView = 'shops';
+            tandanCurrentCustomPrompt = ''; // 切换角色时清空自定义情景
 
             const titleEl = document.getElementById('tandan-title');
             const body = document.getElementById('tandan-body');
@@ -78046,7 +79386,229 @@ ${characterInfo}
             });
         }
 
+        // 探店刷新选项菜单
+        let tandanRefreshMenuEl = null;
+
+        function showTandanRefreshMenu(event) {
+            event.stopPropagation();
+            if (tandanRefreshMenuEl) {
+                closeTandanRefreshMenu();
+                return;
+            }
+            const btn = event.currentTarget;
+            const rect = btn.getBoundingClientRect();
+            
+            const menu = document.createElement('div');
+            menu.className = 'tandan-refresh-menu';
+            menu.innerHTML = 
+                '<div class="tandan-refresh-menu-item" data-mode="default">' +
+                    '<svg viewBox="0 0 24 24" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>' +
+                    '<div><span>探店模式</span><div class="menu-desc">生成美食探店推荐</div></div>' +
+                '</div>' +
+                '<div class="tandan-refresh-menu-item" data-mode="custom">' +
+                    '<svg viewBox="0 0 24 24" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>' +
+                    '<div><span>自定义模式</span><div class="menu-desc">自定义情景生成剧本</div></div>' +
+                '</div>';
+            
+            // 计算菜单位置
+            let top = rect.bottom + 8;
+            let left = rect.right - menu.offsetWidth || rect.right - 200;
+            
+            menu.style.top = top + 'px';
+            menu.style.right = (window.innerWidth - rect.right) + 'px';
+            
+            document.body.appendChild(menu);
+            tandanRefreshMenuEl = menu;
+            
+            // 绑定点击事件
+            menu.querySelector('[data-mode="default"]').addEventListener('click', function() {
+                closeTandanRefreshMenu();
+                tandanRefreshShops();
+            });
+            menu.querySelector('[data-mode="custom"]').addEventListener('click', function() {
+                closeTandanRefreshMenu();
+                showTandanCustomModal();
+            });
+            
+            // 点击外部关闭
+            setTimeout(function() {
+                document.addEventListener('click', closeTandanRefreshMenuOnOutside);
+            }, 10);
+        }
+
+        function closeTandanRefreshMenu() {
+            if (tandanRefreshMenuEl) {
+                tandanRefreshMenuEl.remove();
+                tandanRefreshMenuEl = null;
+            }
+            document.removeEventListener('click', closeTandanRefreshMenuOnOutside);
+        }
+
+        function closeTandanRefreshMenuOnOutside(e) {
+            if (tandanRefreshMenuEl && !tandanRefreshMenuEl.contains(e.target)) {
+                closeTandanRefreshMenu();
+            }
+        }
+
+        // 自定义输入弹窗
+        function showTandanCustomModal() {
+            let modal = document.getElementById('tandan-custom-modal');
+            if (!modal) {
+                modal = document.createElement('div');
+                modal.id = 'tandan-custom-modal';
+                modal.className = 'tandan-custom-modal';
+                modal.innerHTML = 
+                    '<div class="tandan-custom-modal-content">' +
+                        '<div class="tandan-custom-modal-header">' +
+                            '<h3>自定义情景</h3>' +
+                            '<button class="tandan-custom-modal-close" onclick="closeTandanCustomModal()">' +
+                                '<svg viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>' +
+                            '</button>' +
+                        '</div>' +
+                        '<div class="tandan-custom-modal-body">' +
+                            '<div class="tandan-custom-modal-label">请输入想玩的梗，会生成10个相关的小剧场</div>' +
+                            '<textarea class="tandan-custom-modal-textarea" id="tandan-custom-input" placeholder="例如：傲娇、吃醋、误会..."></textarea>' +
+                        '</div>' +
+                        '<div class="tandan-custom-modal-footer">' +
+                            '<button class="tandan-custom-modal-btn cancel" onclick="closeTandanCustomModal()">取消</button>' +
+                            '<button class="tandan-custom-modal-btn confirm" onclick="confirmTandanCustomGenerate()">生成</button>' +
+                        '</div>' +
+                    '</div>';
+                document.body.appendChild(modal);
+            }
+            modal.classList.add('active');
+            setTimeout(function() {
+                document.getElementById('tandan-custom-input').focus();
+            }, 100);
+        }
+
+        function closeTandanCustomModal() {
+            const modal = document.getElementById('tandan-custom-modal');
+            if (modal) {
+                modal.classList.remove('active');
+            }
+        }
+
+        async function confirmTandanCustomGenerate() {
+            const input = document.getElementById('tandan-custom-input');
+            const customPrompt = input ? input.value.trim() : '';
+            console.log('[自定义模式] 用户输入内容:', customPrompt);
+            if (!customPrompt) {
+                alert('请输入自定义情景描述');
+                return;
+            }
+            closeTandanCustomModal();
+            if (input) input.value = '';
+            await tandanRefreshShopsCustom(customPrompt);
+        }
+
+        // 自定义模式生成
+        async function tandanRefreshShopsCustom(customPrompt) {
+            console.log('[自定义模式] 开始生成, customPrompt:', customPrompt);
+            tandanCurrentCustomPrompt = customPrompt; // 保存自定义情景
+            if (!tandanCurrentRole) return;
+            const role = tandanCurrentRole;
+            const body = document.getElementById('tandan-body');
+            const btn = body.querySelector('.tandan-refresh-btn');
+
+            if (btn) btn.classList.add('loading');
+
+            const hasCards = body.querySelector('.tandan-shop-card');
+            if (hasCards) {
+                body.classList.add('refreshing');
+                const overlay = document.createElement('div');
+                overlay.className = 'tandan-refresh-overlay';
+                overlay.innerHTML = '<div class="tandan-loading-spinner"></div><div class="tandan-loading-text">Generating...</div>';
+                body.appendChild(overlay);
+            } else {
+                body.innerHTML = '<div class="tandan-loading">' +
+                    '<div class="tandan-loading-spinner"></div>' +
+                    '<div class="tandan-loading-text">Generating...</div></div>';
+            }
+
+            const savedApiUrl = localStorage.getItem('apiUrl') || '';
+            const apiKey = localStorage.getItem('apiKey') || '';
+            const selectedModel = localStorage.getItem('selectedModel') || '';
+            const chatEndpoint = getChatEndpoint(savedApiUrl);
+
+            if (!chatEndpoint || !apiKey || !selectedModel) {
+                body.innerHTML = '<div class="tandan-empty-state">' +
+                    '<div class="tandan-empty-icon"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#8a8580" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></div>' +
+                    '<div class="tandan-empty-title">Setup Required</div>' +
+                    '<div class="tandan-empty-desc">请先在设置中配置 API</div></div>';
+                return;
+            }
+
+            let worldbookPrompt = '';
+            try { worldbookPrompt = getWorldbookPrompt(role.id); } catch(e) {}
+
+            const systemPrompt = '你是一个小说作者。你的任务是根据用户指定的情景，设计符合该情景的地点或活动。\n\n' +
+                '## 角色信息\n- 角色名称：' + role.name + '\n' +
+                (role.description ? '- 人物描述：' + role.description + '\n' : '') +
+                (role.tags && role.tags.length > 0 ? '- 性格特点：' + role.tags.join('、') + '\n' : '') +
+                (worldbookPrompt ? '\n## 世界书/背景设定\n' + worldbookPrompt + '\n' : '') +
+                '\n## ⚠️ 核心情景（必须严格遵守）\n用户指定的情景是：**' + customPrompt + '**\n\n' +
+                '你生成的所有剧本都必须直接服务于这个情景，不要偏离主题。\n\n' +
+                '## 生成要求\n' +
+                '生成10个与"' + customPrompt + '"直接相关的剧本。每个推荐要有：\n' +
+                '- name: 该剧情的场景与正在发生什么（必须与"' + customPrompt + '"直接相关，直白描述，有现实感，禁止使用"赛博"、"科幻"、"梦幻"等花里胡哨的词汇）\n' +
+                '- tags: 标签数组（2-3个，描述该剧情与"' + customPrompt + '"的关系）\n' +
+                '- desc: 剧情描述（50-80字，围绕角色在这个地点进行"' + customPrompt + '"时的互动和故事，以人物为中心，不要出现对话，描写行为，正确使用标点符号）\n\n' +
+                '## 返回格式\n严格按JSON格式返回：\n```json\n' +
+                '{ "shops": [ { "name": "名称", "tags": ["标签1","标签2"], "desc": "介绍" } ] }\n```\n\n' +
+                '⚠️ 禁止事项：\n' +
+                '1. 禁止推荐与"' + customPrompt + '"无关的地点\n' +
+                '2. 禁止偏离用户指定的情景主题\n' +
+                '3. 每次生成要有创意，避免模板化';
+
+            console.log('[自定义模式] 完整 systemPrompt:', systemPrompt);
+
+            try {
+                const response = await fetch(chatEndpoint, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': 'Bearer ' + apiKey
+                    },
+                    body: JSON.stringify({
+                        model: selectedModel,
+                        messages: [
+                            { role: 'system', content: systemPrompt },
+                            { role: 'user', content: '请为"' + customPrompt + '"这个情景推荐10个适合' + role.name + '的地点或活动，以JSON格式返回。' }
+                        ],
+                        temperature: 1.2
+                    })
+                });
+
+                if (response.ok) {
+                    const result = await response.json();
+                    let reply = result.choices[0].message.content;
+                    reply = reply.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
+
+                    try {
+                        const data = JSON.parse(reply);
+                        const shops = data.shops || [];
+                        tandanSaveShopsToDB(role.id, shops);
+                        tandanClearRefreshState();
+                        tandanRenderShops(shops);
+                    } catch(e) {
+                        console.warn('解析自定义生成JSON失败:', e);
+                        tandanClearRefreshState();
+                        body.innerHTML = '<div class="tandan-empty-state"><div class="tandan-empty-icon"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#8a8580" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg></div><div class="tandan-empty-title">Oops</div><div class="tandan-empty-desc">生成失败，请重试</div></div>';
+                    }
+                } else {
+                    tandanClearRefreshState();
+                    body.innerHTML = '<div class="tandan-empty-state"><div class="tandan-empty-icon"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#8a8580" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg></div><div class="tandan-empty-title">Request Failed</div><div class="tandan-empty-desc">API 请求失败</div></div>';
+                }
+            } catch(error) {
+                console.error('自定义生成失败:', error);
+                tandanClearRefreshState();
+                body.innerHTML = '<div class="tandan-empty-state"><div class="tandan-empty-icon"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#8a8580" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><line x1="1" y1="1" x2="23" y2="23"/><path d="M16.72 11.06A10.94 10.94 0 0 1 19 12.55"/><path d="M5 12.55a10.94 10.94 0 0 1 5.17-2.39"/><path d="M10.71 5.05A16 16 0 0 1 22.56 9"/><path d="M1.42 9a15.91 15.91 0 0 1 4.7-2.88"/><path d="M8.53 16.11a6 6 0 0 1 6.95 0"/><line x1="12" y1="20" x2="12.01" y2="20"/></svg></div><div class="tandan-empty-title">Network Error</div><div class="tandan-empty-desc">网络错误，请重试</div></div>';
+            }
+        }
+
         async function tandanRefreshShops() {
+            tandanCurrentCustomPrompt = ''; // 清空自定义情景（探店模式）
             if (!tandanCurrentRole) return;
             const role = tandanCurrentRole;
             const body = document.getElementById('tandan-body');
@@ -78095,7 +79657,7 @@ ${characterInfo}
                 '根据角色的性格、喜好和背景，生成10家推荐店铺。每家店铺要有：\n' +
                 '- name: 店铺名称（要有创意，符合当下潮流）\n' +
                 '- tags: 标签数组（2-3个，如"日料"、"安静"、"约会推荐"等）\n' +
-                '- desc: 店铺介绍（50-80字，用客观官方的口吻介绍这家店的特色、招牌菜品和用餐体验）\n\n' +
+                '- desc: 店铺介绍（50-80字，用客观官方的口吻介绍这家店的特色、招牌菜品和用餐体验，正确使用标点符号）\n\n' +
                 '## 返回格式\n严格按JSON格式返回，不要添加其他内容：\n```json\n' +
                 '{ "shops": [ { "name": "店名", "tags": ["标签1","标签2"], "desc": "推荐理由" } ] }\n```\n\n' +
                 '注意：\n1. 店铺类型要多样化（咖啡、日料、火锅、甜品、烧烤、西餐、中餐等）\n' +
@@ -78160,7 +79722,7 @@ ${characterInfo}
             body.innerHTML = '<div class="tandan-header-deco">— ' + roleName + '\'s pick —</div>' +
                 '<div class="tandan-refresh-row">' +
                     '<div class="tandan-subtitle" style="margin-bottom:0">NO SHOPS YET</div>' +
-                    '<button class="tandan-refresh-btn" onclick="tandanRefreshShops()">' +
+                    '<button class="tandan-refresh-btn" onclick="showTandanRefreshMenu(event)">' +
                         '<svg viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"></polyline><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path></svg>' +
                         'DISCOVER' +
                     '</button>' +
@@ -78183,7 +79745,7 @@ ${characterInfo}
             let html = '<div class="tandan-header-deco">— ' + roleName + '\'s pick —</div>' +
                 '<div class="tandan-refresh-row">' +
                     '<div class="tandan-subtitle tandan-anim" style="margin-bottom:0">' + shops.length + ' PLACES CURATED</div>' +
-                    '<button class="tandan-refresh-btn" onclick="tandanRefreshShops()">' +
+                    '<button class="tandan-refresh-btn" onclick="showTandanRefreshMenu(event)">' +
                         '<svg viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"></polyline><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path></svg>' +
                         'REFRESH' +
                     '</button>' +
@@ -78248,7 +79810,8 @@ ${characterInfo}
             tandanDetailShop = shop;
 
             // 填充头部
-            document.getElementById('tandan-detail-scene').textContent = '探店中…';
+            const sceneText = tandanCurrentCustomPrompt ? tandanCurrentCustomPrompt + '中…' : '探店中…';
+            document.getElementById('tandan-detail-scene').textContent = sceneText;
             document.getElementById('tandan-detail-role-label').textContent = roleName + ' 推荐';
             document.getElementById('tandan-detail-name').textContent = shop.name || '未知店铺';
 
@@ -78971,9 +80534,10 @@ ${characterInfo}
                 const now = new Date();
                 const timeStr = now.toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' });
                 const dayOfWeek = ['周日','周一','周二','周三','周四','周五','周六'][now.getDay()];
+                const customScene = tandanCurrentCustomPrompt || '探店';
                 apiMessages.push({
                     role: 'user',
-                    content: '[系统：' + userName + '刚到，现在是' + dayOfWeek + ' ' + timeStr + '。你们约好了一起去「' + (shop ? shop.name : '一家店') + '」探店。你们刚到。请你（' + roleName + '）先开口，描述到店的场景和第一句话。]'
+                    content: '[系统：现在是' + dayOfWeek + ' ' + timeStr + '。你们正在' + customScene + '。请你（' + roleName + '）先开口。要求：先用括号描述当前场景（作为旁白），然后直接说第一句话，不要加"角色名："这样的前缀。正确使用标点符号。]'
                 });
             } else {
                 apiMessages.push({ role: 'user', content: userText });
