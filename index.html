@@ -4219,7 +4219,7 @@
         .forum-hot-item:hover { background: #f9f9f9; }
         .forum-hot-item:active { background: #f0f0f0; }
 
-        .forum-hot-detail-header { padding: 16px; background: #fff; border-bottom: 1px solid #f0f0f0; flex-shrink: 0; }
+        .forum-hot-detail-header { padding: 16px; background: #fff; border-bottom: 1px solid #f0f0f0; flex-shrink: 0; position: sticky; top: 0; z-index: 10; }
         .forum-hot-detail-title { font-size: 16px; font-weight: 700; color: #111; margin-bottom: 6px; }
         .forum-hot-detail-meta { font-size: 11px; color: #999; display: flex; align-items: center; gap: 8px; }
         .forum-hot-detail-count { color: #ff6b6b; font-weight: 600; }
@@ -29495,24 +29495,17 @@
             <div class="announcement-header">
                 <div class="announcement-header-left">
                     <h2 class="announcement-title">本次更新内容</h2>
-                    <div class="announcement-date" id="announcement-date">2026年5月10日</div>
+                    <div class="announcement-date" id="announcement-date">2026年5月12日</div>
                 </div>
                 <button class="announcement-close-icon" id="announcement-close-icon" aria-label="关闭"></button>
             </div>
             <div class="announcement-body">
                 <div class="announcement-content">
                     <ul>
-                        <li>🎬 快手部分实装，首页板块固定刷新神秘精神小伙，角色板块可以生成正常视频和魔改精神小伙视频【用户发布视频和我的还没做完！大概就是只能刷视频吧】</li>
-                        <li>🔧 修复切换api预设不包含模型的问题</li>
-                        <li>📝 修复引用内容过长</li>
-                        <li>✨ 聊天侧栏美化了一下</li>
-                        <li>📱 微博可修改手机型号</li>
-                        <li>💌 微博底栏私信页增加功能：〈角色艾特你看微博，角色评论别人的微博，角色点赞过的微博〉点击消息页面的放大镜选择角色生成，一次5条，新数据覆盖旧数据（照顾一下性能！）</li>
-                        <li>💬 微博陌生人私信可以一次生成5条，并且顶栏增加一个按钮，可以选择角色帮你回私信，角色会以男朋友偷手机回陌生人消息的情景进行多轮对话，并且你也可以继续回（小品一则）</li>
-                        <li>🎨 桌面第二页的小组件修改了一下，更好看噜</li>
-                        <li>🖼️ 增加了网站图标（图源网络评论区，有争议的话会换掉）</li>
-                        <li>💫 聊天设置增加了状态栏美化</li>
-                        <li>📞 聊天设置增加了角色主动打电话（可以开启或者关闭此功能，可以设置触发打电话的提示词）</li>
+                        <li>📱 微博热搜和艾特评论点赞都可以点进去看到原微博</li>
+                        <li>🔋 后台保活（iOS测试有效）</li>
+                        <li>🔔 后台通知（iOS测试有效）</li>
+                        <li>🎭 探店模式可以自定义想玩的梗，AI会帮你生成几个小剧本</li>
                     </ul>
                 </div>
             </div>
@@ -56872,10 +56865,9 @@ ${songInfo}
             },
 
             saveSettings() {
-                const settings = {
-                    keepAliveEnabled: this.isEnabled,
-                    wakeLockEnabled: this.wakeLockEnabled
-                };
+                const settings = JSON.parse(localStorage.getItem('keepAliveSettings') || '{}');
+                settings.keepAliveEnabled = this.isEnabled;
+                settings.wakeLockEnabled = this.wakeLockEnabled;
                 localStorage.setItem('keepAliveSettings', JSON.stringify(settings));
             },
 
