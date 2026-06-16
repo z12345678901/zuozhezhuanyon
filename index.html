@@ -981,7 +981,7 @@
 
         .dark-mode .status,
         .dark-mode .status .online-indicator {
-            color: #4a4a4c !important;
+            color: #d6a5b4 !important;
         }
 
         .dark-mode .diary-app-container {
@@ -28007,7 +28007,8 @@
         .hero-section { padding: 16px 24px 16px; }
         .hero-subtitle { font-size: 13px; font-weight: 500; color: #888890; margin-bottom: 2px; text-transform: uppercase; letter-spacing: 1px; }
         .hero-title { font-size: 34px; font-weight: 800; color: #1C1C1E; letter-spacing: -1px; display: flex; align-items: center; gap: 12px; line-height: 1.1; }
-        .status-badge { font-size: 12px; font-weight: 600; color: #FFF; background: #222224; padding: 4px 10px; border-radius: 20px; }
+        .status-badge { display: none; align-items: center; justify-content: center; min-width: 20px; font-size: 12px; font-weight: 600; color: #FFF; background: #222224; padding: 4px 10px; border-radius: 20px; }
+        .status-badge.visible { display: inline-flex; }
 
         .search-wrapper { padding: 0 24px 24px; }
         .search-bar-new {
@@ -38105,7 +38106,7 @@
                 </div>
 
                 <div class="ins-profile-section jury-container">
-                    <div class="ins-section-title">好友/动物评审团</div>
+                    <div class="ins-section-title">评审团</div>
                     <div class="jury-list" id="ins-jury-list"></div>
                 </div>
 
@@ -42072,7 +42073,7 @@
                 <div class="hero-subtitle" id="hero-date"></div>
                 <div class="hero-title">
                     Inbox
-                    <span class="status-badge" id="inbox-count">0</span>
+                    <span class="status-badge" id="inbox-count"></span>
                 </div>
             </div>
 
@@ -42348,6 +42349,44 @@
                 <div class="voice-modal-buttons">
                     <button class="voice-modal-btn cancel" onclick="closeVoiceModal()">取消</button>
                     <button class="voice-modal-btn send" onclick="sendVoiceMessage()">发送</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="quick-command-modal-overlay" id="quick-command-modal-overlay">
+            <div class="quick-command-modal">
+                <div class="quick-command-modal-top">
+                    <button class="quick-command-close" onclick="closeQuickCommandModal()" aria-label="关闭">
+                        <svg viewBox="0 0 24 24" fill="none" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                            <polyline points="15 18 9 12 15 6"></polyline>
+                        </svg>
+                    </button>
+                </div>
+                <div class="quick-command-content-card">
+                    <div class="quick-command-modal-header">
+                        <div class="quick-command-modal-icon">
+                            <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M4 7h16"></path>
+                                <path d="M4 12h10"></path>
+                                <path d="M4 17h7"></path>
+                                <path d="M17 14l3 3-3 3"></path>
+                            </svg>
+                        </div>
+                        <div>
+                            <div class="quick-command-modal-title">快捷指令</div>
+                            <div class="quick-command-modal-subtitle">写给 <span id="quick-command-role-name">TA</span> 的临时强制提示词</div>
+                        </div>
+                    </div>
+                    <textarea class="quick-command-textarea" id="quick-command-textarea" maxlength="1200" placeholder="例如：请更主动、少解释，不要跳出角色。"></textarea>
+                    <div class="quick-command-preset-tools">
+                        <input class="quick-command-preset-name" id="quick-command-preset-name" maxlength="32" placeholder="预设名称" autocomplete="off">
+                        <button class="quick-command-small-btn" type="button" onclick="saveQuickCommandPreset()">存为预设</button>
+                    </div>
+                    <div class="quick-command-presets" id="quick-command-presets"></div>
+                </div>
+                <div class="quick-command-actions">
+                    <button class="quick-command-btn clear" type="button" onclick="clearQuickCommandActive()">清除</button>
+                    <button class="quick-command-btn apply" type="button" onclick="applyQuickCommandActive()">应用</button>
                 </div>
             </div>
         </div>
@@ -58397,15 +58436,30 @@ ${conversationHistory.slice(-10).map(msg => {
                 if (roleMessages.length === 0) return false;
                 
                 const lastReadTime = this.getLastReadTime(roleId);
-                if (!lastReadTime) return true;
                 
                 const receivedMessages = roleMessages.filter(msg => msg.type === 'received' && msg.context !== 'call');
                 if (receivedMessages.length === 0) return false;
+                if (!lastReadTime) return true;
                 
                 const lastReceivedMsg = receivedMessages[receivedMessages.length - 1];
                 const lastReceivedTime = new Date(lastReceivedMsg.timestamp);
                 
                 return lastReceivedTime > lastReadTime;
+            },
+
+            getUnreadCount: function(roleId) {
+                const roleMessages = messages[roleId] || [];
+                if (roleMessages.length === 0) return 0;
+
+                const lastReadTime = this.getLastReadTime(roleId);
+                const lastReadMs = lastReadTime ? lastReadTime.getTime() : 0;
+
+                return roleMessages.filter(msg => {
+                    if (msg.type !== 'received' || msg.context === 'call') return false;
+                    if (!msg.timestamp) return !lastReadTime;
+                    const msgTime = new Date(msg.timestamp).getTime();
+                    return Number.isFinite(msgTime) && msgTime > lastReadMs;
+                }).length;
             },
             
             hasAnyUnreadMessages: function() {
@@ -66848,6 +66902,11 @@ ${commenterInfo}
                 emptyMessage.style.fontSize = '14px';
                 emptyMessage.innerHTML = '暂无消息<br><span style="font-size: 12px; color: #C0C0C8;">去通讯录添加角色吧</span>';
                 messageList.appendChild(emptyMessage);
+                if (inboxCount) {
+                    inboxCount.textContent = '';
+                    inboxCount.classList.remove('visible');
+                    inboxCount.removeAttribute('aria-label');
+                }
                 return;
             }
 
@@ -66998,6 +67057,8 @@ ${commenterInfo}
 
                 const preview = document.createElement('div');
                 preview.className = 'preview-bubble';
+                const unreadCount = UnreadManager.getUnreadCount(role.id);
+                totalUnread += unreadCount;
                 if (roleMessages.length > 0) {
                     const lastMessage = roleMessages[roleMessages.length - 1];
                     if (lastMessage.content && typeof lastMessage.content === 'object') {
@@ -67080,7 +67141,15 @@ ${commenterInfo}
             });
 
             if (inboxCount) {
-                inboxCount.textContent = totalUnread;
+                if (totalUnread > 0) {
+                    inboxCount.textContent = totalUnread > 99 ? '99+' : totalUnread;
+                    inboxCount.classList.add('visible');
+                    inboxCount.setAttribute('aria-label', `${totalUnread} 条未读消息`);
+                } else {
+                    inboxCount.textContent = '';
+                    inboxCount.classList.remove('visible');
+                    inboxCount.removeAttribute('aria-label');
+                }
             }
         }
 
@@ -67681,6 +67750,7 @@ ${commenterInfo}
             checkChatApiStatus();
             
             UnreadManager.setLastReadTime(role.id);
+            loadMessages();
         }
 
         function checkChatApiStatus() {
@@ -79726,6 +79796,10 @@ ${chatHistoryText}
                 });
                 
                 attachMessageClickHandlers();
+
+                if (type === 'received') {
+                    UnreadManager.setLastReadTime(roleId);
+                }
             } else {
                 console.log(`[ChatIsolation] 消息已存储到角色 ${roleId}，但当前显示角色为 ${currentChatRole ? currentChatRole.id : 'null'}，跳过UI更新`);
             }
