@@ -24562,6 +24562,8 @@
             font-weight: 500;
             letter-spacing: 1px;
             cursor: pointer;
+            touch-action: manipulation;
+            -webkit-tap-highlight-color: transparent;
             transition: all 0.3s;
         }
         .meet-review-close-btn:hover {
@@ -25255,6 +25257,8 @@
             border: none;
             color: var(--meet-text-muted);
             cursor: pointer;
+            touch-action: manipulation;
+            -webkit-tap-highlight-color: transparent;
             padding: 4px;
             transition: color 0.3s;
             margin-left: auto;
@@ -25797,6 +25801,29 @@
         .meet-settings-panel .settings-save-btn:hover {
             background: var(--meet-primary-pink);
             color: #FFFFFF;
+        }
+        .meet-settings-panel .meet-settings-actions {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        .meet-settings-panel .meet-exit-btn {
+            background: #FAFAFA;
+            color: #d7606d;
+            border: 1px solid #f0c4cb;
+            border-radius: 20px;
+            padding: 8px 20px;
+            font-size: 11px;
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .meet-settings-panel .meet-exit-btn:hover {
+            background: #d7606d;
+            color: #FFFFFF;
+            border-color: #d7606d;
         }
 
         /* 存档管理样式 */
@@ -38297,7 +38324,10 @@
                             </div>
                         </div>
                     </div>
-                    <button class="settings-save-btn" id="meet-settings-save">Save</button>
+                    <div class="meet-settings-actions">
+                        <button class="settings-save-btn" id="meet-settings-save">Save</button>
+                        <button class="meet-exit-btn" id="meet-settings-exit">退出线下</button>
+                    </div>
                     <div class="setting-group save-slots-group" id="meet-save-slots-group">
                         <div class="save-slots-toggle">
                             <span class="setting-label">存档管理</span>
@@ -43620,12 +43650,12 @@
                     </div>
                     
                     <div class="form-group" id="auto-summary-count-group">
-                        <label for="auto-summary-count" style="color: rgb(51, 51, 51);">自动总结 - 回顾聊天记录轮数:</label>
+                        <label for="auto-summary-count" style="color: rgb(51, 51, 51);">自动总结 - 触发/回顾聊天记录轮数:</label>
                         <div style="display: flex; gap: 10px; align-items: center;">
                             <input type="number" id="auto-summary-count" min="1" max="500" value="50" style="flex: 1; padding: 14px 16px; border: 1px solid rgba(0, 0, 0, 0.15); border-radius: 12px; background: rgba(255, 255, 255, 0.9); color: #333; font-size: 15px;">
                         </div>
                         <p style="font-size: 12px; color: #666; margin-top: 8px;">
-                            设置自动总结时，回顾最近多少轮聊天记录（1轮 = 你发1条 + AI回1条，范围: 1-500轮）。
+                            每新增这么多轮聊天后自动总结，并回顾最近同样数量的聊天记录（1轮 = 你发1条 + AI回1条，范围: 1-500轮）。
                         </p>
                     </div>
                     
@@ -44139,7 +44169,7 @@
                     </div>
                 </div>
                 <div class="thought-chain-footer">
-                    <button class="thought-chain-btn secondary" onclick="disableThoughtChainPrompt()">停用</button>
+                    <button class="thought-chain-btn secondary" onclick="restoreDefaultThoughtChainPrompt()">还原默认</button>
                     <button class="thought-chain-btn primary" onclick="saveThoughtChainPreset()">保存为预设</button>
                 </div>
             </div>
@@ -45648,6 +45678,68 @@
             let currentCallMessages = []; // 当前通话的消息记录
             let activeCallRole = null;
 
+            function bindTapSafeButton(button, handler) {
+                if (!button || button.dataset.callTapSafeBound === 'true') return;
+                button.dataset.callTapSafeBound = 'true';
+
+                let startX = 0;
+                let startY = 0;
+                let moved = false;
+                let hadTouchStart = false;
+                let lastTouchTime = 0;
+                const tolerance = 12;
+
+                function getTouch(e) {
+                    return (e.changedTouches && e.changedTouches[0]) || (e.touches && e.touches[0]);
+                }
+
+                function markMovedIfNeeded(touch) {
+                    if (!touch || !hadTouchStart) return;
+                    if (Math.abs(touch.clientX - startX) > tolerance ||
+                        Math.abs(touch.clientY - startY) > tolerance) {
+                        moved = true;
+                    }
+                }
+
+                button.addEventListener('click', function(e) {
+                    if (Date.now() - lastTouchTime < 600) {
+                        e.preventDefault();
+                        return;
+                    }
+                    handler.call(button, e);
+                });
+
+                button.addEventListener('touchstart', function(e) {
+                    const touch = getTouch(e);
+                    if (!touch) return;
+                    startX = touch.clientX;
+                    startY = touch.clientY;
+                    moved = false;
+                    hadTouchStart = true;
+                }, { passive: true });
+
+                button.addEventListener('touchmove', function(e) {
+                    markMovedIfNeeded(getTouch(e));
+                }, { passive: true });
+
+                button.addEventListener('touchend', function(e) {
+                    markMovedIfNeeded(getTouch(e));
+                    if (!hadTouchStart) return;
+                    hadTouchStart = false;
+                    lastTouchTime = Date.now();
+                    if (moved) return;
+                    e.preventDefault();
+                    e.stopPropagation();
+                    handler.call(button, e);
+                }, { passive: false });
+
+                button.addEventListener('touchcancel', function() {
+                    hadTouchStart = false;
+                    moved = true;
+                    lastTouchTime = Date.now();
+                }, { passive: true });
+            }
+
             function setActiveCallRole(role = currentChatRole) {
                 if (role) activeCallRole = role;
                 return activeCallRole;
@@ -45704,31 +45796,31 @@
                 const callMiniBubble = document.getElementById('call-mini-bubble');
 
                 if (iconCallBtn) {
-                    iconCallBtn.addEventListener('click', openCallPopup);
+                    bindTapSafeButton(iconCallBtn, openCallPopup);
                 }
 
                 if (btnCallEnd) {
-                    btnCallEnd.addEventListener('click', closeCallPopup);
+                    bindTapSafeButton(btnCallEnd, closeCallPopup);
                 }
 
                 if (btnCallSend) {
-                    btnCallSend.addEventListener('click', sendMessage);
+                    bindTapSafeButton(btnCallSend, sendMessage);
                 }
 
                 if (btnRingingCancel) {
-                    btnRingingCancel.addEventListener('click', cancelCallRinging);
+                    bindTapSafeButton(btnRingingCancel, cancelCallRinging);
                 }
 
                 if (btnRingingAccept) {
-                    btnRingingAccept.addEventListener('click', acceptIncomingCall);
+                    bindTapSafeButton(btnRingingAccept, acceptIncomingCall);
                 }
 
                 if (btnRingingReject) {
-                    btnRingingReject.addEventListener('click', rejectIncomingCall);
+                    bindTapSafeButton(btnRingingReject, rejectIncomingCall);
                 }
 
                 if (btnCallMini) {
-                    btnCallMini.addEventListener('click', minimizeCallPopup);
+                    bindTapSafeButton(btnCallMini, minimizeCallPopup);
                 }
 
                 if (callMiniBubble) {
@@ -47492,16 +47584,78 @@ ${contextSummary || '无'}
                 night: ['Under Stars', 'Moonlit Night', 'Late Night', 'Quiet Hours']
             };
 
+            function bindTapSafeButton(button, handler) {
+                if (!button || button.dataset.tapSafeBound === 'true') return;
+                button.dataset.tapSafeBound = 'true';
+
+                let startX = 0;
+                let startY = 0;
+                let moved = false;
+                let hadTouchStart = false;
+                let lastTouchTime = 0;
+                const tolerance = 12;
+
+                function getTouch(e) {
+                    return (e.changedTouches && e.changedTouches[0]) || (e.touches && e.touches[0]);
+                }
+
+                function markMovedIfNeeded(touch) {
+                    if (!touch || !hadTouchStart) return;
+                    if (Math.abs(touch.clientX - startX) > tolerance ||
+                        Math.abs(touch.clientY - startY) > tolerance) {
+                        moved = true;
+                    }
+                }
+
+                button.addEventListener('click', function(e) {
+                    if (Date.now() - lastTouchTime < 600) {
+                        e.preventDefault();
+                        return;
+                    }
+                    handler.call(button, e);
+                });
+
+                button.addEventListener('touchstart', function(e) {
+                    const touch = getTouch(e);
+                    if (!touch) return;
+                    startX = touch.clientX;
+                    startY = touch.clientY;
+                    moved = false;
+                    hadTouchStart = true;
+                }, { passive: true });
+
+                button.addEventListener('touchmove', function(e) {
+                    markMovedIfNeeded(getTouch(e));
+                }, { passive: true });
+
+                button.addEventListener('touchend', function(e) {
+                    markMovedIfNeeded(getTouch(e));
+                    if (!hadTouchStart) return;
+                    hadTouchStart = false;
+                    lastTouchTime = Date.now();
+                    if (moved) return;
+                    e.preventDefault();
+                    e.stopPropagation();
+                    handler.call(button, e);
+                }, { passive: false });
+
+                button.addEventListener('touchcancel', function() {
+                    hadTouchStart = false;
+                    moved = true;
+                    lastTouchTime = Date.now();
+                }, { passive: true });
+            }
+
             function init() {
                 const closeBtn = document.getElementById('meet-close-btn');
                 const sendBtn = document.getElementById('meet-send-btn');
                 const meetInput = document.getElementById('meet-input');
                 const toggleBtn = document.getElementById('toggle-choices-btn');
 
-                if (closeBtn) closeBtn.addEventListener('click', closeMeet);
+                bindTapSafeButton(closeBtn, closeMeet);
                 const reviewCloseBtn = document.getElementById('meet-review-close-btn');
-                if (reviewCloseBtn) reviewCloseBtn.addEventListener('click', closeMeet);
-                if (sendBtn) sendBtn.addEventListener('click', sendUserMessage);
+                bindTapSafeButton(reviewCloseBtn, closeMeet);
+                bindTapSafeButton(sendBtn, sendUserMessage);
                 if (meetInput) {
                     meetInput.addEventListener('keydown', function(e) {
                         if (e.key === 'Enter' && !e.isComposing) {
@@ -47511,7 +47665,7 @@ ${contextSummary || '无'}
                     });
                 }
                 if (toggleBtn) {
-                    toggleBtn.addEventListener('click', function() {
+                    bindTapSafeButton(toggleBtn, function() {
                         const panel = document.getElementById('meet-options-bar');
                         this.classList.toggle('collapsed');
                         if (panel) panel.classList.toggle('collapsed');
@@ -47522,9 +47676,10 @@ ${contextSummary || '无'}
                 const cmdIcon = document.querySelector('.meet-container .cmd-icon');
                 const settingsPanel = document.getElementById('meet-settings-panel');
                 const settingsSave = document.getElementById('meet-settings-save');
+                const settingsExit = document.getElementById('meet-settings-exit');
                 if (cmdIcon && settingsPanel) {
                     cmdIcon.style.cursor = 'pointer';
-                    cmdIcon.addEventListener('click', function() {
+                    bindTapSafeButton(cmdIcon, function() {
                         settingsPanel.classList.toggle('active');
                         // 从缓存加载已保存的设置
                         const styleInput = document.getElementById('meet-style-input');
@@ -47542,7 +47697,7 @@ ${contextSummary || '无'}
                     });
                 }
                 if (settingsSave) {
-                    settingsSave.addEventListener('click', function() {
+                    bindTapSafeButton(settingsSave, function() {
                         const styleInput = document.getElementById('meet-style-input');
                         const narrationLimit = document.getElementById('meet-narration-limit');
                         const dialogueLimit = document.getElementById('meet-dialogue-limit');
@@ -47554,11 +47709,17 @@ ${contextSummary || '无'}
                         settingsPanel.classList.remove('active');
                     });
                 }
+                if (settingsExit) {
+                    bindTapSafeButton(settingsExit, function() {
+                        if (settingsPanel) settingsPanel.classList.remove('active');
+                        closeMeet();
+                    });
+                }
 
                 // 记忆互通开关
                 const memoryToggle = document.getElementById('meet-memory-toggle');
                 if (memoryToggle) {
-                    memoryToggle.addEventListener('click', function() {
+                    bindTapSafeButton(memoryToggle, function() {
                         this.classList.toggle('active');
                         meetSettings.meetMemorySharing = this.classList.contains('active');
                         saveMeetSettingsToDB();
@@ -47591,7 +47752,7 @@ ${contextSummary || '无'}
                     });
                 }
                 if (presetSaveBtn) {
-                    presetSaveBtn.addEventListener('click', function() {
+                    bindTapSafeButton(presetSaveBtn, function() {
                         const styleInput = document.getElementById('meet-style-input');
                         const narrationLimit = document.getElementById('meet-narration-limit');
                         const dialogueLimit = document.getElementById('meet-dialogue-limit');
@@ -47610,7 +47771,7 @@ ${contextSummary || '无'}
                     });
                 }
                 if (presetDeleteBtn) {
-                    presetDeleteBtn.addEventListener('click', function() {
+                    bindTapSafeButton(presetDeleteBtn, function() {
                         const idx = parseInt(presetSelect ? presetSelect.value : '');
                         if (isNaN(idx) || !meetStylePresets[idx]) return;
                         if (!confirm('确定删除预设「' + meetStylePresets[idx].name + '」？')) return;
@@ -47644,7 +47805,7 @@ ${contextSummary || '无'}
                     });
                 }
                 if (wallpaperClearBtn) {
-                    wallpaperClearBtn.addEventListener('click', function() {
+                    bindTapSafeButton(wallpaperClearBtn, function() {
                         clearMeetWallpaper();
                         clearMeetWallpaperFromDB();
                         const preview = document.getElementById('meet-wallpaper-preview');
@@ -48078,19 +48239,18 @@ ${(() => {
                                     const delta = parsed.choices?.[0]?.delta?.content || '';
                                     if (delta) {
                                         fullReply += delta;
-                                        updateMeetMessage(loadingEl, fullReply);
+                                        updateMeetMessage(loadingEl, stripStreamingThoughtChainOutput(fullReply) || '…');
                                     }
                                 } catch (e) {}
                             }
                         }
                     }
 
-                    if (!fullReply.trim()) {
-                        fullReply = '（对方看了看你，没有说话）';
-                    }
+                    let cleanReply = stripThoughtChainOutputTags(fullReply).trim();
+                    if (!cleanReply) cleanReply = '（对方看了看你，没有说话）';
 
-                    updateMeetMessage(loadingEl, fullReply, true);
-                    meetMessages.push({ role: 'assistant', content: fullReply });
+                    updateMeetMessage(loadingEl, cleanReply, true);
+                    meetMessages.push({ role: 'assistant', content: cleanReply });
 
                     // 增加好感度
                     const rounds = meetMessages.filter(m => m.role === 'assistant').length;
@@ -48102,8 +48262,8 @@ ${(() => {
                     updateAffection();
 
                     // 解析选项
-                    parseAndShowOptions(fullReply);
-                    parseAndUpdateScene(fullReply);
+                    parseAndShowOptions(cleanReply);
+                    parseAndUpdateScene(cleanReply);
 
                 } catch (error) {
                     if (error.name === 'AbortError') return;
@@ -48171,7 +48331,7 @@ ${(() => {
 
                 // 单击事件 - 显示回溯菜单（仅点击气泡或叙事框时触发）
                 (function(w) {
-                    w.addEventListener('click', function(e) {
+                    bindTapSafeButton(w, function(e) {
                         e.stopPropagation();
                         var targetBlock = e.target.closest('.narrative-box') || e.target.closest('.meet-message') || null;
                         if (!targetBlock) return; // 点击空白区域不触发
@@ -48320,7 +48480,7 @@ ${(() => {
             }
 
             function stripOptionsTag(text) {
-                return text.replace(/\[选项:.*?\]/g, '').replace(/\[场景:.*?\]/g, '').trim();
+                return stripThoughtChainOutputTags(text).replace(/\[选项:.*?\]/g, '').replace(/\[场景:.*?\]/g, '').trim();
             }
 
             function parseAndUpdateScene(text) {
@@ -48344,7 +48504,7 @@ ${(() => {
                     const btn = document.createElement('button');
                     btn.className = 'meet-option-btn';
                     btn.textContent = opt;
-                    btn.addEventListener('click', function() {
+                    bindTapSafeButton(btn, function() {
                         selectOption(opt);
                     });
                     optionsBar.appendChild(btn);
@@ -48470,13 +48630,13 @@ ${(() => {
                 menu.style.left = posX + 'px';
                 menu.style.top = posY + 'px';
 
-                menu.querySelector('.meet-menu-item.rewind').addEventListener('click', function(e) {
+                bindTapSafeButton(menu.querySelector('.meet-menu-item.rewind'), function(e) {
                     e.stopPropagation();
                     hideMeetContextMenu();
                     meetRewindFrom(wrapper, targetBlock);
                 });
 
-                menu.querySelector('.meet-menu-item.delete').addEventListener('click', function(e) {
+                bindTapSafeButton(menu.querySelector('.meet-menu-item.delete'), function(e) {
                     e.stopPropagation();
                     hideMeetContextMenu();
                     meetDeleteBlock(wrapper, targetBlock);
@@ -50920,16 +51080,29 @@ ${(() => {
 
         // 触摸交互
         document.querySelectorAll('.app-icon, .dock-app').forEach(icon => {
-            icon.addEventListener('click', function(e) {
-                e.preventDefault();
-                const appName = this.querySelector('.app-name, .dock-name').textContent;
-                const appData = this.getAttribute('data-app');
+            let touchStartX = 0;
+            let touchStartY = 0;
+            let touchMoved = false;
+            let lastTouchLaunchTime = 0;
+            let lastTouchMoveTime = 0;
+            const tapMoveTolerance = 12;
+
+            function getPrimaryTouch(e) {
+                return (e.changedTouches && e.changedTouches[0]) || (e.touches && e.touches[0]);
+            }
+
+            function launchAppFromIcon(e) {
+                if (e) e.preventDefault();
+                const appNameElement = icon.querySelector('.app-name, .dock-name');
+                if (!appNameElement) return;
+                const appName = appNameElement.textContent;
+                const appData = icon.getAttribute('data-app');
                 
-                const isVCentered = this.classList.contains('v-centered');
+                const isVCentered = icon.classList.contains('v-centered');
                 const baseTransform = isVCentered ? 'translateY(-50%) ' : '';
-                this.style.transform = baseTransform + 'scale(0.92)';
+                icon.style.transform = baseTransform + 'scale(0.92)';
                 setTimeout(() => {
-                    this.style.transform = baseTransform.trim() || '';
+                    icon.style.transform = baseTransform.trim() || '';
                 }, 150);
                 
                 setTimeout(() => {
@@ -50963,8 +51136,48 @@ ${(() => {
                         alert(`打开应用: ${appName}`);
                     }
                 }, 200);
+            }
+
+            icon.addEventListener('click', function(e) {
+                if (Date.now() - lastTouchLaunchTime < 600 || Date.now() - lastTouchMoveTime < 600) {
+                    e.preventDefault();
+                    return;
+                }
+                launchAppFromIcon(e);
             });
-            
+
+            icon.addEventListener('touchstart', function(e) {
+                const touch = getPrimaryTouch(e);
+                if (!touch) return;
+                touchStartX = touch.clientX;
+                touchStartY = touch.clientY;
+                touchMoved = false;
+            }, { passive: true });
+
+            icon.addEventListener('touchmove', function(e) {
+                const touch = getPrimaryTouch(e);
+                if (!touch) return;
+                if (Math.abs(touch.clientX - touchStartX) > tapMoveTolerance ||
+                    Math.abs(touch.clientY - touchStartY) > tapMoveTolerance) {
+                    touchMoved = true;
+                }
+            }, { passive: true });
+
+            icon.addEventListener('touchend', function(e) {
+                const touch = getPrimaryTouch(e);
+                if (touch && (Math.abs(touch.clientX - touchStartX) > tapMoveTolerance ||
+                    Math.abs(touch.clientY - touchStartY) > tapMoveTolerance)) {
+                    touchMoved = true;
+                }
+                if (touchMoved) {
+                    lastTouchMoveTime = Date.now();
+                    return;
+                }
+                lastTouchLaunchTime = Date.now();
+                e.stopPropagation();
+                launchAppFromIcon(e);
+            }, { passive: false });
+             
             icon.addEventListener('contextmenu', function(e) {
                 e.preventDefault();
             });
@@ -73066,10 +73279,22 @@ ${songInfo}
             localStorage.setItem('autoSummaryCount', autoCount);
             localStorage.setItem('autoSummaryEnabled', autoSummaryEnabled);
             localStorage.setItem('customSummaryPrompt', customPrompt);
+
+            if (currentChatRole) {
+                const lastSummaryIndexKey = 'lastSummaryIndex_' + currentChatRole.id;
+                if (autoSummaryEnabled) {
+                    const currentMessageCount = messages[currentChatRole.id] ? messages[currentChatRole.id].length : 0;
+                    localStorage.setItem(lastSummaryIndexKey, currentMessageCount.toString());
+                    console.log(`[AutoSummary] 自动总结已开启，从当前消息数 ${currentMessageCount} 开始计数`);
+                } else {
+                    localStorage.removeItem(lastSummaryIndexKey);
+                    console.log('[AutoSummary] 自动总结已关闭，已清除当前角色的触发计数');
+                }
+            }
             
-            let message = `已保存设置：\n手动总结回顾 ${manualCount} 条\n自动总结功能: ${autoSummaryEnabled ? '已开启' : '已关闭'}\n自定义提示词: ${customPrompt ? '已设置' : '未设置（使用默认）'}`;
+            let message = `已保存设置：\n手动总结回顾 ${manualCount} 轮\n自动总结功能: ${autoSummaryEnabled ? '已开启' : '已关闭'}\n自定义提示词: ${customPrompt ? '已设置' : '未设置（使用默认）'}`;
             if (autoSummaryEnabled) {
-                message += `\n自动总结回顾 ${autoCount} 条`;
+                message += `\n每新增 ${autoCount} 轮后自动总结，并回顾最近 ${autoCount} 轮`;
             }
             alert(message);
             closeAiSummarySettings();
@@ -79820,8 +80045,15 @@ ${chatHistoryText}
             
             const autoTriggerCount = parseInt(localStorage.getItem('autoSummaryCount')) || 50;
             const lastSummaryIndexKey = 'lastSummaryIndex_' + roleId;
-            const lastSummaryIndex = parseInt(localStorage.getItem(lastSummaryIndexKey)) || 0;
             const currentMessageCount = messages[roleId] ? messages[roleId].length : 0;
+            const savedLastSummaryIndex = localStorage.getItem(lastSummaryIndexKey);
+            if (savedLastSummaryIndex === null) {
+                localStorage.setItem(lastSummaryIndexKey, currentMessageCount.toString());
+                console.log(`[AutoSummary] 初始化自动总结计数起点: ${currentMessageCount}`);
+                return;
+            }
+
+            const lastSummaryIndex = parseInt(savedLastSummaryIndex) || 0;
             const newMessagesSinceLastSummary = currentMessageCount - lastSummaryIndex;
             // 按「轮」计数：一轮 = 用户发送 + AI回复，所以实际消息阈值 = 设置轮数 * 2
             const actualThreshold = autoTriggerCount * 2;
@@ -84050,7 +84282,18 @@ ${recentContext || '暂无最近聊天'}` : `无角色参与。请以未来的�
                 .replace(/<reasoning\b[^>]*>[\s\S]*?<\/reasoning>/gi, '')
                 .replace(/<cot\b[^>]*>[\s\S]*?<\/cot>/gi, '')
                 .replace(/\[思考链\][\s\S]*?\[\/思考链\]/gi, '')
-                .replace(/<\/?(?:thought|think|thinking|reasoning|cot)\b[^>]*>/gi, '');
+                .replace(/<\s*(?:thought|think|thinking|reasoning|cot)\b[^>]*>[\s\S]*$/i, '')
+                .replace(/\[思考链\][\s\S]*$/i, '')
+                .replace(/<\/?(?:thought|think|thinking|reasoning|cot)\b[^>]*>/gi, '')
+                .replace(/^\s*(?:思考|推理|分析|思维链|思考链|reasoning|analysis|chain of thought)\s*[:：][\s\S]*?(?=(?:\n{2,}|(?:^|\n)\s*(?:最终回复|回复|正文|回答)\s*[:：]))/i, '')
+                .replace(/(?:^|\n)\s*(?:最终回复|回复|正文|回答)\s*[:：]\s*/i, '\n')
+                .trim();
+        }
+
+        function stripStreamingThoughtChainOutput(text) {
+            return stripThoughtChainOutputTags(text)
+                .replace(/^\s*(?:思考|推理|分析|思维链|思考链|reasoning|analysis|chain of thought)\s*[:：][\s\S]*$/i, '')
+                .trim();
         }
 
         function buildThoughtChainSystemPrompt(scope = 'chat', options = {}) {
@@ -84194,15 +84437,23 @@ ${recentContext || '暂无最近聊天'}` : `无角色参与。请以未来的�
             thoughtChainToast('思维链预设已删除');
         }
 
-        function disableThoughtChainPrompt() {
-            const active = getThoughtChainActive() || {};
-            setThoughtChainActive({ ...active, enabled: false, offlineEnabled: false });
+        function restoreDefaultThoughtChainPrompt() {
+            localStorage.removeItem(THOUGHT_CHAIN_ACTIVE_KEY);
+            thoughtChainEditingPresetId = null;
+            const nameInput = document.getElementById('thought-chain-name');
+            const contentInput = document.getElementById('thought-chain-content');
             const enabledInput = document.getElementById('thought-chain-enabled');
             const offlineEnabledInput = document.getElementById('thought-chain-offline-enabled');
-            if (enabledInput) enabledInput.checked = false;
+            if (nameInput) nameInput.value = '';
+            if (contentInput) contentInput.value = '';
+            if (enabledInput) enabledInput.checked = true;
             if (offlineEnabledInput) offlineEnabledInput.checked = false;
             renderThoughtChainPresets();
-            thoughtChainToast('思维链提示词已停用');
+            thoughtChainToast('已还原默认思维链');
+        }
+
+        function disableThoughtChainPrompt() {
+            restoreDefaultThoughtChainPrompt();
         }
 
         // ============================================
@@ -91132,7 +91383,22 @@ ${jurySourceInstruction}
         // ==================== 桌面区域滚动和缩放限制 ====================
         (function() {
             var desktopSelectors = '.ios-container, .home-screen, .app-grid, .dock';
+            var interactiveSelectors = '.app-icon, .dock-app, .desktop-page-turn-btn, button, a, input, textarea, select, label, [onclick], [role="button"], [contenteditable="true"]';
             
+            function isEventOnInteractiveElement(e) {
+                var target = e.target;
+                while (target && target !== document) {
+                    if (target.matches && target.matches(interactiveSelectors)) {
+                        return true;
+                    }
+                    if (target.nodeType === 1 && window.getComputedStyle(target).cursor === 'pointer') {
+                        return true;
+                    }
+                    target = target.parentElement;
+                }
+                return false;
+            }
+             
             function isEventOnDesktop(e) {
                 var target = e.target;
                 while (target && target !== document) {
@@ -91158,37 +91424,37 @@ ${jurySourceInstruction}
             }
 
             document.addEventListener('wheel', function(e) {
-                if (isEventOnDesktop(e)) {
+                if (!isEventOnInteractiveElement(e) && isEventOnDesktop(e)) {
                     e.preventDefault();
                 }
             }, { passive: false });
 
             document.addEventListener('gesturestart', function(e) {
-                if (isEventOnDesktop(e)) {
+                if (!isEventOnInteractiveElement(e) && isEventOnDesktop(e)) {
                     e.preventDefault();
                 }
             }, { passive: false });
 
             document.addEventListener('gesturechange', function(e) {
-                if (isEventOnDesktop(e)) {
+                if (!isEventOnInteractiveElement(e) && isEventOnDesktop(e)) {
                     e.preventDefault();
                 }
             }, { passive: false });
 
             document.addEventListener('gestureend', function(e) {
-                if (isEventOnDesktop(e)) {
+                if (!isEventOnInteractiveElement(e) && isEventOnDesktop(e)) {
                     e.preventDefault();
                 }
             }, { passive: false });
 
             document.addEventListener('touchstart', function(e) {
-                if (isEventOnDesktop(e) && e.touches.length > 1) {
+                if (!isEventOnInteractiveElement(e) && isEventOnDesktop(e) && e.touches.length > 1) {
                     e.preventDefault();
                 }
             }, { passive: false });
 
             document.addEventListener('touchmove', function(e) {
-                if (isEventOnDesktop(e)) {
+                if (!isEventOnInteractiveElement(e) && isEventOnDesktop(e)) {
                     e.preventDefault();
                 }
             }, { passive: false });
@@ -103061,17 +103327,18 @@ ${roleListStr}
                                 const delta = parsed.choices && parsed.choices[0] && parsed.choices[0].delta && parsed.choices[0].delta.content || '';
                                 if (delta) {
                                     fullReply += delta;
-                                    updateTandanDetailMessage(loadingEl, fullReply);
+                                    updateTandanDetailMessage(loadingEl, stripStreamingThoughtChainOutput(fullReply) || '…');
                                 }
                             } catch (e) {}
                         }
                     }
                 }
 
-                if (!fullReply.trim()) fullReply = '（对方看了看你，没有说话）';
+                var cleanReply = stripThoughtChainOutputTags(fullReply).trim();
+                if (!cleanReply) cleanReply = '（对方看了看你，没有说话）';
 
-                updateTandanDetailMessage(loadingEl, fullReply, true);
-                tandanDetailMessages.push({ role: 'assistant', content: fullReply });
+                updateTandanDetailMessage(loadingEl, cleanReply, true);
+                tandanDetailMessages.push({ role: 'assistant', content: cleanReply });
 
                 // 更新好感度
                 var assistantCount = tandanDetailMessages.filter(function(m) { return m.role === 'assistant'; }).length;
@@ -103083,8 +103350,8 @@ ${roleListStr}
                 updateTandanAffection();
 
                 // 解析选项和场景
-                parseTandanDetailOptions(fullReply);
-                parseTandanDetailScene(fullReply);
+                parseTandanDetailOptions(cleanReply);
+                parseTandanDetailScene(cleanReply);
 
             } catch (error) {
                 if (error.name === 'AbortError') return;
@@ -103105,7 +103372,7 @@ ${roleListStr}
         }
 
         function stripTandanOptionsTag(text) {
-            return text.replace(/\[选项:\s*.+?\]/g, '').replace(/\[场景:\s*.+?\]/g, '').trim();
+            return stripThoughtChainOutputTags(text).replace(/\[选项:\s*.+?\]/g, '').replace(/\[场景:\s*.+?\]/g, '').trim();
         }
 
         function addTandanDetailMessage(text, type, isLoading) {
